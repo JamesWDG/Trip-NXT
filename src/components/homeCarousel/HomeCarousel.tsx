@@ -1,0 +1,184 @@
+import React, { useRef, useState, useEffect } from 'react';
+import {
+  View,
+  FlatList,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ImageBackground,
+  ImageSourcePropType,
+  Image,
+} from 'react-native';
+import { CarouselData } from '../../constants/Accomodation';
+import colors from '../../config/colors';
+import images from '../../config/images';
+import fonts from '../../config/fonts';
+
+const { width } = Dimensions.get('window');
+
+const Slider = ({ data }: { data: CarouselData[] }) => {
+  const flatListRef = useRef<FlatList<CarouselData> | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
+
+  const _renderItem = (item: CarouselData) => {
+    const imageSource: ImageSourcePropType =
+      typeof (item as any).image === 'string'
+        ? { uri: (item as any).image }
+        : (item as any).image;
+    return (
+      <ImageBackground
+        source={imageSource}
+        style={styles.imageBackground}
+        imageStyle={styles.imageStyle}
+      >
+        <View style={styles.cardContainer}>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>Journey Starts with a Great Stay</Text>
+            <Text style={styles.getExtraOffText}>
+              Get Extra 25% Off On 1st Booking
+            </Text>
+          </View>
+          <View
+            style={{
+              alignItems: 'flex-end',
+              justifyContent: 'flex-end',
+              // backgroundColor: 'green',
+            }}
+          >
+            <Image source={images.hotel} />
+          </View>
+        </View>
+        {/* Optional overlay content can go here */}
+      </ImageBackground>
+    );
+  };
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: any }) => {
+      if (viewableItems.length > 0) {
+        setCurrentIndex(viewableItems[0].index);
+      }
+    },
+  ).current;
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        ref={flatListRef}
+        data={data}
+        renderItem={({ item }) => _renderItem(item)}
+        keyExtractor={item => String(item.id)}
+        horizontal
+        pagingEnabled
+        contentContainerStyle={styles.contentContainer}
+        style={{ flex: 1 }}
+        showsHorizontalScrollIndicator={false}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewConfig}
+        getItemLayout={(_, index) => ({
+          length: width,
+          offset: width * index,
+          index,
+        })}
+        snapToInterval={width}
+        decelerationRate="fast"
+      />
+
+      <View style={styles.pagination}>
+        {data?.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.dot,
+              index === currentIndex ? styles.activeDot : styles.inactiveDot,
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    height: 220,
+    alignItems: 'center',
+    flex: 1,
+    marginVertical: 20,
+    // paddingHorizontal: 20,
+  },
+  textContainer: {
+    padding: 20,
+    width: '65%',
+  },
+  slide: {
+    width: width,
+    height: 200,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  pagination: {
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: -10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  dot: {
+    width: 20,
+    height: 4,
+    borderRadius: 100,
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: 'red',
+  },
+  inactiveDot: {
+    backgroundColor: colors.c_505050,
+  },
+  imageBackground: {
+    height: 150,
+    width: width,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    // backgroundColor: 'red',
+  },
+  contentContainer: {
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexGrow: 1,
+    // backgroundColor: 'red',
+  },
+  imageStyle: {
+    width: width * 0.9,
+    height: 150,
+    borderRadius: 10,
+  },
+  cardContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    // backgroundColor: 'yellow',
+    width: '90%',
+  },
+  title: {
+    color: colors.white,
+    fontSize: 20,
+    fontFamily: fonts.bold,
+  },
+  getExtraOffText: {
+    color: colors.white,
+    fontSize: 10,
+    fontFamily: fonts.medium,
+  },
+});
+
+export default Slider;

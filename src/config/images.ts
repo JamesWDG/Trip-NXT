@@ -1,0 +1,87 @@
+const images = Object.freeze({
+    splash: require('../assets/images/splash_logo.png'),
+    introWrapper: require('../assets/images/intro_back.png'),
+    firstStepImage: require('../assets/images/Food.png'),
+    secondStepImage: require('../assets/images/Ride.png'),
+    thirdStepImage: require('../assets/images/Accommodation-01.png'),
+    video: require('../assets/videos/bgvideo.mp4'),
+    google: require('../assets/images/google.png'),
+    location: require('../assets/images/location.png'),
+    bookARide: require('../assets/images/bookARide.png'),
+    foodOrder: require('../assets/images/foodOrder.png'),
+    bookYourPlace: require('../assets/images/bookYourPlace.png'),
+    recommended_accomodation: require('../assets/images/recommended_accomodation.png'),
+    accomodation_home: require('../assets/images/accomodation_home.png'),
+    star: require('../assets/images/star.png'),
+    hamburger: require('../assets/images/hamburger.png'),
+    filter: require('../assets/images/filter.png'),
+    next_gateway: require('../assets/images/next_gateway.png'),
+    studios: require('../assets/images/studios.png'),
+    appartment: require('../assets/images/appartment.png'),
+    condos: require('../assets/images/condos.png'),
+    hotel_room: require('../assets/images/hotel_room.png'),
+    single_room: require('../assets/images/single_room.png'),
+    slider_accomodation: require('../assets/images/slider_accomodation.png'),
+    hotel: require('../assets/images/hotel.png'),
+    thank_you_logo: require('../assets/images/thank_you_logo.png'),
+    avatar: require('../assets/images/avatar.png'),
+    hotel_details: require('../assets/images/hotel_details.png'),
+    AC: require('../assets/images/AC.png'),
+    coffee: require('../assets/images/coffee.png'),
+    wifi: require('../assets/images/wifi.png'),
+    TV: require('../assets/images/TV.png'),
+    shower: require('../assets/images/shower.png'),
+    flag: require('../assets/images/flag.png'),
+
+
+
+    /* Tabs */
+    home_tab: require('../assets/images/home.png'),
+    food_tab: require('../assets/images/food_tab.png'),
+    car: require('../assets/images/car.png'),
+    user: require('../assets/images/user.png'),
+    card: require('../assets/images/payment_card.png'),
+
+    /* Drawer Modal */
+    drawer_home: require('../assets/images/drawer_home.png'),
+    user_circle: require('../assets/images/user_circle.png'),
+    bell: require('../assets/images/bell.png'),
+    help: require('../assets/images/help.png'),
+    card: require('../assets/images/card.png'),
+    messages: require('../assets/images/messages.png'),
+    payment: require('../assets/images/payment.png'),
+    calender: require('../assets/images/calender.png'),
+    heart: require('../assets/images/heart.png'),
+    settings: require('../assets/images/settings.png'),
+    faq: require('../assets/images/faq.png'),
+
+
+    // Food Home
+    foodHome: require('../assets/images/foodHome.png'),
+
+
+    // Home Food 
+    near_me: require('../assets/images/near_me.png'),
+    big_promo: require('../assets/images/big_promo.png'),
+    best_seller: require('../assets/images/best_seller.png'),
+    meals: require('../assets/images/meals.png'),
+    order_tracking: require('../assets/images/order_tracking.png'),
+    newly_opened: require('../assets/images/newly_openend.png'),
+    user_avatar: require('../assets/images/user_avatar.png'),
+    money: require('../assets/images/money.png'),
+    car_home: require('../assets/images/car_home.png'),
+    ride_home_traffic: require('../assets/images/ride_home_traffic.png'),
+    map_bg: require('../assets/images/map_bg.png'),
+    save_address: require('../assets/images/save_address.png'),
+    locate: require('../assets/images/locate.png'),
+    carr: require('../assets/images/carr.png'),
+    rickshaw: require('../assets/images/rickshaw.png'),
+    bike: require('../assets/images/bike.png'),
+    allow_location: require('../assets/images/allow_location.png'),
+    finding_your_ride: require('../assets/images/finding_your_ride.png'),
+    black_car: require('../assets/images/black_car.png'),
+    driver_arrived: require('../assets/images/driver_arrived.png'),
+    you_arrived: require('../assets/images/you_arrived.png'),
+});
+
+export default images;

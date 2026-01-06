@@ -1,0 +1,187 @@
+import {
+  Image,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import React, { FC, useCallback, useState } from 'react';
+import colors from '../../config/colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import images from '../../config/images';
+import SwipeButton from 'rn-swipe-button';
+import { IOption, options } from '../../constants/options';
+import { height, width } from '../../config/constants';
+import fonts from '../../config/fonts';
+const DashboardTabs: FC<{ navigation: any }> = ({ navigation }) => {
+  const [selectedOption, setSelectedOption] = useState<IOption[] | null>(
+    options.map(ele => {
+      return { ...ele, selected: false };
+    }),
+  );
+  let forceResetLastButton: any = null;
+  let forceCompleteCallback: any = null;
+  const [finishSwipeAnimDuration, setFinishSwipeAnimDuration] = useState(400);
+
+  console.log('selected option', selectedOption);
+  // const dispatch = useDispatch();
+
+  const forceCompleteButtonCallback = useCallback(() => {
+    setFinishSwipeAnimDuration(0);
+    forceCompleteCallback();
+  }, []);
+
+  const forceResetButtonCallback = useCallback(() => {
+    forceResetLastButton();
+    setInterval(() => setFinishSwipeAnimDuration(400), 1000);
+  }, []);
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <ImageBackground
+          source={images.location}
+          style={styles.locationImage}
+          imageStyle={styles.bgImageStyles}
+        >
+          <Image
+            source={images.splash}
+            style={styles.tripNxtImage}
+            resizeMode="contain"
+          />
+
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontSize: 34, color: colors.white }}>
+              Get What You’re
+            </Text>
+            <Text
+              style={{
+                fontSize: 34,
+                fontFamily: fonts.semibold,
+                color: colors.white,
+              }}
+            >
+              Looking For–Fast
+            </Text>
+          </View>
+
+          <View style={{ gap: 30, alignItems: 'center', marginTop: 50 }}>
+            {selectedOption?.map((item, index) => {
+              return (
+                <SwipeButton
+                  key={index}
+                  containerStyles={{
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onSwipeSuccess={() => {
+                    console.log('onSwipeSuccess');
+                    navigation.navigate('app');
+                    setSelectedOption(
+                      selectedOption?.map(ele => {
+                        if (ele?.id === index) {
+                          // dispatch(setFlow(item.title.replace(/\s+/g, '')));
+                          return { ...ele, selected: true };
+                        }
+                        return { ...ele, selected: ele?.selected };
+                      }),
+                    );
+                  }}
+                  onSwipeFail={() => {
+                    console.log('onSwipeFail');
+                    setSelectedOption(
+                      selectedOption?.map(ele => {
+                        if (ele?.id == index) {
+                          return { ...ele, selected: false };
+                        }
+                        return { ...ele, selected: ele?.selected };
+                      }),
+                    );
+                  }}
+                  titleStyles={{
+                    fontSize: 18,
+                    fontWeight: '600',
+                    position: 'absolute', // 👈 Always on top
+                    alignSelf: 'center',
+                    zIndex: 10, // 👈 Ensure it's above thumb and rail
+                    color: item?.selected ? colors.white : colors.black,
+                  }}
+                  height={80}
+                  finishRemainingSwipeAnimationDuration={
+                    finishSwipeAnimDuration
+                  }
+                  railBackgroundColor={colors.white}
+                  railStyles={{
+                    // backgroundColor: colors.c_F47E20,
+                    borderColor: item?.selected
+                      ? colors.c_F47E20
+                      : 'transparent',
+                    height: 50,
+                    borderWidth: 0,
+                  }}
+                  // swipeSuccessThreshold={100}
+                  railFillBackgroundColor={colors.c_F47E20}
+                  railFillBorderColor={item?.selected ? colors.c_F47E20 : 'red'}
+                  // railBorderColor={item?.selected ? 'transparent' : 'blue'}
+                  thumbIconImageSource={item?.image}
+                  thumbIconStyles={{
+                    width: 85,
+                    height: 85,
+                    borderWidth: 4,
+                    position: 'absolute',
+                    top: -15,
+                    // left: 0,
+                  }}
+                  thumbIconBorderColor={
+                    item?.selected ? colors.c_F47E20 : colors.primary
+                  }
+                  thumbIconBackgroundColor={colors.white}
+                  title={item?.title}
+                  width={width * 0.9}
+                />
+              );
+            })}
+          </View>
+        </ImageBackground>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default DashboardTabs;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.primary,
+  },
+  tripNxtImage: {
+    height: 165,
+    width: 200,
+    alignSelf: 'center',
+    marginTop: 20,
+  },
+  bgImageStyles: {
+    opacity: 0.09,
+    height: 200,
+    width: 150,
+    // backgroundColor: 'red',
+    top: height * 0.3,
+    left: width * 0.3,
+  },
+  locationImage: {
+    // minWidth: 150,
+    // height: 200,
+    alignItems: 'center',
+    zIndex: 8,
+    justifyContent: 'center',
+    // backgroundColor: 'red',
+    flex: 1,
+  },
+});

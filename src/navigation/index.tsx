@@ -1,0 +1,31 @@
+import React, { FC } from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer } from '@react-navigation/native';
+import AuthStack from './authStack/AuthStack';
+import { navigationRef } from '../config/constants';
+import BottomStack from './bottomStack/BottomStack';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
+export interface RootParamList {
+  auth: undefined;
+  [key: string]: undefined;
+}
+
+const RootNavigator = createNativeStackNavigator<RootParamList>();
+const RootNavigation: FC = () => {
+  const { token } = useSelector((state: RootState) => state.auth);
+  // console.log('token', token);
+  return (
+    <NavigationContainer ref={navigationRef} onReady={() => {}}>
+      <RootNavigator.Navigator screenOptions={{ headerShown: false }}>
+        {token ? (
+          <RootNavigator.Screen name="app" component={BottomStack} />
+        ) : (
+          <RootNavigator.Screen name="auth" component={AuthStack} />
+        )}
+      </RootNavigator.Navigator>
+    </NavigationContainer>
+  );
+};
+
+export default RootNavigation;
