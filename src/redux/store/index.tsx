@@ -3,9 +3,10 @@ import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { authApi } from '../services/authService';
 import authReducer from '../slices/authSlice';
+import { baseApi } from '../services/api';
 
 const rootReducer = combineReducers({
-  [authApi.reducerPath]: authApi.reducer,
+  [baseApi.reducerPath]: baseApi.reducer,
   auth: authReducer,
 });
 

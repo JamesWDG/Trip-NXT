@@ -26,10 +26,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    // logout: state => {
-    //   state.user = null;
-    //   state.token = null;
-    // },
+
     setRememberMe: (state, action) => {
       state.rememberMe = action.payload;
     },

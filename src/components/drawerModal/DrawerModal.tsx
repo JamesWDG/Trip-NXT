@@ -19,6 +19,9 @@ import fonts from '../../config/fonts';
 import IconWithTitleAndDivider from '../iconWithTitleAndDivider/IconWithTitleAndDivider';
 import LinearGradient from 'react-native-linear-gradient';
 import { navigationRef } from '../../config/constants';
+import { useLogoutMutation } from '../../redux/services/authService';
+import { setLogout } from '../../redux/slices/authSlice';
+import { useDispatch } from 'react-redux';
 
 const upperTabData = [
   {
@@ -90,6 +93,17 @@ interface IDrawerModal {
 const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const insets = useSafeAreaInsets();
 
+  const [logoutUser, { isLoading }] = useLogoutMutation();
+  const dispatch = useDispatch();
+  const onLogoutPress = async () => {
+    try {
+      const res = await logoutUser({}).unwrap();
+      dispatch(setLogout());
+      console.log('logout response ===>', res);
+    } catch (error) {
+      console.log('error while logging out', error);
+    }
+  }
   const renderHorizontalTabs = ({
     item,
   }: {
