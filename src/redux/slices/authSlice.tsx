@@ -1,6 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { authApi } from '../services/authService';
 
+
+
 interface User {
   id?: string;
   email?: string;
@@ -30,6 +32,10 @@ const authSlice = createSlice({
     // },
     setRememberMe: (state, action) => {
       state.rememberMe = action.payload;
+    },
+    setLogout: state => {
+      state.user = null;
+      state.token = null;
     },
     saveCredentials: (state, action) => {
       state.user = {
@@ -74,7 +80,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setRememberMe, saveCredentials, clearCredentials } =
+export const { setRememberMe, saveCredentials, clearCredentials, setLogout } =
   authSlice.actions;
 
 export default authSlice.reducer;

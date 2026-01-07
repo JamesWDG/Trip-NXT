@@ -11,6 +11,7 @@ import images from '../../config/images';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { width } from '../../config/constants';
 interface Params {
   title: string;
   resizeMode?: ImageResizeMode;
@@ -30,6 +31,8 @@ const IntroWrapperWithTitle = ({ title, resizeMode = 'cover' }: Params) => {
             source={images.location}
             style={styles.locationImage}
             imageStyle={styles.bgImageStyles}
+          
+            resizeMode='contain'
           >
             <Text style={styles.locationText}>{title}</Text>
           </ImageBackground>
@@ -69,9 +72,9 @@ const styles = StyleSheet.create({
     opacity: 0.09,
     top: 10,
   },
-
   locationImage: {
     minWidth: 150,
+    maxWidth: width * 0.9,
     height: 200,
     alignItems: 'center',
     zIndex: 8,
@@ -79,7 +82,7 @@ const styles = StyleSheet.create({
   },
   locationText: {
     color: colors.white,
-    fontSize: 40,
+    fontSize: 36,
     fontFamily: fonts.bold,
   },
 });
