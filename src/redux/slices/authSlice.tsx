@@ -50,7 +50,7 @@ const authSlice = createSlice({
     builder.addMatcher(
       authApi.endpoints.otpVerification.matchFulfilled,
       (state, action) => {
-        if (action.payload?.data) {
+        if (action.payload?.data && action.payload?.data?.type !== 'reset') {
           state.token = action.payload.data?.accessToken;
         }
       },
