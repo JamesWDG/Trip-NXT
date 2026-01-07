@@ -251,7 +251,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.normal,
   },
   continueWithGoogleContainer: {
-    width: width * 0.9,
+    // width: width * 0.9,
+    width: "100%",
     marginVertical: 28,
   },
   scrollViewStyles: {},

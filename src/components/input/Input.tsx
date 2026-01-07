@@ -53,7 +53,7 @@ export default Input;
 const styles = StyleSheet.create({
   input: {
     marginTop: 8,
-    width: width * 0.9,
+    // width: width * 0.9,
     borderRadius: 100,
     height: 48,
     paddingHorizontal: 20,

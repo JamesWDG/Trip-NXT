@@ -49,7 +49,7 @@ const LoginAndSignup = ({ navigation }: { navigation: any }) => {
         </View>
 
         {/* Google Signup Button */}
-        <View style={{ width: width * 0.9, marginTop: 40 }}>
+        <View style={styles.continueWithGoogleContainer}>
           <ButtonWithIcon
             title={labels.continueWithGoogle}
             onPress={onLognPress}
@@ -66,13 +66,13 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
-    // width: width * 1,
     flex: 1,
   },
   buttonContainer: {
-    width: width * 0.9,
+    width: "100%",
     gap: 20,
     marginTop: 100,
+    paddingHorizontal: 4,
   },
   image: {
     height: 140,
@@ -84,12 +84,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     marginTop: 40,
-    // backgroundColor: 'red',
     width: width * 0.9,
   },
   orLine: {
     height: 1,
-    // width: '100%',
     flex: 1,
     backgroundColor: colors.white,
   },
@@ -97,5 +95,10 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontFamily: fonts.normal,
+  },
+  continueWithGoogleContainer: {
+    // flex : 1,
+    width: "100%",
+    marginVertical: 28,
   },
 });

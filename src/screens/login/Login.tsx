@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import WrapperWithVideo from '../../components/wrappers/WrapperWithVideo';
 import labels from '../../config/labels';
 import colors from '../../config/colors';
@@ -26,6 +26,7 @@ import {
   clearCredentials,
 } from '../../redux/slices/authSlice';
 import { RootState } from '../../redux/store';
+import GeneralStyles from '../../utils/GeneralStyles';
 
 interface stateTypes {
   email: string;
@@ -131,10 +132,9 @@ const Login = ({ navigation }: { navigation: any }) => {
         <IntroWrapperWithTitle title={labels.login} resizeMode="stretch" />
       </View>
 
-      <KeyboardAvoidingView behavior="padding">
+      <KeyboardAvoidingView behavior="padding" style={GeneralStyles.flex}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          bounces={false}
           contentContainerStyle={styles.scrollViewContentContainer}
         >
           <View style={styles.inputContainer}>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     gap: 16,
     marginTop: 300,
   },
-  continueWithGoogleContainer: { width: width * 0.9, marginTop: 28 },
+  continueWithGoogleContainer: { flex : 1, marginTop: 28 },
   loginButtonContainer: { marginTop: 40 },
   introWrapper: {
     position: 'absolute',
@@ -256,12 +256,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     marginTop: 28,
-    // backgroundColor: 'red',
     width: width * 0.9,
   },
   orLine: {
     height: 1,
-    // width: '100%',
     flex: 1,
     backgroundColor: colors.white,
   },
@@ -287,5 +285,7 @@ const styles = StyleSheet.create({
   boldText: {
     fontFamily: fonts.bold,
   },
-  scrollViewContentContainer: {},
+  scrollViewContentContainer: {
+  paddingBottom: 40,
+  },
 });
