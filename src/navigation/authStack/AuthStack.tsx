@@ -8,7 +8,6 @@ import Login from '../../screens/login/Login';
 import Intro from '../../screens/intro/Intro';
 import LoginAndSignup from '../../screens/loginAndSignup/LoginAndSignup';
 import Signup from '../../screens/signup/Signup';
-import DashboardTabs from '../../screens/dashboardTabs/DashboardTabs';
 import OtpVerify from '../../screens/otpVerify/otpVerify';
 import ForgotPassword from '../../screens/ForgotPassword/ForgotPassword';
 import ResetPassword from '../../screens/Password/ResetPassword';

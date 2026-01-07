@@ -26,11 +26,13 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-
+    setLogout: state => {
+      state.user = null;
+      state.token = null;
+    },
     setRememberMe: (state, action) => {
       state.rememberMe = action.payload;
     },
-   
     saveCredentials: (state, action) => {
       state.user = {
         ...state.user,
@@ -56,15 +58,6 @@ const authSlice = createSlice({
       },
     );
     builder.addMatcher(
-      authApi.endpoints.logout.matchFulfilled,
-      (state, action) => {
-        if (action.payload?.data) {
-          state.token = null;
-          state.user = null;
-        }
-      },
-    );
-    builder.addMatcher(
       authApi.endpoints.login.matchFulfilled,
       (state, action) => {
         if (action.payload?.data) {
@@ -77,13 +70,14 @@ const authSlice = createSlice({
       (state, action) => {
         if (action.payload?.data) {
           state.token = null;
+          state.user = null;
         }
       },
     );
   },
 });
 
-export const { setRememberMe, saveCredentials, clearCredentials } =
+export const { setLogout, setRememberMe, saveCredentials, clearCredentials } =
   authSlice.actions;
 
 export default authSlice.reducer;
