@@ -23,7 +23,9 @@ import {
   NavigationProp,
   useNavigation,
 } from '@react-navigation/native';
-import { navigationRef } from '../../config/constants';
+import { navigationRef, ShowToast } from '../../config/constants';
+import { useDispatch } from 'react-redux';
+import { useLogoutMutation } from '../../redux/services/authService';
 
 const upperTabData = [
   {
@@ -100,6 +102,31 @@ interface IDrawerModal {
 const FoodDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const [logoutUser, { isLoading }] = useLogoutMutation();
+  const dispatch = useDispatch();
+  const onLogoutPress = async () => {
+    try {
+      const res = await logoutUser({}).unwrap();
+      ShowToast('success', res.message);
+
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'auth' }],
+          }),
+        );
+      }
+      console.log('logout response ===>', res);
+    } catch (error) {
+      ShowToast(
+        'error',
+        (error as { data: { message: string } }).data.message ||
+          'Something went wrong',
+      );
+      console.log('error while logging out', error);
+    }
+  };
   const renderHorizontalTabs = ({
     item,
   }: {
@@ -201,24 +228,7 @@ const FoodDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
             {/* Log Out Button */}
             <TouchableOpacity
               style={styles.logoutButton}
-              onPress={() => {
-                if (navigationRef.isReady()) {
-                  navigationRef.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [
-                        {
-                          name: 'auth',
-                          state: {
-                            routes: [{ name: 'Login' }],
-                            index: 0,
-                          },
-                        },
-                      ],
-                    }),
-                  );
-                }
-              }}
+              onPress={onLogoutPress}
             >
               <LinearGradient
                 colors={['#F47E20', '#EE4026']}

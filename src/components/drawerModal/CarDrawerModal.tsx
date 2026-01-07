@@ -17,8 +17,10 @@ import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import IconWithTitleAndDivider from '../iconWithTitleAndDivider/IconWithTitleAndDivider';
 import LinearGradient from 'react-native-linear-gradient';
-import { CommonActions, useNavigation } from '@react-navigation/native';
-import { navigationRef } from '../../config/constants';
+import { CommonActions } from '@react-navigation/native';
+import { navigationRef, ShowToast } from '../../config/constants';
+import { useLogoutMutation } from '../../redux/services/authService';
+import { useDispatch } from 'react-redux';
 
 const upperTabData = [
   {
@@ -91,13 +93,42 @@ interface IDrawerModal {
 }
 const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+
+
+  const [logoutUser, { isLoading }] = useLogoutMutation();
+  const dispatch = useDispatch();
+  const onLogoutPress = async () => {
+    try {
+      const res = await logoutUser({}).unwrap();
+     
+
+
+      ShowToast('success', res.message);
+
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'auth' }],
+          }),
+        );
+      }
+      console.log('logout response ===>', res);
+    } catch (error) {
+      ShowToast(
+        'error',
+        (error as { data: { message: string } }).data.message ||
+          'Something went wrong',
+      );
+      console.log('error while logging out', error);
+    }
+  };
   const renderHorizontalTabs = ({
     item,
   }: {
     item: (typeof upperTabData)[0];
   }) => {
-    return <IconsWithTitle image={item.image} title={item.name} />;
+    return <IconsWithTitle image={item.image} title={item.name}  onPress={() => {}} />;
   };
   const renderVerticalTabs = ({
     item,
@@ -111,9 +142,14 @@ const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
         divider={true}
         dividerColor={colors.c_111111}
         onPress={() => {
-          if (item?.navigation) {
+          const navRoute = (item as any)?.navigation;
+          if (navRoute) {
             setIsModalVisible(false);
-            navigation.navigate(item.navigation);
+            if (navigationRef.isReady()) {
+              navigationRef.dispatch(
+                CommonActions.navigate(navRoute as never),
+              );
+            }
           }
         }}
       />
@@ -181,24 +217,7 @@ const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
             {/* Log Out Button */}
             <TouchableOpacity
               style={styles.logoutButton}
-              onPress={() => {
-                if (navigationRef.isReady()) {
-                  navigationRef.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [
-                        {
-                          name: 'auth',
-                          state: {
-                            routes: [{ name: 'Login' }],
-                            index: 0,
-                          },
-                        },
-                      ],
-                    }),
-                  );
-                }
-              }}
+              onPress={onLogoutPress}
             >
               <LinearGradient
                 colors={['#F47E20', '#EE4026']}

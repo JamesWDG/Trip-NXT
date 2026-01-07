@@ -18,9 +18,8 @@ import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import IconWithTitleAndDivider from '../iconWithTitleAndDivider/IconWithTitleAndDivider';
 import LinearGradient from 'react-native-linear-gradient';
-import { navigationRef } from '../../config/constants';
+import { navigationRef, ShowToast } from '../../config/constants';
 import { useLogoutMutation } from '../../redux/services/authService';
-import { setLogout } from '../../redux/slices/authSlice';
 import { useDispatch } from 'react-redux';
 
 const upperTabData = [
@@ -98,18 +97,37 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const onLogoutPress = async () => {
     try {
       const res = await logoutUser({}).unwrap();
-      dispatch(setLogout());
+   
+
+
+      ShowToast('success', res.message);
+
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'auth' }],
+          }),
+        );
+      }
       console.log('logout response ===>', res);
     } catch (error) {
+      ShowToast(
+        'error',
+        (error as { data: { message: string } }).data.message ||
+          'Something went wrong',
+      );
       console.log('error while logging out', error);
     }
-  }
+  };
   const renderHorizontalTabs = ({
     item,
   }: {
     item: (typeof upperTabData)[0];
   }) => {
-    return <IconsWithTitle image={item.image} title={item.name} />;
+    return (
+      <IconsWithTitle image={item.image} title={item.name} onPress={() => {}} />
+    );
   };
   const renderVerticalTabs = ({ item }: { item: (typeof upperTabData)[0] }) => {
     return (
@@ -118,6 +136,7 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
         title={item.name}
         divider={true}
         dividerColor={colors.c_111111}
+        onPress={() => {}}
       />
     );
   };
@@ -183,24 +202,7 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
             {/* Log Out Button */}
             <TouchableOpacity
               style={styles.logoutButton}
-              onPress={() => {
-                if (navigationRef.isReady()) {
-                  navigationRef.dispatch(
-                    CommonActions.reset({
-                      index: 0,
-                      routes: [
-                        {
-                          name: 'auth',
-                          state: {
-                            routes: [{ name: 'Login' }],
-                            index: 0,
-                          },
-                        },
-                      ],
-                    }),
-                  );
-                }
-              }}
+              onPress={onLogoutPress}
             >
               <LinearGradient
                 colors={['#F47E20', '#EE4026']}
