@@ -91,7 +91,6 @@ const Login = ({ navigation }: { navigation: any }) => {
         password: state.password,
       };
       const res = await login(data).unwrap();
-      console.log('login response ===>', res);
       ShowToast('success', res.message);
       if (res.success) {
         if (rememberMe) {
