@@ -94,9 +94,18 @@ interface IDrawerModal {
 const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const insets = useSafeAreaInsets();
 
-
   const [logoutUser, { isLoading }] = useLogoutMutation();
   const dispatch = useDispatch();
+
+  const getModalOverlayStyle = () => ({
+    ...styles.modalOverlay,
+    paddingBottom: (insets?.bottom || 0) + 20,
+  });
+
+  const getModalContentStyle = () => ({
+    ...styles.modalContent,
+    paddingTop: insets.top,
+  });
   const onLogoutPress = async () => {
     try {
       const res = await logoutUser({}).unwrap();
@@ -162,8 +171,8 @@ const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
       transparent={true}
       animationType="slide"
     >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { paddingTop: insets.top }]}>
+      <View style={getModalOverlayStyle()}>
+        <View style={getModalContentStyle()}>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}

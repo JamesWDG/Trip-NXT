@@ -94,6 +94,16 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
 
   const [logoutUser, { isLoading }] = useLogoutMutation();
   const dispatch = useDispatch();
+
+  const getModalOverlayStyle = () => ({
+    ...styles.modalOverlay,
+    paddingBottom: (insets?.bottom || 0) + 20,
+  });
+
+  const getModalContentStyle = () => ({
+    ...styles.modalContent,
+    paddingTop: insets.top,
+  });
   const onLogoutPress = async () => {
     try {
       const res = await logoutUser({}).unwrap();
@@ -147,8 +157,8 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
       transparent={true}
       animationType="slide"
     >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { paddingTop: insets.top }]}>
+      <View style={getModalOverlayStyle()}>
+        <View style={getModalContentStyle()}>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -228,6 +238,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  
   },
   modalContent: {
     backgroundColor: colors.white,

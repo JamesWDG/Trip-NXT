@@ -104,6 +104,12 @@ const FoodDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const navigation = useNavigation();
   const [logoutUser, { isLoading }] = useLogoutMutation();
   const dispatch = useDispatch();
+
+  const getModalContentStyle = () => ({
+    ...styles.modalContent,
+    paddingTop: insets.top,
+    paddingBottom: (insets?.bottom || 0) + 20,
+  });
   const onLogoutPress = async () => {
     try {
       const res = await logoutUser({}).unwrap();
@@ -173,8 +179,8 @@ const FoodDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
       transparent={true}
       animationType="slide"
     >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContent, { paddingTop: insets.top }]}>
+      <View style={[styles.modalOverlay]}>
+        <View style={getModalContentStyle()}>
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
