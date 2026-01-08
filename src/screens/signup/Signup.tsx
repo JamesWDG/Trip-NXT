@@ -5,7 +5,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
+import  { useState, useEffect } from 'react';
 import WrapperWithVideo from '../../components/wrappers/WrapperWithVideo';
 import IntroWrapperWithTitle from '../../components/introWrapperWithTitle/IntroWrapperWithTitle';
 import labels from '../../config/labels';
@@ -72,6 +72,7 @@ const Signup = ({ navigation }: { navigation: any }) => {
         email: state.email?.toLowerCase(),
         password: state.password,
         role: ['user'],
+        phoneNumber: state.phone,
       };
       const res = await signup(data).unwrap();
       console.log('res', res);

@@ -35,6 +35,10 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>TripNxt needs access to your location to provide better experience.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to upload hotel images for your listings.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to save images to your photo library.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

@@ -7,41 +7,85 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from 'react-native';
-import React, { useState, useMemo } from 'react';
+import  { useState, useMemo, useEffect } from 'react';
+import {
+  NavigationProp,
+  useIsFocused,
+  useNavigation,
+} from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User, Mail, Phone, Lock, Camera } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
-import LinearGradient from 'react-native-linear-gradient';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import images from '../../config/images';
 import ProfileInputField from '../../components/profileInputField/ProfileInputField';
 import GradientButton from '../../components/gradientButton/GradientButton';
-import { width } from '../../config/constants';
+import { ShowToast, width } from '../../config/constants';
 import WrapperWithVideo from '../../components/wrappers/WrapperWithVideo';
 import IntroWrapperWithTitle from '../../components/introWrapperWithTitle/IntroWrapperWithTitle';
-import labels from '../../config/labels';
+import { useLazyGetUserQuery } from '../../redux/services/authService';
+import Loader from '../../components/AppLoader/Loader';
 
-const Profile = ({ navigation }: { navigation?: any }) => {
+
+const Profile = () => {
+  const navigation = useNavigation<NavigationProp<any>>();
   const { top, bottom } = useSafeAreaInsets();
-  const [name, setName] = useState('Augustine Okpala');
-  const [email, setEmail] = useState('loremipsum@gmail.com');
-  const [phone, setPhone] = useState('123 456 7890');
-  const [password, setPassword] = useState('**********');
-  const [confirmPassword, setConfirmPassword] = useState('**********');
+  // const [name, setName] = useState('Augustine Okpala');
+  // const [email, setEmail] = useState('loremipsum@gmail.com');
+  // const [phone, setPhone] = useState('123 456 7890');
+  // const [password, setPassword] = useState('**********');
+  // const [confirmPassword, setConfirmPassword] = useState('**********');
+  // const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [getUser, { data: userData, isLoading }] = useLazyGetUserQuery();
+  const isFocused = useIsFocused();
 
-  const headerStyles = useMemo(() => makeHeaderStyles(top), [top]);
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchUserDetails();
+    }
+  }, [isFocused]);
+
+  const fetchUserDetails = async () => {
+    try {
+      const res = await getUser(undefined).unwrap();
+      console.log('user detail response ===>', res);
+    } catch (error) {
+      ShowToast(
+        'error',
+        (error as { data: { message: string } }).data.message ||
+          'Something went wrong',
+      );
+    }
+  };
+
+  // const headerStyles = useMemo(() => makeHeaderStyles(top), [top]);
 
   const handleUpdate = () => {
-    // Handle update logic
-    console.log('Update profile');
+    (navigation as any).navigate('EditProfile', { userData: userData?.data });
   };
 
-  const handleEditPhoto = () => {
-    // Handle photo edit
-    console.log('Edit photo');
-  };
+  // const handleEditPhoto = () => {
+  //   ImagePicker.openPicker({
+  //     mediaType: 'photo',
+  //     cropping: true,
+  //     cropperCircleOverlay: true,
+  //     width: 500,
+  //     height: 500,
+  //     includeBase64: false,
+  //   })
+  //     .then(image => {
+  //       setProfileImage(image.path);
+  //     })
+  //     .catch(error => {
+  //       if (error.code !== 'E_PICKER_CANCELLED') {
+  //         console.log('ImagePicker Error: ', error);
+  //       }
+  //     });
+  // };
 
   // Wave path for smooth transition
   const WavePath = () => (
@@ -62,79 +106,119 @@ const Profile = ({ navigation }: { navigation?: any }) => {
 
   return (
     <WrapperWithVideo introWrapper={true} otherStyles={styles.introWrapper}>
-      <IntroWrapperWithTitle title={'Profile'} resizeMode="stretch" />
+      {isLoading ? (
+        <Loader size="large" flex={1} justifyContent="center" />
+      ) : (
+        <>
+          <IntroWrapperWithTitle title={'Profile'} resizeMode="stretch" />
 
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        {/* Profile Picture */}
-        <View style={styles.profilePictureContainer}>
-          <Image source={images.user_avatar} style={styles.profilePicture} />
-          <TouchableOpacity
-            style={styles.editPhotoButton}
-            onPress={handleEditPhoto}
+          <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
-            <Camera size={16} color={colors.black} />
-          </TouchableOpacity>
-        </View>
+            {/* Profile Picture */}
+            <View style={styles.profilePictureContainer}>
+              <Image
+                source={
+                  userData?.data?.profilePicture
+                    ? { uri: userData?.data?.profilePicture }
+                    : images?.dummyImage
+                }
+                style={styles.profilePicture}
+              />
+              {/* <TouchableOpacity
+      style={styles.editPhotoButton}
+      onPress={handleEditPhoto}
+      activeOpacity={0.8}
+    >
+      <Camera size={16} color={colors.black} />
+    </TouchableOpacity> */}
+            </View>
 
-        {/* Blue Content Section */}
-        <ScrollView
-          style={styles.contentContainer}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: bottom + 100 },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.inputsContainer}>
-            <ProfileInputField
-              icon={User}
-              value={name}
-              placeholder="Name"
-              onChangeText={setName}
-            />
-            <ProfileInputField
-              icon={Mail}
-              value={email}
-              placeholder="Email"
-              keyboardType="email-address"
-              onChangeText={setEmail}
-            />
-            <ProfileInputField
-              icon={Phone}
-              value={phone}
-              placeholder="Phone Number"
-              keyboardType="phone-pad"
-              onChangeText={setPhone}
-            />
-            <ProfileInputField
-              icon={Lock}
-              value={password}
-              placeholder="Password"
-              secureTextEntry={true}
-              onChangeText={setPassword}
-            />
-            <ProfileInputField
-              icon={Lock}
-              value={confirmPassword}
-              placeholder="Confirm Password"
-              secureTextEntry={true}
-              onChangeText={setConfirmPassword}
-            />
-          </View>
-          {/* Update Button */}
+            {/* Blue Content Section */}
+            <ScrollView
+              style={styles.contentContainer}
+              contentContainerStyle={[
+                styles.scrollContent,
+                { paddingBottom: bottom + 100 },
+              ]}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.inputsContainer}>
+                <ProfileInputField
+                  icon={User}
+                  value={userData?.data?.name || ''}
+                  editable={false}
+                  placeholderTextColor={colors.white}
+                  style={styles.inputStyle}
+                  iconColor={colors.white}
+                  containerStyle={styles.inputContainer}
+                  placeholder="Name"
+                  // onChangeText={setName}
+                />
+                <ProfileInputField
+                  icon={Mail}
+                  containerStyle={styles.inputContainer}
+                  placeholderTextColor={colors.white}
+                  style={styles.inputStyle}
+                  iconColor={colors.white}
+                  value={userData?.data?.email || ''}
+                  editable={false}
+                  // placeholder="Email"
+                  // keyboardType="email-address"
+                  // onChangeText={setEmail}
+                />
+                <ProfileInputField
+                  icon={Phone}
+                  value={userData?.data?.phoneNumber || ''}
+                  placeholderTextColor={colors.white}
+                  style={styles.inputStyle}
+                  iconColor={colors.white}
+                  containerStyle={styles.inputContainer}
+                  editable={false}
+                  // placeholder="Phone Number"
+                  // keyboardType="phone-pad"
+                  // onChangeText={setPhone}
+                />
+                {/* <ProfileInputField
+        icon={Lock}
+        value={password}
+        placeholder="Password"
+        editable={false}
+        secureTextEntry={true}
+        onChangeText={setPassword}
+      />
+      <ProfileInputField
+        icon={Lock}
+        value={confirmPassword}
+        placeholder="Confirm Password"
 
+        secureTextEntry={true}
+        onChangeText={setConfirmPassword}
+      /> */}
+              </View>
+              {/* Update Button */}
+
+              <GradientButton
+                title="Edit Profile"
+                onPress={handleUpdate}
+                fontSize={16}
+                fontFamily={fonts.bold}
+                otherStyles={styles.updateButton}
+              />
+              {/* {activeStack === 'RestaurantStack' &&
           <GradientButton
-            title="Update"
-            onPress={handleUpdate}
-            fontSize={16}
-            fontFamily={fonts.bold}
-            otherStyles={styles.updateButton}
-          />
-        </ScrollView>
-      </KeyboardAvoidingView>
+          title="E"
+          onPress={handleUpdate}
+          fontSize={16}
+          fontFamily={fonts.bold}
+          otherStyles={styles.updateButton}
+        />  
+  }   */}
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </>
+      )}
     </WrapperWithVideo>
   );
 };
@@ -154,12 +238,10 @@ const makeHeaderStyles = (top: number) =>
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: colors.c_0162C0,
     marginTop: 230,
   },
   introWrapper: {
     position: 'absolute',
-    // top: -140,
     left: 0,
     right: 0,
     bottom: 0,
@@ -182,7 +264,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   profilePictureContainer: {
-    // position: 'absolute',
     top: 'auto',
     alignSelf: 'center',
     zIndex: 10,
@@ -202,7 +283,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.white, // Purple color
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
@@ -210,8 +291,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    // backgroundColor: colors.c_0162C0,
-    // marginTop: 80,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -229,8 +308,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.c_0162C0,
     paddingTop: 20,
   },
+  inputStyle: {
+    color: colors.white,
+  },
+  inputContainer: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
   updateButton: {
-    height: 50,
-    borderRadius: 100,
+    // height: 50,
+    // borderRadius: 100,
+    // marginTop: 20,
   },
 });

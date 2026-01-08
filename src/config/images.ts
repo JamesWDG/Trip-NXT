@@ -54,6 +54,7 @@ const images = Object.freeze({
     heart: require('../assets/images/heart.png'),
     settings: require('../assets/images/settings.png'),
     faq: require('../assets/images/faq.png'),
+    placeholder: require('../assets/images/placeholder.png'),
 
 
     // Food Home
@@ -82,6 +83,7 @@ const images = Object.freeze({
     black_car: require('../assets/images/black_car.png'),
     driver_arrived: require('../assets/images/driver_arrived.png'),
     you_arrived: require('../assets/images/you_arrived.png'),
+    dummyImage: require('../assets/images/userProfile.png'),
 });
 
 export default images;

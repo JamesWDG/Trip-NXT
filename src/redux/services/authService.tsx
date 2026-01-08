@@ -1,5 +1,7 @@
-import {  endpoint } from '../../constants/api';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseApi } from './api';
+import { endpoint } from '../../constants/api';
+
 
 
 export const authApi = baseApi.injectEndpoints({
@@ -52,6 +54,19 @@ export const authApi = baseApi.injectEndpoints({
         method: 'POST',
       }),
     }),
+    getUser: builder.query({
+      query: () => ({
+        url: endpoint.GET_USER_PROFILE,
+        method: 'GET',
+      }),
+    }),
+    updateUser: builder.mutation({
+      query: ({ id, data }) => ({
+        url: endpoint.UPDATE_USER_PROFILE(id),
+        method: 'PUT',
+        body: data,
+      }),
+    }),
   }),
 });
 
@@ -63,4 +78,6 @@ export const {
   useResendOTPMutation,
   useResetPasswordMutation,
   useLogoutMutation,
+  useLazyGetUserQuery,
+  useUpdateUserMutation,
 } = authApi;

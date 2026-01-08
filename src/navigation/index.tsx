@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import  { FC } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import AuthStack from './authStack/AuthStack';
@@ -17,7 +17,10 @@ const RootNavigation: FC = () => {
   // console.log('token', token);
   return (
     <NavigationContainer ref={navigationRef} onReady={() => {}}>
-      <RootNavigator.Navigator screenOptions={{ headerShown: false }}>
+      <RootNavigator.Navigator
+        id="RootNavigator"
+        screenOptions={{ headerShown: false }}
+      >
         {token ? (
           <RootNavigator.Screen name="app" component={BottomStack} />
         ) : (
