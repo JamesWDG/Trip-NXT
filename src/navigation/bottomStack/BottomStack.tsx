@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import React, { FC } from 'react';
+import  { FC } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import TabBars from '../../components/tabBars/TabBars';
 import AppStack from '../appStack/AppStack';
@@ -7,6 +7,7 @@ import AccomodationStack from '../accomodationStack/AccomodationStack';
 import CarStack from '../carStack/CarStack';
 import FoodStack from '../foodStack/FoodStack';
 import ProfileStack from '../profileStack/ProfileStack';
+import EditProfile from '../../screens/editProfile/EditProfile';
 
 const Tab = createBottomTabNavigator();
 
@@ -25,6 +26,7 @@ const Tab = createBottomTabNavigator();
 const BottomStack: FC = () => {
   return (
     <Tab.Navigator
+      id="BottomTabNavigator"
       tabBar={props => <TabBars {...props} />}
       screenOptions={{
         headerShown: false,
@@ -36,6 +38,7 @@ const BottomStack: FC = () => {
       <Tab.Screen name="Car" component={CarStack} />
       <Tab.Screen name="Food" component={FoodStack} />
       <Tab.Screen name="Profile" component={ProfileStack} />
+      <Tab.Screen name="EditProfile" component={EditProfile} />
       <Tab.Screen name="Main" component={AppStack} />
     </Tab.Navigator>
   );

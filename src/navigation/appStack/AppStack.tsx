@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { StyleSheet, Text, View } from 'react-native';
-import React, { FC } from 'react';
+import  { FC } from 'react';
 import DummyPage from '../../screens/dummyPage/DummyPage';
 import AccomodationHome from '../../screens/Accomodation/home/Home';
 import Recommended from '../../screens/Accomodation/recommended/Recommended';
@@ -21,7 +21,10 @@ const AppStackNavigator = createNativeStackNavigator();
 
 const AppStack: FC = () => {
   return (
-    <AppStackNavigator.Navigator screenOptions={{ headerShown: false }}>
+    <AppStackNavigator.Navigator
+      id="AppStackNavigator"
+      screenOptions={{ headerShown: false }}
+    >
       <AppStackNavigator.Screen
         name="RealtorProfile"
         component={RealtorProfile}
@@ -31,6 +34,7 @@ const AppStack: FC = () => {
         name="AdvancedFilter"
         component={AdvancedFilter}
       />
+    
       <AppStackNavigator.Screen name="TripDetails" component={TripDetails} />
       <AppStackNavigator.Screen
         name="ThankYouScreen"

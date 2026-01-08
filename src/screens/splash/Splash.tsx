@@ -1,5 +1,5 @@
 import { Animated, Image, StyleSheet, Text, View } from 'react-native';
-import React, { FC, useEffect, useRef } from 'react';
+import  { FC, useEffect, useRef } from 'react';
 import colors from '../../config/colors';
 import images from '../../config/images';
 
