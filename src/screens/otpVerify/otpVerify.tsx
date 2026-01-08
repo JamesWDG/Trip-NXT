@@ -242,18 +242,7 @@ const OtpVerify = ({ route }: { route: any }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Verify Button */}
-          {/* <TouchableOpacity
-            style={[
-              styles.verifyButton,
-              !isOtpComplete && styles.verifyButtonDisabled,
-            ]}
-            onPress={handleVerify}
-            disabled={!isOtpComplete}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.verifyButtonText}>Verify</Text>
-          </TouchableOpacity> */}
+    
           <GradientButton
             title={labels.otpButton}
             loader={isLoading}
@@ -267,7 +256,6 @@ const OtpVerify = ({ route }: { route: any }) => {
           />
         </ScrollView>
       </>
-      {/* // </WrapperContainer> */}
     </WrapperWithVideo>
   );
 };
@@ -279,12 +267,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    // paddingHorizontal: 20,
-    flex: 1,
-    marginTop: 30,
-    justifyContent: 'center',
-    // paddingTop: '50%',
-    // paddingBottom: 40,
+
+    marginTop: 280,
     alignItems: 'center',
   },
   title: {
