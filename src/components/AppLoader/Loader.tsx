@@ -11,7 +11,7 @@ interface LoaderProps {
 
 const Loader = ({
   color = colors.white,
-  size = 'large',
+  size = 'small',
   flex = 0,
   justifyContent,
 }: LoaderProps) => {
