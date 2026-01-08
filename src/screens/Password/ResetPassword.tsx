@@ -89,10 +89,11 @@ const ResetPassword = ({ route }: { route: any }) => {
 
   return (
     <WrapperWithVideo otherStyles={styles.introWrapper}>
-      <View style={styles.introWrapperContainer} pointerEvents="none">
+      <View style={styles.introWrapperContainer} pointerEvents="box-none">
         <IntroWrapperWithTitle
           title={labels.passwordHeading}
           resizeMode="stretch"
+          showBack={true} onBackPress={() => navigation.goBack()}
         />
       </View>
       <KeyboardAvoidingView behavior="padding">

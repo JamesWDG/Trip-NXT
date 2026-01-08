@@ -107,8 +107,8 @@ const Signup = ({ navigation }: { navigation: any }) => {
 
   return (
     <WrapperWithVideo introWrapper={true} otherStyles={styles.introWrapper}>
-      <View style={styles.introWrapperContainer} pointerEvents="none">
-        <IntroWrapperWithTitle title={labels.signup} resizeMode="stretch" />
+      <View style={styles.introWrapperContainer} pointerEvents="box-none">
+        <IntroWrapperWithTitle title={labels.signup} resizeMode="stretch" showBack={true} onBackPress={() => navigation.goBack()} />
       </View>
       {/* <View style={styles.tabButtonsContainer}>
         <TabButtons />

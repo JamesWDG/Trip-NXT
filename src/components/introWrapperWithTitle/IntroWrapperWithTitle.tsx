@@ -4,21 +4,43 @@ import {
   Text,
   View,
   ImageResizeMode,
+  ViewStyle,
+  TouchableOpacity,
 } from 'react-native';
 import React from 'react';
-import IntroWrappers from '../wrappers/IntroWrappers';
 import images from '../../config/images';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { width } from '../../config/constants';
+import { useNavigation } from '@react-navigation/native';
+import IntroWrappers from '../wrappers/IntroWrappers';
+import { ChevronLeftIcon } from 'lucide-react-native';
 interface Params {
   title: string;
   resizeMode?: ImageResizeMode;
+  showBack?: boolean;
+  locationStyle?: ViewStyle;
+  onBackPress?: () => void;
 }
-const IntroWrapperWithTitle = ({ title, resizeMode = 'cover' }: Params) => {
+const IntroWrapperWithTitle = ({
+  title,
+  resizeMode = 'cover',
+  showBack = false,
+  locationStyle,
+  onBackPress,
+}: Params) => {
   const { top } = useSafeAreaInsets();
+  const navigation = useNavigation();
   const locationContainerStyle = locationContainer(top);
+ 
+  const handleBackPress = () => {
+    if (onBackPress) {
+      onBackPress();
+    } else {
+      navigation.goBack();
+    }
+  };
+ 
   return (
     <>
       <IntroWrappers
@@ -26,13 +48,23 @@ const IntroWrapperWithTitle = ({ title, resizeMode = 'cover' }: Params) => {
         resizeMode={resizeMode}
         maxHeight={260}
       >
-        <View style={locationContainerStyle.locationContainerStyle}>
+        {showBack && (
+          <TouchableOpacity
+            style={[styles.backButton, { top: top + 10 }]}
+            onPress={handleBackPress}
+            activeOpacity={0.7}
+          >
+            <ChevronLeftIcon size={40} color={colors.white} />
+          </TouchableOpacity>
+        )}
+        <View
+          style={[locationContainerStyle.locationContainerStyle, locationStyle]}
+        >
           <ImageBackground
             source={images.location}
             style={styles.locationImage}
             imageStyle={styles.bgImageStyles}
-          
-            resizeMode='contain'
+            resizeMode="contain"
           >
             <Text style={styles.locationText}>{title}</Text>
           </ImageBackground>
@@ -41,9 +73,9 @@ const IntroWrapperWithTitle = ({ title, resizeMode = 'cover' }: Params) => {
     </>
   );
 };
-
+ 
 export default IntroWrapperWithTitle;
-
+ 
 const locationContainer = (top: number) =>
   StyleSheet.create({
     locationContainerStyle: {
@@ -67,6 +99,16 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 10,
+    pointerEvents: 'box-none',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    zIndex: 11,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   bgImageStyles: {
     opacity: 0.09,
@@ -74,7 +116,6 @@ const styles = StyleSheet.create({
   },
   locationImage: {
     minWidth: 150,
-    maxWidth: width * 0.9,
     height: 200,
     alignItems: 'center',
     zIndex: 8,
@@ -82,7 +123,10 @@ const styles = StyleSheet.create({
   },
   locationText: {
     color: colors.white,
-    fontSize: 36,
+    fontSize: 40,
+    marginTop: 20,
     fontFamily: fonts.bold,
   },
 });
+ 
+ 
