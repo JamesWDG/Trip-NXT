@@ -148,6 +148,7 @@ const Login = ({ navigation }: { navigation: any }) => {
             <Input
               placeholder={labels.typeYourPassword}
               value={state.password}
+              secureTextEntry={true}
               onChangeText={text => onChangeText(text, 'password')}
               title={labels.password}
               errorBorder={!!state.errors.password}
@@ -243,11 +244,13 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     paddingHorizontal: 10,
     marginTop: 12,
+   
   },
   toggleText: {
     fontSize: 12,
     fontFamily: fonts.normal,
     color: colors.white,
+    marginLeft:10
   },
   orContainer: {
     flexDirection: 'row',

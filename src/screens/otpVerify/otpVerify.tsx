@@ -160,6 +160,7 @@ const OtpVerify = ({ route }: { route: any }) => {
       setOtp(['', '', '', '']);
       inputRefs.current[0]?.focus();
     } catch (error) {
+
       ShowToast(
         'error',
         (error as { data: { message: string } }).data.message ||

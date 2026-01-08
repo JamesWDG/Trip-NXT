@@ -37,7 +37,7 @@ const Signup = ({ navigation }: { navigation: any }) => {
   const [state, setState] = useState<stateTypes>({
     name: '',
     email: '',
-    phone: '12025550147',
+    phone: '',
     password: '',
     cPassword: '',
     errors: {
@@ -154,12 +154,14 @@ const Signup = ({ navigation }: { navigation: any }) => {
               value={state.password}
               onChangeText={text => onChangeText(text, 'password')}
               title={labels.password}
+              secureTextEntry={true}
               errorBorder={!!state.errors.password}
               errorText={state.errors.password}
             />
             <Input
               placeholder={labels.confirmPassword}
               value={state.cPassword}
+              secureTextEntry={true}
               onChangeText={text => onChangeText(text, 'cPassword')}
               title={labels.confirmPassword}
               errorBorder={!!state.errors.cPassword}
@@ -223,9 +225,8 @@ const styles = StyleSheet.create({
     // width: width * 1,
   },
   scrollViewContentContainer: {
-    paddingTop: 30,
+    paddingTop: 270,
     paddingBottom: 150,
-    zIndex: 100000,
   },
   inputContainer: {
     gap: 16,
@@ -258,6 +259,6 @@ const styles = StyleSheet.create({
   scrollViewStyles: {},
   keyboardAvoidingView: {
     flex: 1,
-    marginTop: 250,
+    // marginTop: 250,
   },
 });

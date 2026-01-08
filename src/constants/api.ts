@@ -16,7 +16,7 @@ export const endpoint: endpointTypes = {
     SIGNUP: 'user/register',
     LOGOUT: 'user/logout',
     FORGOT_PASSWORD: 'user/forget-password',
-    VERIFY_OTP: 'verify-otp',
+    VERIFY_OTP: 'user/verify-otp',
     RESEND_OTP: 'user/resend-otp',
     RESET_PASSWORD: 'user/reset-password',
 }

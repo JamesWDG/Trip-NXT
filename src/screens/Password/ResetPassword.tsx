@@ -118,7 +118,7 @@ const ResetPassword = ({ route }: { route: any }) => {
               errorBorder={!!state.errors.newPassword}
               errorText={state.errors.newPassword}
               value={state.newPassword}
-              // secureTextEntry={true}
+              secureTextEntry={true}
               onChangeText={text => onChangeText(text, 'newPassword')}
               placeholder={labels.password}
               title={labels.newPassword}
@@ -127,7 +127,7 @@ const ResetPassword = ({ route }: { route: any }) => {
               errorBorder={!!state.errors.cPassword}
               errorText={state.errors.cPassword}
               value={state.cPassword}
-              // secureTextEntry={true}
+              secureTextEntry={true}
               onChangeText={text => onChangeText(text, 'cPassword')}
               placeholder={labels.confirmPassword}
               title={labels.confirmPassword}
