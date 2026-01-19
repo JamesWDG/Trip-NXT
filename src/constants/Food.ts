@@ -26,6 +26,12 @@ export type MenuItem = {
     isActive: number;
     name: string;
     price: number;
+    toppings: {
+        id: number;
+        name: string;
+        price: number;
+        description: string;
+    }[]
 }
 
 export type RestaurantMenu = {

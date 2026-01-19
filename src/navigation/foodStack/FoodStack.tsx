@@ -43,7 +43,7 @@ const FoodStack: FC = () => {
       <FoodStackNavigator.Screen name="FoodMyWallet" component={MyWallet} />
       <FoodStackNavigator.Screen name="FoodCart" component={Cart} />
       <FoodStackNavigator.Screen name="FoodReviews" component={Reviews} />
-      <FoodStackNavigator.Screen name="FoodDetails" component={FoodDetails} />
+      <FoodStackNavigator.Screen name="FoodDetails" component={FoodDetails as any} />
       <FoodStackNavigator.Screen
         name="FoodRestaurantInfo"
         component={RestaurantInfo}

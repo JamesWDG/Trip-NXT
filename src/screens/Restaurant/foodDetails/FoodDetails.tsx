@@ -1,16 +1,19 @@
 import {
+  Alert,
+  Animated,
   Image,
   ImageSourcePropType,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useMemo, useState } from 'react';
-import { NavigationProp } from '@react-navigation/native';
+import React, { useMemo, useRef, useState } from 'react';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MapPin, Star, Image as ImageIcon } from 'lucide-react-native';
+import { CheckCircle, MapPin, Star, Image as ImageIcon } from 'lucide-react-native';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import FoodHeader from '../../../components/foodHeader/FoodHeader';
 import colors from '../../../config/colors';
@@ -22,29 +25,34 @@ import FastImage from 'react-native-fast-image';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
 import { CarouselData } from '../../../constants/Accomodation';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
+import LinearGradient from 'react-native-linear-gradient';
 
 interface ToppingOption {
   id: string;
   name: string;
   price: number;
+  description: string;
 }
 
-const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
+const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, route: RouteProp<{ params: { id: string, category: string, name: string, price: number, image: string, description: string, toppings: ToppingOption[] } }> }) => {
   const { top } = useSafeAreaInsets();
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedTopping, setSelectedTopping] = useState<string>('3');
   const [quantity, setQuantity] = useState(1);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
 
   const wishlistButtonStyles = useMemo(() => {
     return wishlistButton(top);
   }, []);
   const toppingOptions: ToppingOption[] = [
-    { id: '1', name: 'New hand tossed', price: 2.0 },
-    { id: '2', name: 'Weat thin crust', price: 2.0 },
-    { id: '3', name: 'Cheese burst', price: 5.0 },
-    { id: '4', name: 'Fresh Pan Pizza', price: 5.0 },
-    { id: '5', name: 'Classic Hand Tossed', price: 2.0 },
-    { id: '6', name: 'Classic Tossed', price: 45.0 },
+    { id: '1', name: 'New hand tossed', price: 2.0, description: '' },
+    { id: '2', name: 'Weat thin crust', price: 2.0, description: '' },
+    { id: '3', name: 'Cheese burst', price: 5.0, description: '' },
+    { id: '4', name: 'Fresh Pan Pizza', price: 5.0, description: '' },
+    { id: '5', name: 'Classic Hand Tossed', price: 2.0, description: '' },
+    { id: '6', name: 'Classic Tossed', price: 45.0, description: '' },
   ];
 
   const foodImage = images.newly_opened || images.foodHome;
@@ -86,6 +94,42 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
     navigation.navigate('FoodReviews');
   };
 
+  const handleOrderSuccess = () => {
+    setShowSuccessModal(true);
+    // Animate modal appearance
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const closeSuccessModal = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowSuccessModal(false);
+    });
+  };
+
   return (
     <View style={GeneralStyles.flex}>
       {/* Header */}
@@ -100,7 +144,7 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
       </View>
 
       <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={['https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg', 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg']} />
+        <MainCarousel data={[route.params.image]} />
       </View>
       {/* Food Image */}
       {/* <View style={styles.imageContainer}>
@@ -129,13 +173,13 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
           {/* Food Name, Location, and Price */}
           <View style={styles.nameLocationContainer}>
             <View style={styles.nameLocationLeft}>
-              <Text style={styles.foodName}>{foodName}</Text>
-              <View style={styles.locationRow}>
+              <Text style={styles.foodName}>{route?.params?.name}</Text>
+              {/* <View style={styles.locationRow}>
                 <MapPin size={14} color={colors.c_EE4026} />
                 <Text style={styles.location}>{location}</Text>
-              </View>
+              </View> */}
             </View>
-            <Text style={styles.price}>${price.toFixed(1)}</Text>
+            <Text style={styles.price}>${route?.params?.price}</Text>
           </View>
 
           {/* Rating and Photo Count */}
@@ -161,7 +205,7 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
             </View>
           </View> */}
 
-          <View style={styles.ratingsMainContainer}>
+          {/* <View style={styles.ratingsMainContainer}>
             <View style={styles.ratingContainers}>
               <View style={styles.badgeIconContainer}>
                 <Star size={25} color={colors.white} fill={colors.white} />
@@ -180,17 +224,17 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
                 <Text style={styles.badgeLabel}>Rating</Text>
               </View>
             </View>
-          </View>
+          </View> */}
           {/* Food Detail Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Food Detail</Text>
-            <Text style={styles.description}>{description}</Text>
+            <Text style={styles.description}>{route?.params?.description}</Text>
           </View>
 
           {/* Add Topping Section */}
-          <View style={styles.section}>
+         {route?.params?.toppings?.length > 0 && <View style={styles.section}>
             <Text style={styles.sectionTitle}>Add Topping</Text>
-            {toppingOptions.map(topping => (
+            {route?.params?.toppings?.map(topping => (
               <TouchableOpacity
                 key={topping.id}
                 style={styles.toppingOption}
@@ -212,7 +256,7 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
                 </View>
               </TouchableOpacity>
             ))}
-          </View>
+          </View>}
 
           {/* Quantity and Add to Cart */}
           <View style={styles.quantityCartContainer}>
@@ -247,9 +291,16 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
             </View>
 
             <View style={styles.cartButtonContainer}>
-              <GradientButtonForAccomodation
+              {/* <GradientButtonForAccomodation
                 title="Add to Cart"
                 onPress={handleAddToCart}
+                fontSize={16}
+                fontFamily={fonts.semibold}
+                otherStyles={styles.cartButton}
+              /> */}
+              <GradientButtonForAccomodation
+                title="Buy Now"
+                onPress={handleOrderSuccess}
                 fontSize={16}
                 fontFamily={fonts.semibold}
                 otherStyles={styles.cartButton}
@@ -265,6 +316,50 @@ const FoodDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
           />
         </ScrollView>
       </View>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent
+        animationType="none"
+        onRequestClose={closeSuccessModal}
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View
+            style={[
+              styles.modalContainer,
+              {
+                opacity: opacityAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.successIconContainer}>
+                <CheckCircle size={80} color={colors.c_F47E20} fill={colors.c_F47E20} />
+              </View>
+              <Text style={styles.modalTitle}>Order Placed Successfully!</Text>
+              <Text style={styles.modalMessage}>
+                Your order has been confirmed and will be delivered soon.
+              </Text>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={closeSuccessModal}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['#F47E20', '#EE4026']}
+                  style={styles.modalButtonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.modalButtonText}>Continue Shopping</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -501,5 +596,61 @@ const styles = StyleSheet.create({
   cartButton: {
     height: 50,
     width: '100%',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  successIconContainer: {
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontFamily: fonts.bold,
+    color: colors.c_2B2B2B,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  modalButton: {
+    width: '100%',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  modalButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontFamily: fonts.semibold,
+    color: colors.white,
   },
 });

@@ -53,7 +53,8 @@ const RestaurantInformation: FC<{
         image: '',
         category: '',
         isActive: 0,
-        price: 0
+        price: 0,
+        toppings: []
       },
       deliveryRadius: '',
       description: '',
@@ -149,7 +150,7 @@ const RestaurantInformation: FC<{
                 </Text>
                 <View style={styles.locationContainer}>
                   <MapPin size={16} color={colors.c_F47E20} />
-                  <Text style={styles.locationText}>{restaurantMenu?.location ?JSON.parse(restaurantMenu?.location as string)?.address : ''}</Text>
+                  <Text style={styles.locationText}>{restaurantMenu?.location ? JSON.parse(restaurantMenu?.location as string)?.address : ''}</Text>
                 </View>
               </View>
             </View>
@@ -213,7 +214,7 @@ const RestaurantInformation: FC<{
               />
             </View>
             <SectionHeader title="Menu" onSeeAllPress={() => { }} />
-            
+
             {restaurantMenu?.menues?.map((section, sectionIndex) => (
               <View key={sectionIndex} style={styles.menuSection}>
                 <Text style={styles.sectionHeaderText}>{section.title}</Text>
@@ -233,7 +234,7 @@ const RestaurantInformation: FC<{
                         rating={4.7}
                         price={item.price}
                         hasFreeship={true}
-                        onPress={() => navigation.navigate('FoodDetails', { id: item.id })}
+                        onPress={() => navigation.navigate('FoodDetails', { id: item.id, category: item.category, name: item.name, price: item.price, image: item.image, description: item.description, toppings: item.toppings || [] })}
                       />
                     </View>
                   )}
