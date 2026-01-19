@@ -39,7 +39,7 @@ const Cart = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
       id: '1',
-      image: images.newly_opened || images.foodHome,
+      image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
       title: 'Chicken burger Noodle Soup',
       description: 'Lorem Ipsum is simply dummy text',
       price: 24.0,
@@ -49,7 +49,7 @@ const Cart = ({ navigation }: { navigation: NavigationProp<any> }) => {
     },
     {
       id: '2',
-      image: images.newly_opened || images.foodHome,
+      image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
       title: 'Pretzel Chicken Noodle Soup',
       description: 'Lorem Ipsum is simply dummy text',
       price: 24.0,
@@ -59,7 +59,7 @@ const Cart = ({ navigation }: { navigation: NavigationProp<any> }) => {
     },
     {
       id: '3',
-      image: images.newly_opened || images.foodHome,
+      image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
       title: 'Pretzel Chicken Noodle Soup',
       description: 'Lorem Ipsum is simply dummy text',
       price: 24.0,
@@ -123,7 +123,7 @@ const Cart = ({ navigation }: { navigation: NavigationProp<any> }) => {
       </View>
 
       <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={CarouselData} />
+        <MainCarousel data={['https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg','https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg']} />
       </View>
 
       {/* White Content Card */}

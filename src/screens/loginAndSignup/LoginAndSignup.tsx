@@ -11,7 +11,6 @@ import ButtonWithIcon from '../../components/buttonWithIcon/ButtonWithIcon';
 import labels from '../../config/labels';
 
 const LoginAndSignup = ({ navigation }: { navigation: any }) => {
-  const onLognPress = () => {};
   const onLoginPress = () => {
     navigation.navigate('Login');
   };
@@ -52,7 +51,14 @@ const LoginAndSignup = ({ navigation }: { navigation: any }) => {
         <View style={styles.continueWithGoogleContainer}>
           <ButtonWithIcon
             title={labels.continueWithGoogle}
-            onPress={onLognPress}
+            type='google'
+          />
+          <ButtonWithIcon
+            type='apple'
+            height={35}
+            width={35}
+            imageSrc={images.apple}
+            title={labels.continueWithApple}
           />
         </View>
       </ScrollView>
@@ -97,7 +103,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.normal,
   },
   continueWithGoogleContainer: {
-    // flex : 1,
+    gap: 20,
     width: "100%",
     marginVertical: 28,
   },

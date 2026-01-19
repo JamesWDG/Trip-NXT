@@ -79,7 +79,7 @@ const FoodCardWithBorder = ({
       </View>
 
       <View style={styles.contentContainer}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
         <View style={styles.categoryRatingContainer}>
@@ -109,13 +109,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.c_F3F3F3,
     borderRadius: 12,
     overflow: 'hidden',
-    marginBottom: 16,
+    // marginBottom: 16,
     // Shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    margin: 3
   },
   imageWrapper: {
     // padding: 8,

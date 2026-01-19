@@ -66,6 +66,14 @@ const authSlice = createSlice({
       },
     );
     builder.addMatcher(
+      authApi.endpoints.socialLogin.matchFulfilled,
+      (state, action) => {
+        if (action.payload?.data) {
+          state.token = action.payload.data?.accessToken;
+        }
+      },
+    );
+    builder.addMatcher(
       authApi.endpoints.logout.matchFulfilled,
       (state, action) => {
         if (action.payload?.data) {

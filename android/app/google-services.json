@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "103181817790",
+    "project_id": "trip-nxt-user",
+    "storage_bucket": "trip-nxt-user.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:103181817790:android:1ceecd8171ca58c9074bef",
+        "android_client_info": {
+          "package_name": "com.tripnxt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "103181817790-epng62d4gkouq1c17kfhrkhkd08d9ulu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyhf3cczzoigmUgXxyFzAwpQ9KTQSn1n4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "103181817790-epng62d4gkouq1c17kfhrkhkd08d9ulu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

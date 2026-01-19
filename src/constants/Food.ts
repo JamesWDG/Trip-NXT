@@ -1,3 +1,4 @@
+import { ImageURISource } from "react-native";
 import images from "../config/images"
 import labels from "../config/labels"
 
@@ -8,11 +9,39 @@ export interface FoodCard {
 }
 
 export interface FoodListCardType {
-    id: string,
-    image: string,
-    title: string
-    discount: number,
-    time: string
+    banner: string,
+    createdAt: string,
+    deliveryRadius: string,
+    description: string,
+    id: number | string,
+    logo: string,
+    name: string,
+}
+
+export type MenuItem = {
+    category: string;
+    description: string;
+    id: number;
+    image: string;
+    isActive: number;
+    name: string;
+    price: number;
+}
+
+export type RestaurantMenu = {
+    banner: string | ImageURISource;
+    cheapestItem: MenuItem;
+    deliveryRadius: string;
+    description: string;
+    id: number;
+    isActive: boolean
+    location: string;
+    logo: string | ImageURISource;
+    menues: { title: string, data: MenuItem[] }[];
+    name: string;
+    ownerId: number;
+    phoneNumber: string;
+    timings: string[];
 }
 
 export const FoodIconListArray: FoodCard[] = [
@@ -39,39 +68,38 @@ export const FoodIconListArray: FoodCard[] = [
 
 ]
 
-
-export const FoodCardList: FoodListCardType[] = [
+export const FoodCardList: ({ id: string, image: string, title: string, time: string, discount: number })[] = [
     {
         id: "1",
-        image: images.newly_opened,
+        image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
         title: "Mc Donald’s",
         time: "10:00 AM - 11:00 AM",
         discount: 10
     },
     {
         id: "1",
-        image: images.newly_opened,
+        image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
         title: "Mc Donald’s",
         time: "10:00 AM - 11:00 AM",
         discount: 10
     },
     {
         id: "1",
-        image: images.newly_opened,
+        image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
         title: "Mc Donald’s",
         time: "10:00 AM - 11:00 AM",
         discount: 10
     },
     {
         id: "1",
-        image: images.newly_opened,
+        image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
         title: "Mc Donald’s",
         time: "10:00 AM - 11:00 AM",
         discount: 10
     },
     {
         id: "1",
-        image: images.newly_opened,
+        image: 'https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg',
         title: "Mc Donald’s",
         time: "10:00 AM - 11:00 AM",
         discount: 10

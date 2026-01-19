@@ -17,18 +17,19 @@ import { height } from '../../config/constants';
 
 const { width } = Dimensions.get('window');
 
-const MainCarousel = ({ data }: { data: CarouselData[] }) => {
-  const flatListRef = useRef<FlatList<CarouselData> | null>(null);
+const MainCarousel = ({ data }: { data: string[] }) => {
+  const flatListRef = useRef<FlatList<string> | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
-  const _renderItem = (item: CarouselData) => {
+  const _renderItem = (item: string) => {
     return (
       <ImageBackground
-        source={images.hotel_details as ImageSourcePropType}
+        source={{ uri: item } as any}
         style={styles.imageBackground}
         imageStyle={styles.imageStyle}
+        resizeMode="cover"
       >
         {/* <View style={styles.cardContainer}>
           <View style={styles.textContainer}>
@@ -66,7 +67,7 @@ const MainCarousel = ({ data }: { data: CarouselData[] }) => {
         ref={flatListRef}
         data={data}
         renderItem={({ item }) => _renderItem(item)}
-        keyExtractor={item => String(item.id)}
+        keyExtractor={item => item}
         horizontal
         pagingEnabled
         contentContainerStyle={styles.contentContainer}

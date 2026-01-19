@@ -11,7 +11,7 @@ const WrapperContainer = ({
   showRight,
 }: {
   title: string;
-  showRight: boolean;
+  showRight?: boolean;
   children: React.ReactNode;
   navigation?: NavigationProp<any>;
 }) => {

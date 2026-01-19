@@ -6,6 +6,7 @@ const images = Object.freeze({
     thirdStepImage: require('../assets/images/Accommodation-01.png'),
     video: require('../assets/videos/bgvideo.mp4'),
     google: require('../assets/images/google.png'),
+    apple: require('../assets/images/apple.png'),
     location: require('../assets/images/location.png'),
     bookARide: require('../assets/images/bookARide.png'),
     foodOrder: require('../assets/images/foodOrder.png'),

@@ -1,4 +1,3 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseApi } from './api';
 import { endpoint } from '../../constants/api';
 
@@ -67,6 +66,13 @@ export const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    socialLogin: builder.mutation({
+      query: data => ({
+        url: endpoint.SOCIAL_LOGIN,
+        method: 'POST',
+        body: data,
+      })
+    })
   }),
 });
 
@@ -80,4 +86,5 @@ export const {
   useLogoutMutation,
   useLazyGetUserQuery,
   useUpdateUserMutation,
+  useSocialLoginMutation,
 } = authApi;

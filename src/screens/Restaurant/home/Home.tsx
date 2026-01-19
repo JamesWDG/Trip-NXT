@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationProp } from '@react-navigation/native';
 import HomeHeader from '../../../components/homeHeader/HomeHeader';
 import images from '../../../config/images';
@@ -18,19 +18,35 @@ import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import ListWithIcon from '../../../components/listWithIcon/ListWithIcon';
 import {
-  FoodCardList,
   FoodIconListArray,
   FoodListCardType,
 } from '../../../constants/Food';
-import AccomodationCard from '../../../components/accomodationCard/AccomodationCard';
 import FoodCard from '../../../components/foodCard/FoodCard';
 import { CarouselData } from '../../../constants/Accomodation';
 import HomeCarousel from '../../../components/homeCarousel/HomeCarousel';
 import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import FoodCardWithBorder from '../../../components/foodCardWithBorder/FoodCardWithBorder';
 import FoodDrawerModal from '../../../components/drawerModal/FoodDrawerModal';
+import { useLazyRestaurantGetQuery } from '../../../redux/services/restaurant.service';
 const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [newRestaurant, setNewRestaurant] = useState([]);
+  const [restaurantGet, { data, isLoading }] = useLazyRestaurantGetQuery();
+
+  const fetchData = async () => {
+    try {
+      const res = await restaurantGet(1).unwrap();
+      console.log("restaurant get response ===>", res);
+      setNewRestaurant(res.data.restaurants);
+    } catch (error) {
+      console.log("restaurant get error ===>", error);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   return (
     <View style={[GeneralStyles.flex, { backgroundColor: 'white' }]}>
       <ImageBackground
@@ -78,7 +94,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
             />
           </View>
           <FoodCard
-            list={FoodCardList as FoodListCardType[]}
+            list={newRestaurant}
             navigation={navigation}
           />
         </View>

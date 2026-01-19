@@ -1,18 +1,14 @@
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import React, { useMemo, useState } from 'react';
+import { FlatList, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import FoodHeader from '../../../components/foodHeader/FoodHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/native';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
-import { CarouselData } from '../../../constants/Accomodation';
 import colors from '../../../config/colors';
 import FastImage from 'react-native-fast-image';
 import images from '../../../config/images';
 import {
-  LocateIcon,
-  LocateOffIcon,
-  LocationEditIcon,
   MapPin,
   Star,
   Truck,
@@ -22,145 +18,233 @@ import fonts from '../../../config/fonts';
 import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import FoodCardWithFavorite from '../../../components/foodCardWithFavorite/FoodCardWithFavorite';
 import FoodCardWithBorder from '../../../components/foodCardWithBorder/FoodCardWithBorder';
+import { useLazyRestaurantGetMenuQuery } from '../../../redux/services/restaurant.service';
+import { height, ShowToast, width } from '../../../config/constants';
+import { RestaurantMenu } from '../../../constants/Food';
+import RestaurantInformationSkeleton from '../../../components/restaurantInformationSkeleton/RestaurantInformationSkeleton';
 
-const RestaurantInformation = ({
+const RestaurantInformation: FC<{
+  navigation: NavigationProp<ParamListBase, string>;
+  route: RouteProp<{
+    params: {
+      id: string;
+      name: string;
+      logo: string;
+      banner: string;
+    }
+  }>
+}> = ({
   navigation,
-}: {
-  navigation: NavigationProp<any>;
+  route,
 }) => {
-  const { top } = useSafeAreaInsets();
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [selectedCardIndex, setSelectedCardIndex] = useState(1);
-  const wishlistButtonStyles = useMemo(() => {
-    return wishlistButton(top);
-  }, []);
-  const contentStyles = useMemo(() => makeContentStyles(top), [top]);
+    const { top } = useSafeAreaInsets();
+    const [isFavorite, setIsFavorite] = useState(false);
+    const wishlistButtonStyles = useMemo(() => {
+      return wishlistButton(top);
+    }, []);
+    const contentStyles = useMemo(() => makeContentStyles(top), [top]);
+    const [getRestaurantMenu] = useLazyRestaurantGetMenuQuery();
+    const [restaurantMenu, setRestaurantMenu] = useState<RestaurantMenu | null>({
+      banner: route.params?.banner,
+      cheapestItem: {
+        id: 0,
+        name: '',
+        description: '',
+        image: '',
+        category: '',
+        isActive: 0,
+        price: 0
+      },
+      deliveryRadius: '',
+      description: '',
+      id: 0,
+      isActive: false,
+      location: '',
+      logo: route.params?.logo,
+      menues: [],
+      name: route.params?.name,
+      ownerId: 0,
+      phoneNumber: '',
+      timings: []
+    });
+    const [isLoading, setIsLoading] = useState(false);
+    const fetchRestaurantMenu = async () => {
+      try {
+        setIsLoading(true);
+        const res = await getRestaurantMenu(parseInt(route.params.id)).unwrap();
+        console.log('restaurant menu response ===>', res);
+        setRestaurantMenu(res.data);
+      } catch (error) {
+        console.log('restaurant menu error ===>', error, route.params.id);
+        ShowToast('error', 'Unable to fetch restaurant menu')
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  return (
-    <View style={GeneralStyles.flex}>
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <FoodHeader
-          onBackPress={() => navigation?.goBack()}
-          onNotificationPress={() => {}}
-          onCartPress={() => {}}
-          onFavoritePress={() => setIsFavorite(!isFavorite)}
-          isFavorite={isFavorite}
-        />
-      </View>
+    useEffect(() => {
+      const subscribe = navigation.addListener('focus', () => {
+        fetchRestaurantMenu();
+      })
+      return () => {
+        subscribe();
+      }
+    }, [route.params])
 
-      <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={CarouselData} />
-      </View>
-
-      <View style={contentStyles.contentCard}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollViewContent}
-        >
-          <View style={styles.restaurantInfoContainer}>
-            <FastImage
-              source={images.user_avatar}
-              style={styles.restaurantImage}
+    if (isLoading) {
+      return (
+        <View style={GeneralStyles.flex}>
+          {/* Header */}
+          <View style={styles.headerContainer}>
+            <FoodHeader
+              onBackPress={() => navigation?.goBack()}
+              onNotificationPress={() => { }}
+              onCartPress={() => { }}
+              onFavoritePress={() => setIsFavorite(!isFavorite)}
+              isFavorite={isFavorite}
             />
+          </View>
+          <RestaurantInformationSkeleton />
+        </View>
+      );
+    }
+
+    return (
+      <View style={GeneralStyles.flex}>
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <FoodHeader
+            onBackPress={() => navigation?.goBack()}
+            onNotificationPress={() => { }}
+            onCartPress={() => { }}
+            onFavoritePress={() => setIsFavorite(!isFavorite)}
+            isFavorite={isFavorite}
+          />
+        </View>
+
+        <View style={wishlistButtonStyles.carouselContainer}>
+          {/* <MainCarousel data={[route.params?.banner, route.params?.logo]} /> */}
+          <ImageBackground
+            source={{ uri: restaurantMenu?.banner as string } as any}
+            style={styles.imageBackground}
+            imageStyle={styles.imageStyle}
+            resizeMode="cover"
+          ></ImageBackground>
+        </View>
+
+        <View style={contentStyles.contentCard}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollViewContent}
+          >
+            <View style={styles.restaurantInfoContainer}>
+              <FastImage
+                source={{ uri: restaurantMenu?.logo as string }}
+                style={styles.restaurantImage}
+              />
+
+              <View>
+                <Text style={styles.locationTitleText}>
+                  {restaurantMenu?.name}
+                </Text>
+                <View style={styles.locationContainer}>
+                  <MapPin size={16} color={colors.c_F47E20} />
+                  <Text style={styles.locationText}>{restaurantMenu?.location ?JSON.parse(restaurantMenu?.location as string)?.address : ''}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Info Cards */}
+            <View style={styles.infoCardsContainer}>
+              {/* Rating Card */}
+              <View style={styles.infoCard}>
+                <View style={[styles.iconCircle, styles.orangeCircle]}>
+                  <Star size={20} color={colors.white} fill={colors.white} />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoValue}>4.7</Text>
+                  <Text style={styles.infoLabel}>Rating</Text>
+                </View>
+              </View>
+
+              {/* Delivery Card */}
+              <View style={styles.infoCard}>
+                <View style={[styles.iconCircle, styles.orangeCircle]}>
+                  <Truck size={20} color={colors.white} />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <Text style={styles.infoValue}>30 mins</Text>
+                  <Text style={styles.infoLabel}>Delivery</Text>
+                </View>
+              </View>
+
+              {/* Price Card */}
+              <View style={styles.infoCard}>
+                <View style={[styles.iconCircle, styles.blueCircle]}>
+                  <DollarSign size={20} color={colors.white} />
+                </View>
+                <View style={styles.infoTextContainer}>
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.infoValue}>${restaurantMenu?.cheapestItem?.price || 0}</Text>
+                  </View>
+                  <Text style={styles.infoLabel}>From just</Text>
+                </View>
+              </View>
+            </View>
+
+            <SectionHeader title="Featured Foods" onSeeAllPress={() => { }} />
 
             <View>
-              <Text style={styles.locationTitleText}>
-                Quality Meats Restaurant
-              </Text>
-              <View style={styles.locationContainer}>
-                <MapPin size={16} color={colors.c_F47E20} />
-                <Text style={styles.locationText}>New York City, NY 10019</Text>
-              </View>
+              <FlatList
+                data={[1, 2, 3, 4]}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.featuredContainer}
+                renderItem={({ item, index }) => (
+                  <FoodCardWithFavorite
+                    image={images.foodHome}
+                    title="Food Name"
+                    rating={4.7}
+                    reviewCount={150}
+                    price={10}
+                    onPress={() => navigation.navigate('FoodDetails')}
+                  />
+                )}
+              />
             </View>
-          </View>
-
-          {/* Info Cards */}
-          <View style={styles.infoCardsContainer}>
-            {/* Rating Card */}
-            <View style={styles.infoCard}>
-              <View style={[styles.iconCircle, styles.orangeCircle]}>
-                <Star size={20} color={colors.white} fill={colors.white} />
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoValue}>4.7</Text>
-                <Text style={styles.infoLabel}>Rating</Text>
-              </View>
-            </View>
-
-            {/* Delivery Card */}
-            <View style={styles.infoCard}>
-              <View style={[styles.iconCircle, styles.orangeCircle]}>
-                <Truck size={20} color={colors.white} />
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoValue}>30 mins</Text>
-                <Text style={styles.infoLabel}>Delivery</Text>
-              </View>
-            </View>
-
-            {/* Price Card */}
-            <View style={styles.infoCard}>
-              <View style={[styles.iconCircle, styles.blueCircle]}>
-                <DollarSign size={20} color={colors.white} />
-              </View>
-              <View style={styles.infoTextContainer}>
-                <View style={styles.priceContainer}>
-                  <Text style={styles.infoValue}>$10</Text>
-                </View>
-                <Text style={styles.infoLabel}>From just</Text>
-              </View>
-            </View>
-          </View>
-
-          <SectionHeader title="Featured Foods" onSeeAllPress={() => {}} />
-
-          <View>
-            <FlatList
-              data={[1, 2, 3, 4]}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.featuredContainer}
-              renderItem={({ item, index }) => (
-                <FoodCardWithFavorite
-                  image={images.foodHome}
-                  title="Food Name"
-                  rating={4.7}
-                  reviewCount={150}
-                  price={10}
-                  onPress={() => navigation.navigate('FoodDetails')}
-                />
-              )}
-            />
-          </View>
-          <SectionHeader title="Menu" onSeeAllPress={() => {}} />
-
-          <FlatList
-            data={[1, 2, 3, 4, 5, 6]}
-            numColumns={2}
-            scrollEnabled={false}
-            contentContainerStyle={styles.menuGridContainer}
-            columnWrapperStyle={styles.menuRow}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.menuCardWrapper}>
-                <FoodCardWithBorder
-                  image={images.foodHome}
-                  title="Pretzel Chicken Noodle Soup - Regular"
-                  category="Noodles"
-                  rating={4.7}
-                  price={35}
-                  hasFreeship={true}
-                  onPress={() => navigation.navigate('FoodDetails')}
+            <SectionHeader title="Menu" onSeeAllPress={() => { }} />
+            
+            {restaurantMenu?.menues?.map((section, sectionIndex) => (
+              <View key={sectionIndex} style={styles.menuSection}>
+                <Text style={styles.sectionHeaderText}>{section.title}</Text>
+                <FlatList
+                  data={section.data}
+                  numColumns={2}
+                  scrollEnabled={false}
+                  contentContainerStyle={styles.menuGridContainer}
+                  columnWrapperStyle={styles.menuRow}
+                  keyExtractor={(item, index) => `${sectionIndex}-${item.id || index}`}
+                  renderItem={({ item }) => (
+                    <View style={styles.menuCardWrapper}>
+                      <FoodCardWithBorder
+                        image={item.image || images.foodHome}
+                        title={item.name}
+                        category={item.category}
+                        rating={4.7}
+                        price={item.price}
+                        hasFreeship={true}
+                        onPress={() => navigation.navigate('FoodDetails', { id: item.id })}
+                      />
+                    </View>
+                  )}
                 />
               </View>
-            )}
-          />
-        </ScrollView>
+            ))}
+          </ScrollView>
+        </View>
       </View>
-    </View>
-  );
-};
+    );
+  };
 
 export default RestaurantInformation;
 
@@ -208,6 +292,7 @@ const styles = StyleSheet.create({
   restaurantImage: {
     width: 65,
     height: 65,
+    borderRadius: 65 / 2,
   },
   locationText: {
     fontSize: 16,
@@ -290,17 +375,41 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   menuGridContainer: {
-    paddingBottom: 20,
+    // paddingBottom: 20,
   },
   menuRow: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
+    // marginBottom: 12,
   },
   menuCardWrapper: {
     flex: 1,
-    marginBottom: 12,
+    maxWidth: '48%',
+  },
+  menuSection: {
+    marginBottom: 24,
+  },
+  sectionHeaderText: {
+    fontSize: 20,
+    fontFamily: fonts.bold,
+    color: colors.c_2B2B2B,
+    marginBottom: 16,
+    marginTop: 8,
   },
   scrollViewContent: {
     paddingBottom: 60,
+  },
+  imageStyle: {
+    width: width * 1,
+    height: height * 0.4,
+    borderRadius: 10,
+  },
+  imageBackground: {
+    height: height * 0.4,
+    width: width,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });

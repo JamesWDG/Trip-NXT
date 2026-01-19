@@ -10,6 +10,7 @@ const labels = Object.freeze({
     currentPassword: 'Current Password',
     forgotPassword: 'Forgot Password',
     continueWithGoogle: "Continue with Google",
+    continueWithApple: "Continue with Apple",
     reset: 'Reset',
     change: 'Change',
     typeYourEmail: "Type your email",

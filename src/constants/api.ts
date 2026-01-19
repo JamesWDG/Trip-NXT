@@ -8,11 +8,15 @@ type endpointTypes = {
     RESEND_OTP: string;
     RESET_PASSWORD: string;
     GET_USER_PROFILE: string;
+    SOCIAL_LOGIN: string;
     UPDATE_USER_PROFILE: (id: number) => string;
+    RESTAURANT_GET: (page: number) => string;
+    RESTAURANT_GET_MENU: (id: number) => string;
 }
 
-// export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
-export const BASE_URL: string = 'http://192.168.0.108:5003/api/v1' //live
+export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
+// export const BASE_URL: string = 'http://192.168.0.108:5003/api/v1' //live
+
 export const endpoint: endpointTypes = {
     LOGIN: 'user/login',
     SIGNUP: 'user/register',
@@ -22,6 +26,8 @@ export const endpoint: endpointTypes = {
     RESEND_OTP: 'user/resend-otp',
     RESET_PASSWORD: 'user/reset-password',
     GET_USER_PROFILE: '/user/get-auth-user',
+    SOCIAL_LOGIN: 'user/social-login',
     UPDATE_USER_PROFILE: (id:number) => `/user/update-user/${id}`,
-
+    RESTAURANT_GET: (page:number) => `restaurant/get?page=${page}`,
+    RESTAURANT_GET_MENU: (id:number) => `restaurant/get-restaurant-with-menu/${id}`
 }

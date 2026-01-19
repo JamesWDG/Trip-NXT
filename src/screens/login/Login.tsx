@@ -1,12 +1,13 @@
 import {
   KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import WrapperWithVideo from '../../components/wrappers/WrapperWithVideo';
 import labels from '../../config/labels';
 import colors from '../../config/colors';
@@ -27,6 +28,7 @@ import {
 } from '../../redux/slices/authSlice';
 import { RootState } from '../../redux/store';
 import GeneralStyles from '../../utils/GeneralStyles';
+import images from '../../config/images';
 
 interface stateTypes {
   email: string;
@@ -106,7 +108,7 @@ const Login = ({ navigation }: { navigation: any }) => {
       ShowToast(
         'error',
         (error as { data: { message: string } }).data.message ||
-          'Something went wrong',
+        'Something went wrong',
       );
     }
   };
@@ -173,7 +175,7 @@ const Login = ({ navigation }: { navigation: any }) => {
             <GradientButton
               title={labels.login}
               loader={isLoading}
-              onPress={onLoginPress}
+              onPress={(onLoginPress)}
               fontFamily={fonts.bold}
               fontSize={18}
             />
@@ -189,9 +191,17 @@ const Login = ({ navigation }: { navigation: any }) => {
           {/* Google Signup Button */}
           <View style={styles.continueWithGoogleContainer}>
             <ButtonWithIcon
+              type='google'
               title={labels.continueWithGoogle}
               onPress={onLoginPress}
             />
+            {Platform.OS === 'ios' && <ButtonWithIcon
+              height={35}
+              width={35}
+              type='apple'
+              imageSrc={images.apple}
+              title={labels.continueWithApple}
+            />}
           </View>
 
           <View style={styles.dontHaveAnAccountContainer}>
@@ -217,7 +227,7 @@ const styles = StyleSheet.create({
     gap: 16,
     marginTop: 300,
   },
-  continueWithGoogleContainer: { flex : 1, marginTop: 28 },
+  continueWithGoogleContainer: { flex: 1, marginTop: 28, gap: 20 },
   loginButtonContainer: { marginTop: 40 },
   introWrapper: {
     position: 'absolute',
@@ -244,13 +254,13 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     paddingHorizontal: 10,
     marginTop: 12,
-   
+
   },
   toggleText: {
     fontSize: 12,
     fontFamily: fonts.normal,
     color: colors.white,
-    marginLeft:10
+    marginLeft: 10
   },
   orContainer: {
     flexDirection: 'row',
@@ -271,7 +281,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.normal,
   },
   dontHaveAnAccountContainer: {
-    marginTop: 76,
+    marginTop: 30,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -288,6 +298,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   scrollViewContentContainer: {
-  paddingBottom: 40,
+    paddingBottom: 40,
   },
 });

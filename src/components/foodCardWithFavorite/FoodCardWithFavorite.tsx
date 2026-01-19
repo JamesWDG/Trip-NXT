@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     width: width * 0.74,
+    marginVertical: 2,
   },
   imageContainer: {
     position: 'relative',

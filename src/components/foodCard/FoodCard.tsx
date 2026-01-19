@@ -26,20 +26,31 @@ const FoodCard = ({ list = [], navigation }: Params) => {
   }) => {
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate('FoodRestaurantInformation')}
+        style={styles.container}
+        onPress={() => navigation.navigate('FoodRestaurantInformation', {
+          id: item?.id,
+          name: item?.name,
+          logo: item?.logo,
+          description: item?.description,
+          banner: item?.banner,
+          createdAt: item?.createdAt,
+          deliveryRadius: item?.deliveryRadius,
+        })}
         activeOpacity={0.8}
       >
         <FastImage
-          source={item?.image as ImageSourcePropType}
+          source={{ uri: item?.logo } as any}
           style={styles.image}
           resizeMode="cover"
         />
         <Text numberOfLines={1} style={styles.title}>
-          {item?.title}
+          {item?.name}
         </Text>
-        <Text numberOfLines={1} style={styles.time}>
-          {item?.time}
-        </Text>
+        <View>
+          <Text numberOfLines={1} style={styles.time}>
+            {item?.description}
+          </Text>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -58,6 +69,14 @@ const FoodCard = ({ list = [], navigation }: Params) => {
 export default FoodCard;
 
 const styles = StyleSheet.create({
+  container: {
+    width: 100,
+    // padding: 10,
+    borderRadius: 10,
+    backgroundColor: colors.white,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+  },
   contentContainerStyle: {
     gap: 15,
     paddingLeft: 20,
@@ -70,14 +89,14 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 10,
-    textAlign: 'center',
-    fontSize: 13,
+    // textAlign: 'center',
+    fontSize: 10,
     fontFamily: fonts.medium,
     color: colors.black,
     letterSpacing: 1.1,
   },
   time: {
-    fontSize: 13,
+    fontSize: 10,
     fontFamily: fonts.normal,
   },
 });
