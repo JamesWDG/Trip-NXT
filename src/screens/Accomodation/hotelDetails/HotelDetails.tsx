@@ -9,26 +9,21 @@ import {
 import React, { useMemo, useState } from 'react';
 import PrimaryHeader from '../../../components/primaryHeader/PrimaryHeader';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
-import { CarouselData } from '../../../constants/Accomodation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import colors from '../../../config/colors';
 import {
   Heart,
-  LocateIcon,
-  LocateOffIcon,
-  LocationEditIcon,
-  MapPin,
 } from 'lucide-react-native';
-import StarRating from 'react-native-star-rating-widget';
 import DetailsCard from '../../../components/detailsCard/DetailsCard';
 import images from '../../../config/images';
 import fonts from '../../../config/fonts';
 import IntroCard from '../../../components/introCard/IntroCard';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
 import GeneralStyles from '../../../utils/GeneralStyles';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { AccomodationCard } from '../../../constants/Accomodation';
 
-const HotelDetails = ({ navigation }: { navigation?: any }) => {
+const HotelDetails = ({ navigation, route }: { navigation?: any, route: RouteProp<{ params: { hotel: AccomodationCard } }> }) => {
   const { top } = useSafeAreaInsets();
   const [wishlist, setWishlist] = useState(false);
   const nav = useNavigation<any>();
@@ -42,10 +37,11 @@ const HotelDetails = ({ navigation }: { navigation?: any }) => {
         <PrimaryHeader
           title="Hotel Details"
           onBackPress={() => navigation.goBack()}
+          onProfilePress={() => navigation.navigate('Profile')}
         />
       </View>
       <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={CarouselData} />
+        <MainCarousel data={route.params?.hotel?.images.length > 0 ? route.params?.hotel?.images : [images.placeholder]} />
       </View>
 
       <View style={styles.lowerContainer}>
@@ -55,34 +51,17 @@ const HotelDetails = ({ navigation }: { navigation?: any }) => {
           showsVerticalScrollIndicator={false}
         >
           <DetailsCard
-            title="Lux Hotel Casino"
+            title={route.params?.hotel?.name}
             reviews={11}
-            rating={4}
-            price={23456}
-            location="Las Vegas, NV, USA"
-            description="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries."
-            amenities={[
-              {
-                name: 'WiFi',
-                icon: images.wifi,
-              },
-              {
-                name: 'Shower',
-                icon: images.shower,
-              },
-              {
-                name: 'Breakfast',
-                icon: images.coffee,
-              },
-              {
-                name: 'TV',
-                icon: images.TV,
-              },
-              {
-                name: 'AC',
-                icon: images.AC,
-              },
-            ]}
+            rating={route.params?.hotel?.rating || 10}
+            rentPerDay={route.params?.hotel?.rentPerDay}
+            rentPerHour={route.params?.hotel?.rentPerHour}
+            location={(route.params?.hotel?.location?.city || '') + ', ' + (route.params?.hotel?.location?.state || '') + ', ' + (route.params?.hotel?.location?.country || '')}
+            description={route.params?.hotel?.description}
+            numberOfBeds={route.params?.hotel?.numberOfBeds}
+            numberOfBathrooms={route.params?.hotel?.numberOfBathrooms}
+            numberOfGuests={route.params?.hotel?.numberOfGuests}
+            features={route.params?.hotel?.features || []}
           />
 
           <View
@@ -96,15 +75,13 @@ const HotelDetails = ({ navigation }: { navigation?: any }) => {
             style={[styles.paddingHorizontalStyle, styles.introCardContainer]}
           >
             <IntroCard
-              name={'John Doe'}
-              rating={4.5}
-              reviews={100}
+              name={route.params?.hotel?.owner?.name}
+              rating={route.params?.hotel?.rating || 10}
+              reviews={11}
               yearsHosting={10}
-              image={images.avatar}
-              description={
-                "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries."
-              }
-              designation={'CEO, Company Name'}
+              image={route.params?.hotel?.owner?.profilePicture}
+              description={`CEO, ${route.params?.hotel?.name}`}
+              designation={`CEO, ${route.params?.hotel?.name}`}
             />
           </View>
 

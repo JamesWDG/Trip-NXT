@@ -7,10 +7,65 @@ export interface IconList {
     title: string
 }
 
-export interface AccomodationCard {
-    id: string,
+export interface HotelFeature {
+    id: number,
+    name: string,
     image: string,
-    title: string
+    isActive: boolean,
+    type: string,
+    createdAt: string,
+    updatedAt: string,
+    HotelFeature: {
+        id: number,
+        featureId: number,
+        hotelId: number,
+        createdAt: string,
+        updatedAt: string
+    }
+}
+
+export interface owner {
+    email: string;
+    name: string;
+    phoneNumber: string;
+    profilePicture: string;
+    createdAt: string;
+}
+
+export interface AccomodationCard {
+    checkInTime: string;
+    checkOutTime: string;
+    createdAt: string;
+    description: string
+    features: HotelFeature[]
+    hotelType: 'standard' | 'luxury' | 'budget';
+    id: number;
+    images: string[];
+    isActive: boolean;
+    location: {
+        id: number,
+        city: string,
+        state: string,
+        country: string,
+        latitude: number,
+        longitude: number,
+        street: string,
+        createdAt: string,
+        updatedAt: string
+    };
+    locationId: number;
+    name: string;
+    numberOfBathrooms: number;
+    numberOfBeds: number;
+    numberOfGuests: number;
+    numberOfRooms: number;
+    ownerId: number;
+    owner: owner;
+    phoneNumber: string;
+    rentPerDay: number;
+    rentPerHour: number
+    updatedAt: string;
+    website: string;
 }
 
 export const IconListArray: IconList[] = [
@@ -42,39 +97,6 @@ export const IconListArray: IconList[] = [
 
 ]
 
-
-export const AccomodationListCard: AccomodationCard[] = [
-    {
-        id: "1",
-        image: images.next_gateway,
-        title: labels.parisFrance
-    },
-    {
-        id: "2",
-        image: images.next_gateway,
-        title: labels.oxfordEngland
-    },
-    {
-        id: "3",
-        image: images.next_gateway,
-        title: labels.newYorkCity
-    },
-    {
-        id: "4",
-        image: images.next_gateway,
-        title: labels.newYorkCity
-    },
-    {
-        id: "5",
-        image: images.next_gateway,
-        title: labels.newYorkCity
-    },
-    {
-        id: "6",
-        image: images.next_gateway,
-        title: labels.newYorkCity
-    },
-]
 
 
 

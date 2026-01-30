@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import images from '../../../config/images';
 import { height, width } from '../../../config/constants';
 import colors from '../../../config/colors';
@@ -18,26 +18,40 @@ import SearchWithFilters from '../../../components/searchWithFilters/SearchWithF
 import labels from '../../../config/labels';
 import ListWithIcon from '../../../components/listWithIcon/ListWithIcon';
 import {
-  AccomodationListCard,
   CarouselData,
   IconListArray,
 } from '../../../constants/Accomodation';
 import AccomodationCard from '../../../components/accomodationCard/AccomodationCard';
-import CalenderWithDescription from '../../../components/calenderWithDescription/CalenderWithDescription';
-import RatingsBadge from '../../../components/ratingsBadge/RatingsBadge';
-import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
-import AccomodationTabButtons from '../../../components/accomodationTabButtons/AccomodationTabButtons';
 import HomeCarousel from '../../../components/homeCarousel/HomeCarousel';
 import { RecommendedCard } from '../../dummyPage/DummyPage';
 import DrawerModal from '../../../components/drawerModal/DrawerModal';
 import { useNavigation } from '@react-navigation/native';
 import GeneralStyles from '../../../utils/GeneralStyles';
+import { useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
 
 const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const navigation = useNavigation<any>();
   const { bottom } = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
   const style = useMemo(() => contentContainerStyle(bottom), [bottom]);
+  const [getHotels] = useLazyGetHotelsQuery();
+  const [hotels, setHotels] = useState([]);
+  const fetchHotels = async () => {
+    try {
+      const res = await getHotels({}).unwrap();
+      console.log('hotels response ===>', res);
+      setHotels(res.data.data);
+    } catch (error) {
+      console.log('hotels error ===>', error);
+    }
+  }
+
+  useEffect(() => {
+    const subscribe = navigation.addListener('focus',()=>{
+      fetchHotels();
+    })
+    return subscribe;
+  },[])
 
   return (
     <View style={GeneralStyles.flex}>
@@ -84,7 +98,7 @@ const Home = () => {
             </Text>
           </View>
           <AccomodationCard
-            list={AccomodationListCard}
+            list={hotels}
             navigation={navigation}
           />
         </View>

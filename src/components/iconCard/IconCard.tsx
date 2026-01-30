@@ -17,7 +17,7 @@ const IconCard = ({ name, icon }: Params) => {
     <View style={styles.container}>
       <View style={styles.iconContainer}>
         <Image
-          source={icon as ImageSourcePropType}
+          source={typeof icon === 'string' ? {uri: icon} : icon}
           style={styles.icon}
           resizeMode="contain"
         />

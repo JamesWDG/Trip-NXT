@@ -30,7 +30,7 @@ const GradientButtonForAccomodation = ({
   const textStyles = textStyle(color, fontSize, fontFamily);
   return (
     <TouchableOpacity
-      style={[styles.button, styles.gradient, otherStyles, otherStyles]}
+      style={[{backgroundColor: disabled ? colors.lightGray : colors.c_0162C0,},styles.button, styles.gradient, otherStyles, otherStyles]}
       disabled={disabled}
       onPress={onPress}
     >
@@ -64,7 +64,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     height: 50,
-    backgroundColor: colors.c_0162C0,
     width: '100%',
     borderRadius: 100,
   },

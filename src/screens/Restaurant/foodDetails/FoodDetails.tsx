@@ -1,34 +1,28 @@
 import {
   Alert,
-  Animated,
   Image,
   ImageSourcePropType,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { NavigationProp, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CheckCircle, MapPin, Star, Image as ImageIcon } from 'lucide-react-native';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import FoodHeader from '../../../components/foodHeader/FoodHeader';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
-import Counter from '../../../components/counter/Counter';
-import GradientButton from '../../../components/gradientButton/GradientButton';
-import images from '../../../config/images';
-import FastImage from 'react-native-fast-image';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
-import { CarouselData } from '../../../constants/Accomodation';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
-import LinearGradient from 'react-native-linear-gradient';
+import CheckBox from '@react-native-community/checkbox';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import images from '../../../config/images';
 
 interface ToppingOption {
-  id: string;
+  id: number;
   name: string;
   price: number;
   description: string;
@@ -37,32 +31,13 @@ interface ToppingOption {
 const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, route: RouteProp<{ params: { id: string, category: string, name: string, price: number, image: string, description: string, toppings: ToppingOption[] } }> }) => {
   const { top } = useSafeAreaInsets();
   const [isFavorite, setIsFavorite] = useState(false);
-  const [selectedTopping, setSelectedTopping] = useState<string>('3');
+  const [selectedTopping, setSelectedTopping] = useState<number[]>([]);
   const [quantity, setQuantity] = useState(1);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
 
   const wishlistButtonStyles = useMemo(() => {
     return wishlistButton(top);
   }, []);
-  const toppingOptions: ToppingOption[] = [
-    { id: '1', name: 'New hand tossed', price: 2.0, description: '' },
-    { id: '2', name: 'Weat thin crust', price: 2.0, description: '' },
-    { id: '3', name: 'Cheese burst', price: 5.0, description: '' },
-    { id: '4', name: 'Fresh Pan Pizza', price: 5.0, description: '' },
-    { id: '5', name: 'Classic Hand Tossed', price: 2.0, description: '' },
-    { id: '6', name: 'Classic Tossed', price: 45.0, description: '' },
-  ];
 
-  const foodImage = images.newly_opened || images.foodHome;
-  const foodName = 'Margherita Pizza';
-  const location = 'New York City';
-  const price = 24.0;
-  const rating = 4.7;
-  const photoCount = 99;
-  const description =
-    "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.";
 
   const contentStyles = useMemo(() => makeContentStyles(top), [top]);
 
@@ -76,59 +51,77 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
     setQuantity(quantity + 1);
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    const cartItems = await AsyncStorage.getItem('cart');
+    console.log('cartItems ===>', cartItems);
+    if (!cartItems) {
+      await AsyncStorage.setItem('cart', JSON.stringify([{
+        name: route?.params?.name,
+        quantity,
+        topping: route?.params?.toppings?.filter(topping => selectedTopping.includes(topping.id)),
+        price: route?.params?.price,
+        id: route?.params?.id,
+        image: route.params.image,
+        description: route?.params?.description,
+        category: route?.params?.category,
+      }]));
+      navigation.navigate('FoodCart');
+      return;
+    }
+    const cartItemsArray = JSON.parse(cartItems);
+    let found = cartItemsArray.find((item: any) => item.id === route?.params?.id);
+    if (found) {
+      found.quantity = quantity;
+      found.topping = route?.params?.toppings?.filter(topping => selectedTopping.includes(topping.id));
+      found.price = route?.params?.price;
+      found.image = route.params.image;
+      found.description = route?.params?.description;
+      found.category = route?.params?.category;
+    } else {
+      cartItemsArray.push({
+        name: route?.params?.name,
+        quantity,
+        topping: route?.params?.toppings?.filter(topping => selectedTopping.includes(topping.id)),
+        price: route?.params?.price,
+        id: route?.params?.id,
+        image: route.params.image,
+        description: route?.params?.description,
+        category: route?.params?.category,
+      });
+    }
+    console.log('cartItemsArray ===>', cartItemsArray);
+    await AsyncStorage.setItem('cart', JSON.stringify(cartItemsArray));
     navigation.navigate('FoodCart');
-    const selectedToppingData = toppingOptions.find(
-      t => t.id === selectedTopping,
-    );
-    console.log('Add to cart:', {
-      foodName,
-      quantity,
-      topping: selectedToppingData,
-      totalPrice: price + (selectedToppingData?.price || 0),
-    });
-    // Navigate to cart or show success message
   };
 
   const onPressGoReviews = () => {
     navigation.navigate('FoodReviews');
   };
 
-  const handleOrderSuccess = () => {
-    setShowSuccessModal(true);
-    // Animate modal appearance
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
+  const handleSelectTopping = (toppingId: number) => {
+    if (selectedTopping.includes(toppingId)) {
+      setSelectedTopping(selectedTopping.filter(id => id !== toppingId));
+    } else {
+      setSelectedTopping([...selectedTopping, toppingId]);
+    }
+  }
 
-  const closeSuccessModal = () => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 0,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setShowSuccessModal(false);
-    });
-  };
+  const fetchCartItems = async () => {
+    const cartItems = await AsyncStorage.getItem('cart');
+    if (cartItems) {
+      const cartItemsArray = JSON.parse(cartItems);
+      console.log('cartItemsArray ===>', cartItemsArray);
+      const found = cartItemsArray.find((item: any) => item.id === route?.params?.id);
+      if (found) {
+        setSelectedTopping(found.topping.map((topping: any) => topping.id));
+        setQuantity(found.quantity);
+      }
+    }
+  }
+
+  useEffect(()=>{
+    fetchCartItems();
+  },[route.params])
 
   return (
     <View style={GeneralStyles.flex}>
@@ -144,7 +137,7 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
       </View>
 
       <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={[route.params.image]} />
+        <MainCarousel data={[route?.params?.image || images.placeholder]} />
       </View>
       {/* Food Image */}
       {/* <View style={styles.imageContainer}>
@@ -232,29 +225,23 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
           </View>
 
           {/* Add Topping Section */}
-         {route?.params?.toppings?.length > 0 && <View style={styles.section}>
+          {route?.params?.toppings?.length > 0 && <View style={styles.section}>
             <Text style={styles.sectionTitle}>Add Topping</Text>
             {route?.params?.toppings?.map(topping => (
-              <TouchableOpacity
-                key={topping.id}
-                style={styles.toppingOption}
-                onPress={() => setSelectedTopping(topping.id)}
-                activeOpacity={0.7}
-              >
+              <View key={topping.id} style={styles.toppingOption}>
                 <Text style={styles.toppingText}>
                   {topping.name} +${topping.price.toFixed(2)}
                 </Text>
-                <View
-                  style={[
-                    styles.radioButton,
-                    selectedTopping === topping.id && styles.radioSelected,
-                  ]}
-                >
-                  {selectedTopping === topping.id && (
-                    <View style={styles.radioInner} />
-                  )}
-                </View>
-              </TouchableOpacity>
+                <CheckBox
+                  value={selectedTopping.includes(topping.id)}
+                  onValueChange={() => handleSelectTopping(topping.id)}
+                  tintColor={colors.c_F47E20}
+                  onCheckColor={colors.white}
+                  onTintColor={colors.c_F47E20}
+                  onFillColor={colors.c_F47E20}
+                  style={styles.checkbox}
+                />
+              </View>
             ))}
           </View>}
 
@@ -291,20 +278,20 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
             </View>
 
             <View style={styles.cartButtonContainer}>
-              {/* <GradientButtonForAccomodation
+              <GradientButtonForAccomodation
                 title="Add to Cart"
                 onPress={handleAddToCart}
                 fontSize={16}
                 fontFamily={fonts.semibold}
                 otherStyles={styles.cartButton}
-              /> */}
-              <GradientButtonForAccomodation
+              />
+              {/* <GradientButtonForAccomodation
                 title="Buy Now"
-                onPress={handleOrderSuccess}
+                onPress={() => Alert.alert('Order Placed Successfully')}
                 fontSize={16}
                 fontFamily={fonts.semibold}
                 otherStyles={styles.cartButton}
-              />
+              /> */}
             </View>
           </View>
           <GradientButtonForAccomodation
@@ -316,50 +303,6 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
           />
         </ScrollView>
       </View>
-
-      {/* Success Modal */}
-      <Modal
-        visible={showSuccessModal}
-        transparent
-        animationType="none"
-        onRequestClose={closeSuccessModal}
-      >
-        <View style={styles.modalOverlay}>
-          <Animated.View
-            style={[
-              styles.modalContainer,
-              {
-                opacity: opacityAnim,
-                transform: [{ scale: scaleAnim }],
-              },
-            ]}
-          >
-            <View style={styles.modalContent}>
-              <View style={styles.successIconContainer}>
-                <CheckCircle size={80} color={colors.c_F47E20} fill={colors.c_F47E20} />
-              </View>
-              <Text style={styles.modalTitle}>Order Placed Successfully!</Text>
-              <Text style={styles.modalMessage}>
-                Your order has been confirmed and will be delivered soon.
-              </Text>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={closeSuccessModal}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['#F47E20', '#EE4026']}
-                  style={styles.modalButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <Text style={styles.modalButtonText}>Continue Shopping</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -525,29 +468,15 @@ const styles = StyleSheet.create({
     color: colors.black,
     flex: 1,
   },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    // borderColor: colors.c_F47E20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radioSelected: {
-    borderColor: colors.c_F47E20,
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.c_F47E20,
+  checkbox: {
+    width: 22,
+    height: 22,
   },
   quantityCartContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: 8,
+    // marginTop: 8,
     gap: 16,
   },
   quantitySection: {
@@ -591,66 +520,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cartButtonContainer: {
-    flex: 1.01,
+    flex: 1,
   },
   cartButton: {
     height: 50,
     width: '100%',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  modalContainer: {
-    width: '100%',
-    maxWidth: 400,
-  },
-  modalContent: {
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  successIconContainer: {
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontFamily: fonts.bold,
-    color: colors.c_2B2B2B,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalMessage: {
-    fontSize: 16,
-    fontFamily: fonts.normal,
-    color: colors.c_666666,
-    textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 24,
-  },
-  modalButton: {
-    width: '100%',
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  modalButtonGradient: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontFamily: fonts.semibold,
-    color: colors.white,
   },
 });

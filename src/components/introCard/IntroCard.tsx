@@ -4,6 +4,7 @@ import FastImage from 'react-native-fast-image';
 import Divider from '../divider/Divider';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
+import images from '../../config/images';
 
 interface Params {
   name: string;
@@ -27,7 +28,7 @@ const IntroCard = ({
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <FastImage
-          source={image as ImageSourcePropType}
+          source={typeof image === 'string' ? {uri: image} : image? image: images.placeholder}
           style={styles.logo}
           resizeMode="cover"
         />

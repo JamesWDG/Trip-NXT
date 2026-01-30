@@ -34,6 +34,25 @@ export type MenuItem = {
     }[]
 }
 
+export interface Topping {
+    id: number;
+    name: string;
+    price: number;
+    description: string;
+}
+
+export interface CartItem {
+    id: string;
+    image: any;
+    name: string;
+    description: string;
+    price: number;
+    rating: number;
+    reviewCount: number;
+    quantity: number;
+    topping: Topping[];
+}
+
 export type RestaurantMenu = {
     banner: string | ImageURISource;
     cheapestItem: MenuItem;

@@ -107,11 +107,7 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const onLogoutPress = async () => {
     try {
       const res = await logoutUser({}).unwrap();
-   
-
-
       ShowToast('success', res.message);
-
       if (navigationRef.isReady()) {
         navigationRef.dispatch(
           CommonActions.reset({
@@ -122,11 +118,19 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
       }
       console.log('logout response ===>', res);
     } catch (error) {
-      ShowToast(
-        'error',
-        (error as { data: { message: string } }).data.message ||
-          'Something went wrong',
-      );
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'auth' }],
+          }),
+        );
+      }
+      // ShowToast(
+      //   'error',
+      //   (error as { data: { message: string } }).data.message ||
+      //     'Something went wrong',
+      // );
       console.log('error while logging out', error);
     }
   };

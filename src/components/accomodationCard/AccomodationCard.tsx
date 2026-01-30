@@ -3,13 +3,12 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
-import React from 'react';
 import { AccomodationCard as AccomodationCardType } from '../../constants/Accomodation';
 import FastImage from 'react-native-fast-image';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
+import images from '../../config/images';
 interface Params {
   list: AccomodationCardType[];
   navigation?: any;
@@ -24,16 +23,16 @@ const AccomodationCard = ({ list, navigation }: Params) => {
   }) => {
     return (
       <TouchableOpacity
-        onPress={() => navigation?.navigate('HotelDetails')}
+        onPress={() => navigation?.navigate('HotelDetails', {hotel: item})}
         activeOpacity={0.8}
       >
         <FastImage
-          source={item?.image}
+          source={ item?.images.length > 0 ? {uri: item?.images[0]} : images.placeholder}
           style={styles.image}
           resizeMode="cover"
         />
         <Text numberOfLines={1} style={styles.title}>
-          {item?.title}
+          {item?.name}
         </Text>
       </TouchableOpacity>
     );

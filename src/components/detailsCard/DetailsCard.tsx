@@ -1,31 +1,36 @@
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import React from 'react';
 import { Bath, BedDouble, CarFront, MapPin } from 'lucide-react-native';
 import StarRating from 'react-native-star-rating-widget';
 import fonts from '../../config/fonts';
 import colors from '../../config/colors';
 import IconCard from '../iconCard/IconCard';
-type Amenity = {
-  name: string;
-  icon: string;
-};
+import { HotelFeature} from '../../constants/Accomodation';
+
 interface Params {
   reviews: number;
   rating: number;
-  price: number;
+  rentPerDay: number;
+  rentPerHour: number;
   location: string;
   title: string;
   description: string;
-  amenities: Amenity[];
+  features: HotelFeature[];
+  numberOfBeds: number;
+  numberOfBathrooms: number;
+  numberOfGuests: number;
 }
 const DetailsCard = ({
   reviews,
   rating,
-  price,
+  rentPerDay,
+  rentPerHour,
   location,
+  numberOfBeds,
+  numberOfBathrooms,
+  numberOfGuests,
   title,
   description,
-  amenities,
+  features,
 }: Params) => {
   return (
     <View style={styles.container}>
@@ -34,7 +39,8 @@ const DetailsCard = ({
       </View>
       <View style={styles.priceContainer}>
         <View>
-          <Text style={styles.price}> $ {price}</Text>
+          <Text style={styles.price}> Rent per day: ${rentPerDay}</Text>
+          <Text style={styles.price}> Rent per hour: ${rentPerHour}</Text>
           <View style={styles.locationContainer}>
             <MapPin size={12} />
             <Text style={styles.location}>{location}</Text>
@@ -49,15 +55,15 @@ const DetailsCard = ({
       <View style={styles.featuresContainer}>
         <View style={styles.featureItem}>
           <BedDouble size={26} color={'#F47E26'} />
-          <Text style={styles.featureItemText}>{12} Beds</Text>
+          <Text style={styles.featureItemText}>{numberOfBeds} Beds</Text>
         </View>
         <View style={styles.featureItem}>
           <Bath size={26} color={'#F47E28'} />
-          <Text style={styles.featureItemText}>{12} Baths</Text>
+          <Text style={styles.featureItemText}>{numberOfBathrooms} Baths</Text>
         </View>
         <View style={styles.featureItem}>
           <CarFront size={26} color={'#F47E20'} />
-          <Text style={styles.featureItemText}>{12} Parkings</Text>
+          <Text style={styles.featureItemText}>{numberOfGuests} Guests</Text>
         </View>
       </View>
 
@@ -71,10 +77,10 @@ const DetailsCard = ({
       <View>
         <Text style={styles.amenitiesTitle}>Amenities</Text>
         <FlatList
-          data={amenities}
+          data={features}
           scrollEnabled={false} // disable inner scrolling
           renderItem={({ item, index }) => {
-            return <IconCard name={item.name} icon={item.icon} key={index} />;
+            return <IconCard name={item.name} icon={item.image} key={index} />;
           }}
           contentContainerStyle={styles.amenitiesContainer}
           keyExtractor={(item, index) => index.toString()}

@@ -7,94 +7,161 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useMemo, useState } from 'react';
-import { NavigationProp } from '@react-navigation/native';
+import { useEffect, useMemo, useState } from 'react';
+import { NavigationProp, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  ChevronLeft,
-  Eye,
   Edit2,
-  CreditCard,
-  DollarSign,
-  Crosshair,
   LocateFixed,
 } from 'lucide-react-native';
 import GeneralStyles from '../../../utils/GeneralStyles';
-import FoodHeader from '../../../components/foodHeader/FoodHeader';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
 import PaymentOption from '../../../components/paymentOption/PaymentOption';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
-import { CarouselData } from '../../../constants/Accomodation';
 import PrimaryHeader from '../../../components/primaryHeader/PrimaryHeader';
 import images from '../../../config/images';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
+import { AuthState } from '../../../redux/slices/authSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CartItem } from '../../../constants/Food';
+import { useCreateOrderMutation } from '../../../redux/services/restaurant.service';
+import { height, ShowToast } from '../../../config/constants';
+import DestinationSearch from '../../../components/destinationSearch/DestinationSearch';
+import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
 
-const Checkout = ({ navigation }: { navigation: NavigationProp<any> }) => {
+const Checkout = ({ navigation, route }: { navigation: NavigationProp<any>, route: RouteProp<{ params: { total: number, subTotal: number, deliveryFee: number, couponDiscount: number } }> }) => {
   const { top } = useSafeAreaInsets();
-  const [isFavorite, setIsFavorite] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
-  const [landmark, setLandmark] = useState('');
-
+  const [landmark, setLandmark] = useState<{
+    address: string;
+    city: string;
+    destination: string;
+    lat?: number;
+    lng?: number;
+    place_id?: string;
+  }>({
+    address: '',
+    city: '',
+    destination: '',
+    lat: 0,
+    lng: 0,
+    place_id: '',
+  });
+  const [createOrder, { isLoading }] = useCreateOrderMutation();
   const contentStyles = useMemo(() => makeContentStyles(top), [top]);
   const wishlistButtonStyles = useMemo(() => wishlistButton(top), [top]);
+  const { user } = useSelector<RootState, AuthState>((state) => state.auth);
+  const [orderItems, setOrderItems] = useState<CartItem[]>([]);
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
-  const orderItems = [{ label: '1x Chicken Cheese Burger', amount: 75.58 }];
+  const handleOrderPlace = async () => {
+    try {
+      if (paymentMethod === 'card') {
+        console.log('initPaymentSheet ===>');
+        const { error, } = await initPaymentSheet({
+          merchantDisplayName: 'TripNxt LLC',
+          paymentIntentClientSecret: 'pi_3StzzFRT7PBrdzjo1Y555wiZ_secret_he8laSFEMv1ZbtBukbCDiSwE4', // retrieve this from your server
+        });
+        if (error) {
+          // handle error
+          console.log('error ===>', error);
+        } else {
+          const { error: presentError } = await presentPaymentSheet();
 
-  const paymentSummaryItems = [
-    { label: 'Subtotal', amount: 75.58 },
-    { label: 'Coupon discount', amount: 5.5, isDiscount: true },
-    { label: 'Delivery Fee', amount: 5.0 },
-  ];
-
-  const total = 75.58 - 5.5 + 5.0;
-
-  const handleOrderPlace = () => {
-    navigation.navigate('FoodOrderTracking');
-    console.log('Order placed:', {
-      paymentMethod,
-      landmark,
-      total,
-    });
+          if (presentError) {
+            console.log('Payment error:', presentError);
+          } else {
+            console.log('Payment completed');
+          }
+        }
+      }
+      const payload = {
+        totalAmount: route.params?.total,
+        subTotal: route.params?.subTotal,
+        discountId: 1,
+        tax: 0,
+        deliveryFee: route.params?.deliveryFee,
+        orderItems: orderItems.map(item => ({
+          itemId: typeof item.id === 'string' ? parseInt(item.id) : item.id,
+          quantity: item.quantity,
+          price: item.price,
+          itemToppings: item.topping.map(topping => topping.id),
+        })),
+        deliveryAddress: { lat: 0, lng: 0, location: 'Texas, USA' },
+      }
+      console.log('payload ===>', payload);
+      const res = await createOrder(payload);
+      console.log('res order create ===>', res);
+      ShowToast('success', 'Order placed successfully');
+      AsyncStorage.setItem('cart', JSON.stringify([]));
+      navigation.navigate('FoodOrderTracking');
+    } catch (error) {
+      console.error('Error placing order:', error);
+      ShowToast('error', 'Cannot place order at the moment.');
+    }
     // Handle order placement
   };
 
+  const fetchOrderItems = async () => {
+    try {
+      const orderItems = await AsyncStorage.getItem('cart');
+      if (orderItems) {
+        setOrderItems(JSON.parse(orderItems));
+        console.log('orderItems ===>', orderItems);
+      }
+    } catch (error) {
+      console.error('Error fetching order items:', error);
+    }
+  }
+
+  useEffect(() => {
+    fetchOrderItems();
+  }, [])
+
   return (
-    <View style={[GeneralStyles.flex, styles.container]}>
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <PrimaryHeader
-          title={'Checkout'}
-          onBackPress={() => navigation.goBack()}
-        />
-      </View>
+    <StripeProvider publishableKey={'pk_test_51RYtYNRT7PBrdzjovfRyXABozKiNkaAX0nJVTgfiiNpbDN719eYC4T88avnf0CtcWx7INMq51sUjPrFgUI7DL91x004gPiKy9u'}>
+      <View style={[GeneralStyles.flex, styles.container]}>
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <PrimaryHeader
+            title={'Checkout'}
+            onBackPress={() => navigation.goBack()}
+            onProfilePress={() => { }}
+          />
+        </View>
 
-      {/* Map Carousel */}
-      <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={CarouselData} />
-      </View>
+        {/* Map Carousel */}
+        <View style={wishlistButtonStyles.carouselContainer}>
+          <MainCarousel data={['https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg']} />
+        </View>
 
-      {/* White Content Card */}
-      <View style={contentStyles.contentCard}>
-        <ScrollView
-          style={GeneralStyles.flex}
-          contentContainerStyle={contentStyles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Delivery Address Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Delivery Address</Text>
-            <View style={styles.addressInputRow}>
-              <View style={[styles.addressInputContainer, styles.shadowBox]}>
-                <TextInput
-                  style={styles.addressInput}
-                  placeholder="e.g. landmark"
-                  placeholderTextColor={colors.c_666666}
-                  value={landmark}
-                  onChangeText={setLandmark}
+        {/* White Content Card */}
+        <View style={contentStyles.contentCard}>
+          <ScrollView
+            style={GeneralStyles.flex}
+            contentContainerStyle={contentStyles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Delivery Address Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Delivery Address</Text>
+              {/* <View style={styles.addressInputRow}> */}
+              <View style={[styles.addressInputContainer]}>
+                <DestinationSearch
+                  placeholder="Search for destination"
+                  onSearchChange={() => { }}
+                  onItemPress={(item) => {
+                    console.log('item ===>', item);
+                    setLandmark(item)
+                  }}
+                  showCurrentLocation={true}
+                  currentLocation={undefined}
                 />
               </View>
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={[styles.targetButton, styles.shadowBox]}
                 activeOpacity={0.7}
                 onPress={() => {
@@ -103,125 +170,126 @@ const Checkout = ({ navigation }: { navigation: NavigationProp<any> }) => {
               >
                 <LocateFixed size={20} color={colors.black} />
               </TouchableOpacity>
+            </View> */}
             </View>
-          </View>
 
-          {/* Delivery Information Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Delivery Information</Text>
-              <TouchableOpacity activeOpacity={0.7}>
-                <Edit2 size={18} color={colors.c_666666} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.deliveryInfo}>
-              <Text style={styles.infoText}>
-                Name: <Text style={styles.infoTextValue}>Marian Livera</Text>
-              </Text>
-              <Text style={styles.infoText}>
-                Phone number:{' '}
-                <Text style={styles.infoTextValue}>+837 736363</Text>
-              </Text>
-              <Text style={styles.infoText}>
-                Address: <Text style={styles.infoTextValue}>New York, USA</Text>
-              </Text>
-            </View>
-          </View>
-
-          {/* Pay With Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pay With</Text>
-            <View style={styles.paymentOptionWrapper}>
-              <PaymentOption
-                label="Credit Card"
-                selected={paymentMethod === 'card'}
-                onSelect={() => setPaymentMethod('card')}
-              />
-              <View style={styles.paymentOptionRight}>
-                <View style={styles.visaBadge}>
-                  <Text style={styles.visaText}>VISA</Text>
-                </View>
+            {/* Delivery Information Section */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Delivery Information</Text>
+                <TouchableOpacity activeOpacity={0.7}>
+                  <Edit2 size={18} color={colors.c_666666} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.deliveryInfo}>
+                <Text style={styles.infoText}>
+                  Name: <Text style={styles.infoTextValue}>{user?.name}</Text>
+                </Text>
+                <Text style={styles.infoText}>
+                  Phone number:{' '}
+                  <Text style={styles.infoTextValue}>{user?.phoneNumber}</Text>
+                </Text>
+                <Text style={styles.infoText}>
+                  Address: <Text style={styles.infoTextValue}>{landmark?.destination}</Text>
+                </Text>
               </View>
             </View>
 
-            <View style={styles.paymentOptionWrapper}>
-              <PaymentOption
-                label="Cash"
-                selected={paymentMethod === 'cash'}
-                onSelect={() => setPaymentMethod('cash')}
-              />
-              <View style={styles.paymentOptionRight}>
-                <Image source={images.money} />
-              </View>
-            </View>
-          </View>
-
-          {/* Order Summary Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Order Summary</Text>
-
-            {/* Order Items */}
-            <View style={styles.orderItemsContainer}>
-              {orderItems.map((item, index) => (
-                <View key={index}>
-                  <View style={styles.orderItemRow}>
-                    <Text style={styles.orderItemLabel}>{item.label}</Text>
-                    <Text style={styles.orderItemAmount}>
-                      ${item.amount.toFixed(2)}
-                    </Text>
+            {/* Pay With Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Pay With</Text>
+              <View style={styles.paymentOptionWrapper}>
+                <PaymentOption
+                  label="Credit Card"
+                  selected={paymentMethod === 'card'}
+                  onSelect={() => setPaymentMethod('card')}
+                />
+                <View style={styles.paymentOptionRight}>
+                  <View style={styles.visaBadge}>
+                    <Text style={styles.visaText}>VISA</Text>
                   </View>
                 </View>
-              ))}
-            </View>
-            <View style={styles.separatorLine} />
+              </View>
 
-            {/* Summary Details */}
-            <View style={styles.summaryDetailsContainer}>
-              {/* Subtotal */}
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryAmount}>
-                  ${paymentSummaryItems[0].amount.toFixed(2)}
-                </Text>
+              <View style={styles.paymentOptionWrapper}>
+                <PaymentOption
+                  label="Cash"
+                  selected={paymentMethod === 'cash'}
+                  onSelect={() => setPaymentMethod('cash')}
+                />
+                <View style={styles.paymentOptionRight}>
+                  <Image source={images.money} />
+                </View>
+              </View>
+            </View>
+
+            {/* Order Summary Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Order Summary</Text>
+
+              {/* Order Items */}
+              <View style={styles.orderItemsContainer}>
+                {orderItems.map((item, index) => (
+                  <View key={index}>
+                    <View style={styles.orderItemRow}>
+                      <Text style={styles.orderItemLabel}>{item.name}</Text>
+                      <Text style={styles.orderItemAmount}>
+                        ${item.price.toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
               </View>
               <View style={styles.separatorLine} />
 
-              {/* Coupon Discount */}
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Coupon discount</Text>
-                <Text style={styles.discountAmount}>
-                  -${paymentSummaryItems[1].amount.toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.separatorLine} />
+              {/* Summary Details */}
+              <View style={styles.summaryDetailsContainer}>
+                {/* Subtotal */}
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Subtotal</Text>
+                  <Text style={styles.summaryAmount}>
+                    ${route.params?.subTotal?.toFixed(2) || 0}
+                  </Text>
+                </View>
+                <View style={styles.separatorLine} />
 
-              {/* Delivery Fee */}
-              <View style={styles.summaryRow}>
-                <Text style={styles.deliveryFeeLabel}>Delivery Fee</Text>
-                <Text style={styles.summaryAmount}>
-                  ${paymentSummaryItems[2].amount.toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.dashedSeparatorLine} />
+                {/* Coupon Discount */}
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Coupon discount</Text>
+                  <Text style={styles.discountAmount}>
+                    -${route.params?.couponDiscount?.toFixed(2) || 0}
+                  </Text>
+                </View>
+                <View style={styles.separatorLine} />
 
-              {/* Total Amount */}
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>Total Amount</Text>
-                <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+                {/* Delivery Fee */}
+                <View style={styles.summaryRow}>
+                  <Text style={styles.deliveryFeeLabel}>Delivery Fee</Text>
+                  <Text style={styles.summaryAmount}>
+                    ${route.params?.deliveryFee?.toFixed(2) || 0}
+                  </Text>
+                </View>
+                <View style={styles.dashedSeparatorLine} />
+
+                {/* Total Amount */}
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Total Amount</Text>
+                  <Text style={styles.totalAmount}>${route.params?.total?.toFixed(2) || 0}</Text>
+                </View>
               </View>
             </View>
-          </View>
-          <GradientButtonForAccomodation
-            title="Order Place"
-            onPress={handleOrderPlace}
-            color={colors.white}
-            fontSize={16}
-            fontFamily={fonts.semibold}
-            otherStyles={styles.orderButton}
-          />
-        </ScrollView>
+            <GradientButtonForAccomodation
+              title="Order Place"
+              onPress={handleOrderPlace}
+              color={colors.white}
+              fontSize={16}
+              fontFamily={fonts.semibold}
+              otherStyles={styles.orderButton}
+            />
+          </ScrollView>
+        </View>
       </View>
-    </View>
+    </StripeProvider>
   );
 };
 
@@ -276,7 +344,7 @@ const styles = StyleSheet.create({
     color: colors.c_CFD1D3,
   },
   section: {
-    marginBottom: 24,
+    // marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -292,18 +360,12 @@ const styles = StyleSheet.create({
   },
   addressInputRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    // alignItems: 'center',
     gap: 12,
   },
   addressInputContainer: {
-    flex: 1,
-    // backgroundColor: colors.c_F3F3F3,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 50,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.c_DDDDDD,
+    width: '100%',
+    minHeight: height * 0.09,
   },
   addressInput: {
     flex: 1,

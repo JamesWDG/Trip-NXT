@@ -35,7 +35,7 @@ const RestaurantInfo = ({
         />
       </View>
       <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={CarouselData} />
+        <MainCarousel data={['https://assets.epicurious.com/photos/5988e3458e3ab375fe3c0caf/1:1/w_3607,h_3607,c_limit/How-to-Make-Chicken-Alfredo-Pasta-hero-02082017.jpg']} />
       </View>
 
       <View style={styles.lowerContainer}>

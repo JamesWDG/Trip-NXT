@@ -3159,6 +3159,126 @@ PODS:
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.10)
   - SocketRocket (0.7.1)
+  - Stripe (25.0.1):
+    - StripeApplePay (= 25.0.1)
+    - StripeCore (= 25.0.1)
+    - StripePayments (= 25.0.1)
+    - StripePaymentsUI (= 25.0.1)
+    - StripeUICore (= 25.0.1)
+  - stripe-react-native (0.57.3):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - stripe-react-native/Core (= 0.57.3)
+    - stripe-react-native/NewArch (= 0.57.3)
+    - Yoga
+  - stripe-react-native/Core (0.57.3):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Stripe (~> 25.0.1)
+    - StripeApplePay (~> 25.0.1)
+    - StripeFinancialConnections (~> 25.0.1)
+    - StripePayments (~> 25.0.1)
+    - StripePaymentSheet (~> 25.0.1)
+    - StripePaymentsUI (~> 25.0.1)
+    - Yoga
+  - stripe-react-native/NewArch (0.57.3):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
+  - StripeApplePay (25.0.1):
+    - StripeCore (= 25.0.1)
+  - StripeCore (25.0.1)
+  - StripeFinancialConnections (25.0.1):
+    - StripeCore (= 25.0.1)
+    - StripeUICore (= 25.0.1)
+  - StripePayments (25.0.1):
+    - StripeCore (= 25.0.1)
+    - StripePayments/Stripe3DS2 (= 25.0.1)
+  - StripePayments/Stripe3DS2 (25.0.1):
+    - StripeCore (= 25.0.1)
+  - StripePaymentSheet (25.0.1):
+    - StripeApplePay (= 25.0.1)
+    - StripeCore (= 25.0.1)
+    - StripePayments (= 25.0.1)
+    - StripePaymentsUI (= 25.0.1)
+  - StripePaymentsUI (25.0.1):
+    - StripeCore (= 25.0.1)
+    - StripePayments (= 25.0.1)
+    - StripeUICore (= 25.0.1)
+  - StripeUICore (25.0.1):
+    - StripeCore (= 25.0.1)
   - TOCropViewController (2.8.0)
   - Yoga (0.0.0)
 
@@ -3257,6 +3377,7 @@ DEPENDENCIES:
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - SocketRocket (~> 0.7.1)
+  - "stripe-react-native (from `../node_modules/@stripe/stripe-react-native`)"
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -3282,6 +3403,14 @@ SPEC REPOS:
     - SDWebImage
     - SDWebImageWebPCoder
     - SocketRocket
+    - Stripe
+    - StripeApplePay
+    - StripeCore
+    - StripeFinancialConnections
+    - StripePayments
+    - StripePaymentSheet
+    - StripePaymentsUI
+    - StripeUICore
     - TOCropViewController
 
 EXTERNAL SOURCES:
@@ -3470,6 +3599,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
+  stripe-react-native:
+    :path: "../node_modules/@stripe/stripe-react-native"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -3587,6 +3718,15 @@ SPEC CHECKSUMS:
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageWebPCoder: 908b83b6adda48effe7667cd2b7f78c897e5111d
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  Stripe: 4728e3e0dd8df134e4a420ab504e929a93a815f0
+  stripe-react-native: eaec4410abe0e10be35237729c841f3ff26fdb2a
+  StripeApplePay: 43997281ace138a1c75a8f2d7be11925ea28644c
+  StripeCore: 457c30e2fd3a7c4b274a5ad53d1ff03661eef2a0
+  StripeFinancialConnections: 8c2e326f767fb014b53174b3a5f8592c0a45fa56
+  StripePayments: 6955de4298a5265e66f02cffcc7954475ac7f6c8
+  StripePaymentSheet: 3f93ce6ea84afde770d3c7e18a9b8f99aed63896
+  StripePaymentsUI: 626726a01255a6458c35436f7f6431dacee82684
+  StripeUICore: 30f8352fd7a5cf1541b7777a57b3ad1133bf6763
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888
   Yoga: ce55ebb197c21e22b6700cd36e3f36b7ec26e6f8
 

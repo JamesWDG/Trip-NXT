@@ -6,9 +6,11 @@ import {
   View,
   ActivityIndicator,
   FlatList,
+  Alert,
 } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { SearchIcon, Navigation, Clock, MapPin } from 'lucide-react-native';
+import { SearchIcon, Navigation, Clock, MapPin, LocateFixed } from 'lucide-react-native';
+import Geolocation from '@react-native-community/geolocation';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 
@@ -17,6 +19,9 @@ export interface SearchHistoryItem {
   address: string;
   city: string;
   destination: string;
+  lat?: number;
+  lng?: number;
+  place_id?: string;
 }
 
 interface DestinationSearchProps {
@@ -39,22 +44,9 @@ const DestinationSearch: React.FC<DestinationSearchProps> = ({
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<SearchHistoryItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isFetchingCoordinates, setIsFetchingCoordinates] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const defaultHistory: SearchHistoryItem[] = [
-    {
-      id: '1',
-      address: 'Puszkarska 7H',
-      city: 'Cracow',
-      destination: 'Bonarka for Business',
-    },
-    {
-      id: '2',
-      address: 'Kamieńskiego 11',
-      city: 'Cracow',
-      destination: 'Bonarka City Center',
-    },
-  ];
 
   const displayHistory = historyItems || [];
 
@@ -103,6 +95,7 @@ const DestinationSearch: React.FC<DestinationSearchProps> = ({
             address: address,
             city: city,
             destination: destination,
+            place_id: prediction.place_id,
           };
         });
       }
@@ -172,12 +165,156 @@ const DestinationSearch: React.FC<DestinationSearchProps> = ({
     [onSearchChange, debouncedSearch],
   );
 
-  const handleItemPress = (item: SearchHistoryItem) => {
-    onItemPress?.(item);
+  // Fetch place details including coordinates
+  const fetchPlaceDetails = async (placeId: string): Promise<{ lat: number; lng: number } | null> => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry&key=${GOOGLE_API_KEY}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
 
-    console.log(item, 'dbfeygeygy');
-    setSearchText(item?.destination);
-    setSearchResults([]);
+      if (data.status === 'OK' && data.result?.geometry?.location) {
+        return {
+          lat: data.result.geometry.location.lat,
+          lng: data.result.geometry.location.lng,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching place details:', error);
+      return null;
+    }
+  };
+
+  const handleItemPress = async (item: SearchHistoryItem) => {
+    // If item already has coordinates, use them
+    if (item.lat && item.lng) {
+      onItemPress?.(item);
+      setSearchText(item?.destination);
+      setSearchResults([]);
+      return;
+    }
+
+    // If item has place_id, fetch coordinates
+    if (item.place_id) {
+      setIsFetchingCoordinates(true);
+      try {
+        const coordinates = await fetchPlaceDetails(item.place_id);
+        if (coordinates) {
+          const itemWithCoordinates: SearchHistoryItem = {
+            ...item,
+            lat: coordinates.lat,
+            lng: coordinates.lng,
+          };
+          onItemPress?.(itemWithCoordinates);
+          console.log('Item with coordinates:', itemWithCoordinates);
+        } else {
+          // If coordinates fetch fails, still pass the item without coordinates
+          onItemPress?.(item);
+        }
+        setSearchText(item?.destination);
+        setSearchResults([]);
+      } catch (error) {
+        console.error('Error fetching coordinates:', error);
+        onItemPress?.(item);
+        setSearchText(item?.destination);
+        setSearchResults([]);
+      } finally {
+        setIsFetchingCoordinates(false);
+      }
+    } else {
+      // If no place_id, pass item as is
+      onItemPress?.(item);
+      setSearchText(item?.destination);
+      setSearchResults([]);
+    }
+  };
+
+  // Reverse geocode coordinates to get address
+  const reverseGeocode = async (lat: number, lng: number): Promise<SearchHistoryItem | null> => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_API_KEY}&language=en`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const addressComponents = result.address_components || [];
+        
+        // Extract address components
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let country = '';
+
+        addressComponents.forEach((component: any) => {
+          const types = component.types;
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          } else if (types.includes('route')) {
+            route = component.long_name;
+          } else if (types.includes('locality') || types.includes('administrative_area_level_1')) {
+            city = component.long_name;
+          } else if (types.includes('country')) {
+            country = component.long_name;
+          }
+        });
+
+        const address = streetNumber && route ? `${streetNumber} ${route}` : route || result.formatted_address.split(',')[0];
+        const fullAddress = result.formatted_address;
+
+        return {
+          id: `current-location-${Date.now()}`,
+          address: address,
+          city: city || country,
+          destination: fullAddress,
+          lat: lat,
+          lng: lng,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error reverse geocoding:', error);
+      return null;
+    }
+  };
+
+  // Get current location and show as prediction
+  const handleGetCurrentLocation = () => {
+    setIsFetchingLocation(true);
+    
+    Geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Reverse geocode to get address
+        const locationItem = await reverseGeocode(latitude, longitude);
+        
+        if (locationItem) {
+          // Show as search result
+          setSearchResults([locationItem]);
+          setSearchText(locationItem.destination);
+          setIsFetchingLocation(false);
+        } else {
+          Alert.alert('Error', 'Unable to get address for current location');
+          setIsFetchingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        Alert.alert(
+          'Location Error',
+          'Unable to get your current location. Please check your location permissions.',
+        );
+        setIsFetchingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000,
+      },
+    );
   };
 
   // Cleanup timeout on unmount
@@ -189,9 +326,9 @@ const DestinationSearch: React.FC<DestinationSearchProps> = ({
     };
   }, []);
 
-  const isSearchingActive = searchText.length >= 3;
+  const isSearchingActive = searchText.length >= 3 || searchResults.length > 0;
   const showSearchResults = isSearchingActive;
-  const showLocationAndHistory = !isSearchingActive;
+  const showLocationAndHistory = !isSearchingActive && searchText.length === 0;
 
   // Render history item
   const renderHistoryItem = ({
@@ -229,10 +366,25 @@ const DestinationSearch: React.FC<DestinationSearchProps> = ({
         <TextInput
           placeholder={placeholder}
           placeholderTextColor={colors.c_666666}
-          style={styles.searchInput}
+          style={[styles.searchInput, { width: showCurrentLocation ? '80%' : '100%', }]}
           value={searchText}
           onChangeText={handleSearchChange}
         />
+        {
+          showCurrentLocation && (
+            <TouchableOpacity 
+              onPress={handleGetCurrentLocation} 
+              activeOpacity={0.7}
+              disabled={isFetchingLocation}
+            >
+              {isFetchingLocation ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <LocateFixed size={20} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          )
+        }
       </View>
 
       {/* Search Results */}
@@ -333,13 +485,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     // paddingVertical: 12,
     height: 48,
-    gap: 12,
+    // gap: 12,
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+    justifyContent: 'space-between',
   },
   historyListContainer: {
     paddingHorizontal: 20,
@@ -352,7 +505,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   searchInput: {
-    flex: 1,
+    height: '100%',
     fontSize: 14,
     fontFamily: fonts.normal,
     color: colors.black,

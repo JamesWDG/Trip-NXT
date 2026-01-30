@@ -26,7 +26,7 @@ const MainCarousel = ({ data }: { data: string[] }) => {
   const _renderItem = (item: string) => {
     return (
       <ImageBackground
-        source={{ uri: item } as any}
+        source={typeof item === 'string' ? { uri: item } as any : item}
         style={styles.imageBackground}
         imageStyle={styles.imageStyle}
         resizeMode="cover"

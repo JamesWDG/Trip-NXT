@@ -44,7 +44,10 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   }
 
   useEffect(() => {
-    fetchData();
+    const subscribe = navigation.addListener('focus', () => {
+      fetchData();
+    })
+    return subscribe; 
   }, []);
 
   return (

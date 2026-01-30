@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import  { FC } from 'react';
+import  { FC, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import TabBars from '../../components/tabBars/TabBars';
 import AppStack from '../appStack/AppStack';
@@ -8,6 +8,9 @@ import CarStack from '../carStack/CarStack';
 import FoodStack from '../foodStack/FoodStack';
 import ProfileStack from '../profileStack/ProfileStack';
 import EditProfile from '../../screens/editProfile/EditProfile';
+import { useLazyGetUserQuery } from '../../redux/services/authService';
+import { useDispatch } from 'react-redux';
+import { saveCredentials } from '../../redux/slices/authSlice';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,6 +27,23 @@ const Tab = createBottomTabNavigator();
 // );
 
 const BottomStack: FC = () => {
+  const [getUser, { data: userData, isLoading }] = useLazyGetUserQuery();
+  const dispatch = useDispatch();
+
+  const fetchUserDetails = async () => {
+    try {
+      const res = await getUser(undefined).unwrap();
+      console.log('user detail response ===>', res);
+      dispatch(saveCredentials(res.data));
+    } catch (error) {
+      console.log('error while fetching user details ===>', error);
+    }
+  }
+
+  useEffect(() => {
+    fetchUserDetails();
+  },[])
+
   return (
     <Tab.Navigator
       id="BottomTabNavigator"

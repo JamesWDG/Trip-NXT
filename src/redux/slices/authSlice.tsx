@@ -7,10 +7,13 @@ interface User {
   id?: string;
   email?: string;
   password?: string;
+  name?: string;
+  phoneNumber?: string;
+  address?: string;
   [key: string]: any;
 }
 
-interface AuthState {
+export interface AuthState {
   user: User | null;
   token: string | null;
   rememberMe: boolean;
@@ -37,7 +40,10 @@ const authSlice = createSlice({
       state.user = {
         ...state.user,
         email: action.payload?.email,
-        password: action.payload?.password,
+        password: '',
+        name: action.payload?.name,
+        phoneNumber: action.payload?.phoneNumber,
+        address: action.payload?.address,
       };
     },
     clearCredentials: state => {

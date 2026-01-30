@@ -1,13 +1,14 @@
 import {
   Image,
   ImageSourcePropType,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import React from 'react';
-import { Minus, Plus, PlusIcon, Star } from 'lucide-react-native';
+import { Minus, Plus, PlusIcon, Star, Trash } from 'lucide-react-native';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import FastImage from 'react-native-fast-image';
@@ -22,6 +23,13 @@ interface CartItemCardProps {
   quantity: number;
   onQuantityChange: (quantity: number) => void;
   onPress?: () => void;
+  onDelete?: () => void;
+  topping: {
+    id: number;
+    name: string;
+    price: number;
+    description: string;
+  }[];
 }
 
 const CartItemCard = ({
@@ -29,11 +37,13 @@ const CartItemCard = ({
   title,
   description,
   price,
-  rating,
-  reviewCount,
+  rating = 4.0,
+  reviewCount = 0,
   quantity,
   onQuantityChange,
   onPress,
+  onDelete,
+  topping,
 }: CartItemCardProps) => {
   const handleDecrease = () => {
     if (quantity > 1) {
@@ -46,11 +56,7 @@ const CartItemCard = ({
   };
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
+    <View style={styles.container}>
       {typeof image === 'string' ? (
         <FastImage
           source={{ uri: image } as any}
@@ -65,9 +71,20 @@ const CartItemCard = ({
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
-        <Text style={styles.description} numberOfLines={2}>
-          {description}
-        </Text>
+        <View>
+          <Text style={styles.description} numberOfLines={2}>
+            {description}
+          </Text>
+          {
+            topping.length > 0 && topping.map((item) => (
+              <View key={item.id} style={styles.toppingContainer}>
+                <Text style={styles.toppingText}>{item.name}</Text>
+                <Text style={styles.toppingPrice}>+${item.price.toFixed(1)}</Text>
+              </View>
+
+            ))
+          }
+        </View>
         <Text style={styles.price}>${price.toFixed(1)}</Text>
         <View style={styles.ratingAndQuantityContainer}>
           <View style={styles.ratingContainer}>
@@ -99,7 +116,14 @@ const CartItemCard = ({
           </View>
         </View>
       </View>
-    </TouchableOpacity>
+      <Pressable
+        style={styles.trashButton}
+        onPress={onDelete}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
+        <Trash size={16} color={colors.c_EE4026} />
+      </Pressable>
+    </View>
   );
 };
 
@@ -122,9 +146,10 @@ const styles = StyleSheet.create({
     // elevation: 2,
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
+    width: 130,
+    height: '100%',
+    resizeMode: 'contain',
+    borderRadius: 8,
   },
   content: {
     flex: 1,
@@ -134,14 +159,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fonts.medium,
     color: colors.black,
-    marginBottom: 4,
+    // marginBottom: 4,
   },
   description: {
     fontSize: 12,
     fontFamily: fonts.normal,
     color: colors.c_666666,
-    marginBottom: 4,
-    lineHeight: 16,
+    // lineHeight: 16,
   },
   price: {
     fontSize: 16,
@@ -197,5 +221,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+  },
+  trashButton: {
+    position: 'absolute',
+    right: 10,
+    top: 15,
+  },
+  toppingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  toppingText: {
+    fontSize: 12,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
+  },
+  toppingPrice: {
+    fontSize: 12,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
   },
 });

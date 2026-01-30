@@ -110,8 +110,6 @@ const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
     try {
       const res = await logoutUser({}).unwrap();
      
-
-
       ShowToast('success', res.message);
 
       if (navigationRef.isReady()) {
@@ -124,11 +122,19 @@ const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
       }
       console.log('logout response ===>', res);
     } catch (error) {
-      ShowToast(
-        'error',
-        (error as { data: { message: string } }).data.message ||
-          'Something went wrong',
-      );
+      // ShowToast(
+      //   'error',
+      //   (error as { data: { message: string } }).data.message ||
+      //     'Something went wrong',
+      // );
+      if (navigationRef.isReady()) {
+        navigationRef.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'auth' }],
+          }),
+        );
+      }
       console.log('error while logging out', error);
     }
   };
