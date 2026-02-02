@@ -4,6 +4,7 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { authApi } from '../services/authService';
 import authReducer from '../slices/authSlice';
 import { baseApi } from '../services/api';
+import '../services/hotel.service';
 
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,

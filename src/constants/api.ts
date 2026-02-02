@@ -16,6 +16,7 @@ type endpointTypes = {
     GET_ITEM_WITH_ID: (id: string) => string;
     GET_HOTELS: string;
     CHECK_AVAILABILITY: string;
+    CREATE_BOOKING: string;
 }
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
@@ -38,5 +39,6 @@ export const endpoint: endpointTypes = {
     CREATE_ORDER: 'order/create-order',
     GET_ITEM_WITH_ID: (id) => `menu/get-cart-items/${id}`,
     GET_HOTELS: 'hotel/',
-    CHECK_AVAILABILITY: '/booking/check-availability'
+    CHECK_AVAILABILITY: '/booking/check-availability',
+    CREATE_BOOKING: 'booking',
 }

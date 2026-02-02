@@ -22,9 +22,10 @@ import CreditCardDisplay from '../../../components/creditCardDisplay/CreditCardD
 import ToggleBox from '../../../components/toggleBox/ToggleBox';
 import GradientButton from '../../../components/gradientButton/GradientButton';
 import StarRating from 'react-native-star-rating-widget';
-import { width } from '../../../config/constants';
+import { width, ShowToast } from '../../../config/constants';
 import colors from '../../../config/colors';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
+import { hotelApi } from '../../../redux/services/hotel.service';
 
 const getNights = (checkIn: string, checkOut: string): number => {
   if (!checkIn || !checkOut) return 1;
@@ -89,9 +90,61 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
     : images.hotel_details;
   const hotelLocation = getLocationString(hotel?.location ?? null);
 
-  const handleCompleteBooking = () => {
-    // Navigate to Thank You screen
-    navigation?.navigate('ThankYouScreen');
+  const [createBooking, { isLoading: isBookingLoading }] = hotelApi.useCreateHotelBookingMutation();
+
+  const handleCompleteBooking = async () => {
+    if (!guestName.trim()) {
+      ShowToast('error', 'Please enter guest name');
+      return;
+    }
+    if (!guestEmail.trim()) {
+      ShowToast('error', 'Please enter guest email');
+      return;
+    }
+    if (!guestPhone.trim()) {
+      ShowToast('error', 'Please enter guest phone number');
+      return;
+    }
+    const hotelId = routeParams.hotelId ?? hotel?.id;
+    const vendorId = routeParams.ownerId ?? hotel?.ownerId;
+    if (!hotelId) {
+      ShowToast('error', 'Hotel information is missing');
+      return;
+    }
+    if (!vendorId) {
+      ShowToast('error', 'Vendor information is missing');
+      return;
+    }
+    try {
+      let response = await createBooking({
+        hotelId: Number(hotelId),
+        vendorId: Number(vendorId),
+        checkInDate: checkIn || checkInDate,
+        checkOutDate: checkOut || checkOutDate,
+        totalAmount: Math.round(totalAmount),
+        status: 'confirmed',
+        emailSent: sendEmails,
+        paymentId: "dinfuiheiuheiuh",
+        numberOfGuests: adults + children,
+        numberOfRooms,
+        numberOfBeds: hotel?.numberOfBeds ?? numberOfRooms,
+        children,
+        adults,
+        guestInfo: {
+          name: guestName.trim(),
+          email: guestEmail.trim(),
+          phoneNumber: guestPhone.trim(),
+        },
+      }).unwrap();
+
+      console.log(response,"responseresponseresponse");
+      
+      ShowToast('success', 'Booking created successfully!');
+      navigation?.navigate('ThankYouScreen');
+    } catch (err: any) {
+      const message = err?.data?.message || err?.message || 'Failed to create booking';
+      ShowToast('error', message);
+    }
   };
 
   return (
@@ -333,6 +386,7 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
           <GradientButtonForAccomodation
             title="Complete Booking"
             onPress={handleCompleteBooking}
+            disabled={isBookingLoading}
             fontSize={16}
             fontFamily={fonts.bold}
             otherStyles={styles.completeButton}

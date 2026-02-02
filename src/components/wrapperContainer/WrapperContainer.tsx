@@ -9,11 +9,13 @@ const WrapperContainer = ({
   children,
   navigation,
   showRight,
+  onBackPress,
 }: {
   title: string;
   showRight?: boolean;
   children: React.ReactNode;
   navigation?: NavigationProp<any>;
+  onBackPress?: () => void;
 }) => {
   return (
     <View style={styles.container}>
@@ -21,7 +23,7 @@ const WrapperContainer = ({
         onProfilePress={() => navigation?.navigate('Profile')}
         title={title}
         showRight={showRight}
-        onBackPress={() => navigation?.goBack()}
+        onBackPress={()=>onBackPress?.()}
       />
       <View style={styles.scrollViewContent}>{children}</View>
     </View>

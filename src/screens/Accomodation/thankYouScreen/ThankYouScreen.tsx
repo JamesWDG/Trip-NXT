@@ -37,7 +37,7 @@ const ThankYouScreen = ({ navigation }: { navigation?: any }) => {
   };
 
   return (
-    <WrapperContainer title=" ">
+    <WrapperContainer title=" " onBackPress={()=>handleReturnHome()} >
       <ScrollView contentContainerStyle={styles.container}>
         <Animated.View
           style={[

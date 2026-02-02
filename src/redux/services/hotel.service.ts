@@ -17,8 +17,32 @@ const hotelApi = baseApi.injectEndpoints({
                 url: endpoint.CHECK_AVAILABILITY,
                 body: data,
             })
-        })
+        }),
+        createHotelBooking: builder.mutation({
+            query: (data: {
+                hotelId: number;
+                vendorId: number;
+                checkInDate: string;
+                checkOutDate: string;
+                totalAmount: number;
+                status?: string;
+                emailSent?: boolean;
+                paymentId?: string;
+                numberOfGuests: number;
+                numberOfRooms: number;
+                numberOfBeds: number;
+                children: number;
+                adults: number;
+                guestInfo: { name: string; email: string; phoneNumber: string };
+            }) => ({
+                method: 'POST',
+                url: endpoint.CREATE_BOOKING,
+                body: data,
+            }),
+            invalidatesTags: ['Hotel'],
+        }),
     })
 });
 
-export const { useLazyGetHotelsQuery, useCheckAvailabilityMutation } = hotelApi;
+export { hotelApi };
+export const { useLazyGetHotelsQuery, useCheckAvailabilityMutation, useCreateHotelBookingMutation } = hotelApi;
