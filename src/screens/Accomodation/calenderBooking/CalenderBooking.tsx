@@ -90,6 +90,7 @@ const CalenderBooking = ({ navigation, route }: { navigation?: any, route: Route
         checkOutDisplay: checkOutDate,
         hotelId: hotelId,
         ownerId: ownerId,
+        hotel: response.data.data,
       });
     } catch (error) {
       console.log('error ===>', error);

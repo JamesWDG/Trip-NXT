@@ -1,8 +1,6 @@
 import {
   FlatList,
   ImageBackground,
-  Modal,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -78,61 +76,57 @@ const Home = () => {
         />
       </ImageBackground>
 
-      <ScrollView
+      <FlatList
+        data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+        keyExtractor={(item) => String(item)}
         contentContainerStyle={[
           GeneralStyles.flexGrow,
           style?.contentContainerStyle,
         ]}
-        horizontal={false}
         showsVerticalScrollIndicator={false}
         style={GeneralStyles.flex}
-      >
-        <View style={styles.listContainer}>
-          <ListWithIcon list={IconListArray} />
-        </View>
-
-        <View style={styles.gap}>
-          <View style={styles.paddingleft}>
-            <Text style={styles.yourNextGatewayText}>
-              {labels.yourNexGateway}
-            </Text>
-          </View>
-          <AccomodationCard
-            list={hotels}
-            navigation={navigation}
-          />
-        </View>
-        <HomeCarousel data={CarouselData} />
-
-        <View style={styles.gap}>
-          <View style={styles.paddingleft}>
-            <Text style={styles.yourNextGatewayText}>
-              {labels.hotelsForYou}
-            </Text>
-          </View>
-
+        ListHeaderComponent={
           <View>
-            <FlatList
-              data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-              renderItem={({ item }) => (
-                <RecommendedCard
-                  image={images.recommended_accomodation}
-                  title="Book Your Place"
-                  description={'$180/night'}
-                  price={100}
-                  rating={4.5}
-                  location={'Kingdom Tower, Brazil'}
-                  onPress={() => navigation.navigate('HotelDetails')}
-                />
-              )}
-              // keyExtractor={item => item.id}
-              horizontal={false}
-              contentContainerStyle={styles.hotelForYou}
-              showsHorizontalScrollIndicator={false}
+            <View style={styles.listContainer}>
+              <ListWithIcon list={IconListArray} />
+            </View>
+
+            <View style={styles.gap}>
+              <View style={styles.paddingleft}>
+                <Text style={styles.yourNextGatewayText}>
+                  {labels.yourNexGateway}
+                </Text>
+              </View>
+              <AccomodationCard
+                list={hotels}
+                navigation={navigation}
+              />
+            </View>
+            <HomeCarousel data={CarouselData} />
+
+            <View style={styles.gap}>
+              <View style={styles.paddingleft}>
+                <Text style={styles.yourNextGatewayText}>
+                  {labels.hotelsForYou}
+                </Text>
+              </View>
+            </View>
+          </View>
+        }
+        renderItem={({ item }) => (
+          <View style={styles.recommendedCardItem}>
+            <RecommendedCard
+              image={images.recommended_accomodation}
+              title="Book Your Place"
+              description={'$180/night'}
+              price={100}
+              rating={4.5}
+              location={'Kingdom Tower, Brazil'}
+              onPress={() => navigation.navigate('HotelDetails')}
             />
           </View>
-        </View>
-      </ScrollView>
+        )}
+      />
 
       <DrawerModal
         visible={isModalVisible}
@@ -159,6 +153,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 20,
     paddingBottom: 50,
+  },
+  recommendedCardItem: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   image: {
     width: '100%',

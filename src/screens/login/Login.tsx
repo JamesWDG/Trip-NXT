@@ -94,7 +94,7 @@ const Login = ({ navigation }: { navigation: any }) => {
         password: state.password,
       };
       const res = await login(data).unwrap();
-      ShowToast('success', res.message);
+      ShowToast('success', res.message ?? 'Login successful');
       if (res.success) {
         if (rememberMe) {
           dispatch(

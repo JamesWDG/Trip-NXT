@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import React, { useState, useMemo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeftIcon, MapPin, Plus, Star } from 'lucide-react-native';
+import { ChevronLeftIcon, MapPin, Plus } from 'lucide-react-native';
 
 import fonts from '../../../config/fonts';
 import images from '../../../config/images';
@@ -26,19 +26,40 @@ import { width } from '../../../config/constants';
 import colors from '../../../config/colors';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
 
+const getNights = (checkIn: string, checkOut: string): number => {
+  if (!checkIn || !checkOut) return 1;
+  const start = new Date(checkIn).getTime();
+  const end = new Date(checkOut).getTime();
+  return Math.max(1, Math.ceil((end - start) / (24 * 60 * 60 * 1000)));
+};
+
+const getLocationString = (location: { city?: string; state?: string; country?: string } | null): string => {
+  if (!location) return '';
+  const parts = [location.city, location.state, location.country].filter(Boolean);
+  return parts.join(', ');
+};
+
 const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
   const { top } = useSafeAreaInsets();
   const routeParams = route?.params || {};
+  const hotel = Array.isArray(routeParams.hotel) ? routeParams.hotel[0] : routeParams.hotel;
+  const checkIn = routeParams.checkIn || '';
+  const checkOut = routeParams.checkOut || '';
+  const nights = useMemo(() => getNights(checkIn, checkOut), [checkIn, checkOut]);
+
   const [checkInDate, setCheckInDate] = useState<string>(
     routeParams.checkInDisplay || 'Sep 13, 2021',
   );
   const [checkOutDate, setCheckOutDate] = useState<string>(
     routeParams.checkOutDisplay || 'Sep 17, 2021',
   );
-  const [roomType, setRoomType] = useState<string>('Deluxe Room');
+  const [roomType, setRoomType] = useState<string>(
+    hotel?.hotelType ? String(hotel.hotelType).charAt(0).toUpperCase() + String(hotel.hotelType).slice(1) : 'Standard',
+  );
+  const maxRooms = hotel?.numberOfRooms ?? 10;
   const [numberOfRooms, setNumberOfRooms] = useState(1);
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
   const [bookingEmail, setBookingEmail] = useState('');
   const [sendEmails, setSendEmails] = useState(false);
@@ -48,14 +69,25 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
 
   const headerStyles = useMemo(() => makeHeaderStyles(top), [top]);
 
-  const priceItems = [
-    { label: '1 room x 2 nights', amount: 240 },
-    { label: 'Taxes', amount: 10 },
-    { label: 'Service Fees', amount: 5 },
-    { label: 'Discount', amount: 0 },
-  ];
-
+  const rentPerDay = hotel?.rentPerDay ?? 0;
+  const roomTotal = rentPerDay * nights * numberOfRooms;
+  const taxes = Math.round(roomTotal * 0.1);
+  const serviceFees = Math.round(roomTotal * 0.02);
+  const priceItems = useMemo(
+    () => [
+      { label: `${numberOfRooms} room x ${nights} night${nights > 1 ? 's' : ''}`, amount: roomTotal },
+      { label: 'Taxes', amount: taxes },
+      { label: 'Service Fees', amount: serviceFees },
+      { label: 'Discount', amount: 0 },
+    ],
+    [numberOfRooms, nights, roomTotal, taxes, serviceFees],
+  );
   const totalAmount = priceItems.reduce((sum, item) => sum + item.amount, 0);
+
+  const hotelImageSource = hotel?.images?.length
+    ? { uri: hotel.images[0] }
+    : images.hotel_details;
+  const hotelLocation = getLocationString(hotel?.location ?? null);
 
   const handleCompleteBooking = () => {
     // Navigate to Thank You screen
@@ -104,35 +136,24 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
 
         {/* Hotel Card */}
         <View style={styles.hotelCard}>
-          {/* Hotel Image */}
           <Image
-            source={images.hotel_details}
+            source={hotelImageSource}
             style={styles.hotelImage}
             resizeMode="cover"
           />
-
-          {/* Hotel Information */}
           <View style={styles.hotelInfo}>
-            <Text style={styles.hotelName}>Lux Hotel Casino</Text>
+            <Text style={styles.hotelName}>{hotel?.name ?? 'Hotel'}</Text>
             <View style={styles.priceLocationRow}>
               <View>
-                <Text style={styles.price}>$ 23,456</Text>
+                <Text style={styles.price}>
+                  $ {rentPerDay.toLocaleString()}
+                  <Text style={styles.perNight}> / night</Text>
+                </Text>
                 <View style={styles.locationContainer}>
                   <MapPin size={14} color={colors.c_666666} />
-                  <Text style={styles.location}>Las Vegas, NV, USA</Text>
-                </View>
-              </View>
-              <View style={styles.ratingContainer}>
-                <Text style={styles.ratingText}>4.5</Text>
-                <View style={styles.starsContainer}>
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <Star
-                      key={star}
-                      size={16}
-                      color={colors.c_F47E20}
-                      fill={colors.c_F47E20}
-                    />
-                  ))}
+                  <Text style={styles.location} numberOfLines={1}>
+                    {hotelLocation || '—'}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -154,9 +175,9 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
             label="Number Of Rooms"
             value={numberOfRooms}
             onDecrease={() => setNumberOfRooms(Math.max(1, numberOfRooms - 1))}
-            onIncrease={() => setNumberOfRooms(Math.min(10, numberOfRooms + 1))}
+            onIncrease={() => setNumberOfRooms(Math.min(maxRooms, numberOfRooms + 1))}
             min={1}
-            max={10}
+            max={maxRooms}
           />
           <Counter
             label="Adult (Age 18+)"
@@ -435,6 +456,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.normal,
     color: colors.black,
     marginBottom: 6,
+  },
+  perNight: {
+    fontSize: 14,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
   },
   locationContainer: {
     flexDirection: 'row',
