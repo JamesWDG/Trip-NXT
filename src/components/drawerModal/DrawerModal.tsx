@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleX, LogOut } from 'lucide-react-native';
 import { CommonActions } from '@react-navigation/native';
@@ -21,6 +20,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { navigationRef, ShowToast } from '../../config/constants';
 import { useLogoutMutation } from '../../redux/services/authService';
 import { useDispatch } from 'react-redux';
+import { setLogout } from '../../redux/slices/authSlice';
 
 const upperTabData = [
   {
@@ -97,7 +97,7 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
 
   const getModalOverlayStyle = () => ({
     ...styles.modalOverlay,
-    paddingBottom: (insets?.bottom || 0) + 20,
+    // paddingBottom: (insets?.bottom || 0) + 20,
   });
 
   const getModalContentStyle = () => ({
@@ -108,16 +108,11 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
     try {
       const res = await logoutUser({}).unwrap();
       ShowToast('success', res.message);
-      if (navigationRef.isReady()) {
-        navigationRef.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'auth' }],
-          }),
-        );
-      }
       console.log('logout response ===>', res);
     } catch (error) {
+      console.log('error while logging out', error);
+      dispatch(setLogout());
+    }finally {
       if (navigationRef.isReady()) {
         navigationRef.dispatch(
           CommonActions.reset({
@@ -126,12 +121,6 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
           }),
         );
       }
-      // ShowToast(
-      //   'error',
-      //   (error as { data: { message: string } }).data.message ||
-      //     'Something went wrong',
-      // );
-      console.log('error while logging out', error);
     }
   };
   const renderHorizontalTabs = ({

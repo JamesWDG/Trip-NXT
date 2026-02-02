@@ -18,6 +18,7 @@ const CalendarRangePicker = ({
 }: CalendarRangePickerProps) => {
   const [startDate, setStartDate] = useState<string | undefined>(initialStartDate);
   const [endDate, setEndDate] = useState<string | undefined>(initialEndDate);
+  const today = new Date().toISOString().split("T")[0];
 
   // Update when props change
   useEffect(() => {
@@ -119,6 +120,7 @@ const CalendarRangePicker = ({
       </View>
 
       <Calendar
+        minDate={today}
         current={startDate || new Date().toISOString().split('T')[0]}
         onDayPress={onDayPress}
         markedDates={getMarkedDates()}

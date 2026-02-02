@@ -6,27 +6,28 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeftIcon } from 'lucide-react-native';
-
 import fonts from '../../../config/fonts';
 import images from '../../../config/images';
 import DateInput from '../../../components/dateInput/DateInput';
 import CalendarRangePicker from '../../../components/calendarRangePicker/CalendarRangePicker';
-import GradientButton from '../../../components/gradientButton/GradientButton';
-import { width } from '../../../config/constants';
+import { ShowToast, width } from '../../../config/constants';
 import colors from '../../../config/colors';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
+import { RouteProp } from '@react-navigation/native';
+import { useCheckAvailabilityMutation } from '../../../redux/services/hotel.service';
 
-const CalenderBooking = ({ navigation }: { navigation?: any }) => {
+const CalenderBooking = ({ navigation, route }: { navigation?: any, route: RouteProp<{ params: { hotelId: number, ownerId: number } }> }) => {
   const { top } = useSafeAreaInsets();
+  const { hotelId, ownerId } = route.params;
   const [checkInDate, setCheckInDate] = useState<string>(''); // Display format
   const [checkOutDate, setCheckOutDate] = useState<string>(''); // Display format
   const [checkInDateRaw, setCheckInDateRaw] = useState<string>(''); // YYYY-MM-DD format
   const [checkOutDateRaw, setCheckOutDateRaw] = useState<string>(''); // YYYY-MM-DD format
   const [showCalendar, setShowCalendar] = useState<boolean>(true);
-
+  const [checkAvailability, { isLoading }] = useCheckAvailabilityMutation();
   const headerStyles = useMemo(() => makeHeaderStyles(top), [top]);
 
   const handleDateRangeSelect = (startDate: string, endDate: string) => {
@@ -60,19 +61,40 @@ const CalenderBooking = ({ navigation }: { navigation?: any }) => {
       'Nov',
       'Dec',
     ];
-    return `${
-      monthNames[date.getMonth()]
-    } ${date.getDate()}, ${date.getFullYear()}`;
+    return `${monthNames[date.getMonth()]
+      } ${date.getDate()}, ${date.getFullYear()}`;
   };
 
-  const handleCheckAvailability = () => {
+  const handleCheckAvailability = async () => {
     // Navigate to Checkout screen with date information
-    navigation?.navigate('Checkout', {
-      checkIn: checkInDateRaw,
-      checkOut: checkOutDateRaw,
-      checkInDisplay: checkInDate,
-      checkOutDisplay: checkOutDate,
-    });
+    if (!checkInDateRaw) {
+      ShowToast('error', 'Please select a check in date');
+      return;
+    }
+    if (!checkOutDateRaw) {
+      ShowToast('error', 'Please select a check out date');
+      return;
+    }
+    try {
+      const response = await checkAvailability({
+        hotelId: hotelId,
+        checkInDate: checkInDateRaw,
+        checkOutDate: checkOutDateRaw,
+      });
+      console.log('response ===>', response);
+      ShowToast('success', response.data.message || 'Availability checked successfully');
+      navigation?.navigate('Checkout', {
+        checkIn: checkInDateRaw,
+        checkOut: checkOutDateRaw,
+        checkInDisplay: checkInDate,
+        checkOutDisplay: checkOutDate,
+        hotelId: hotelId,
+        ownerId: ownerId,
+      });
+    } catch (error) {
+      console.log('error ===>', error);
+      ShowToast('error', 'Cannot check availability at the moment');
+    }
   };
 
   return (
@@ -243,3 +265,7 @@ const styles = StyleSheet.create({
     height: 50,
   },
 });
+function showToast(arg0: string) {
+  throw new Error('Function not implemented.');
+}
+

@@ -1,16 +1,33 @@
 import { Animated, Image, StyleSheet, Text, View } from 'react-native';
-import  { FC, useEffect, useRef } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import colors from '../../config/colors';
 import images from '../../config/images';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
+import { CommonActions } from '@react-navigation/native';
 
 const Splash: FC<{ navigation: any }> = ({ navigation }) => {
   const animation = useRef(new Animated.Value(10)).current;
+  const { token } = useSelector((state: RootState) => state.auth);
   useEffect(() => {
     Animated.timing(animation, {
       toValue: 2000,
       duration: 1000,
       useNativeDriver: false, // can't use native driver for width/height
     }).start();
+    const timeout = setTimeout(() => {
+      if (token) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'app' }],
+          })
+        )
+      } else {
+        navigation.navigate('GetStarted');
+      }
+    }, 3000);
+    return () => clearTimeout(timeout);
   }, [animation]);
 
   const animatedStyle = {
@@ -19,11 +36,6 @@ const Splash: FC<{ navigation: any }> = ({ navigation }) => {
     borderRadius: '50%',
   };
 
-  useEffect(() => {
-    setTimeout(() => {
-      navigation.navigate('GetStarted');
-    }, 3000);
-  }, []);
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.object, animatedStyle]}>

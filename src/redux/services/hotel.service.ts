@@ -10,8 +10,15 @@ const hotelApi = baseApi.injectEndpoints({
                 method: 'GET',
                 providesTags: ['Hotel']
             })
+        }),
+        checkAvailability: builder.mutation({
+            query: (data) => ({
+                method: 'POST',
+                url: endpoint.CHECK_AVAILABILITY,
+                body: data,
+            })
         })
     })
 });
 
-export const { useLazyGetHotelsQuery} = hotelApi;
+export const { useLazyGetHotelsQuery, useCheckAvailabilityMutation } = hotelApi;

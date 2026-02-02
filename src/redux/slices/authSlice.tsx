@@ -51,6 +51,10 @@ const authSlice = createSlice({
         ...state.user,
         email: undefined,
         password: undefined,
+        id: undefined,
+        name: undefined,
+        phoneNumber: undefined,
+        address: undefined,
       };
     },
   },

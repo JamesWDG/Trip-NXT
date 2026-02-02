@@ -98,7 +98,10 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
             <View style={GeneralStyles.flex}>
               <GradientButtonForAccomodation
                 title="Book Now"
-                onPress={() => (navigation || nav).navigate('CalenderBooking')}
+                onPress={() => {
+                  console.log('route.params?.hotel', route.params?.hotel?.id);
+                  (navigation || nav).navigate('CalenderBooking', { hotelId: route.params?.hotel?.id, ownerId: route.params?.hotel?.ownerId })
+                }}
                 fontSize={18}
                 fontFamily={fonts.semibold}
               />

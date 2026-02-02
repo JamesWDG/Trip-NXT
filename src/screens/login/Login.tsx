@@ -29,6 +29,7 @@ import {
 import { RootState } from '../../redux/store';
 import GeneralStyles from '../../utils/GeneralStyles';
 import images from '../../config/images';
+import { CommonActions } from '@react-navigation/native';
 
 interface stateTypes {
   email: string;
@@ -102,7 +103,12 @@ const Login = ({ navigation }: { navigation: any }) => {
         } else {
           dispatch(clearCredentials());
         }
-        // navigation.navigate('OtpVerify', { email: state.email });
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'app' }],
+          }),
+        );
       }
     } catch (error) {
       ShowToast(
