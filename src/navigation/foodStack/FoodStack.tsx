@@ -15,6 +15,7 @@ import OrderTracking from '../../screens/Restaurant/ordersTracking/OrderTracking
 import Chat from '../../screens/messages/Chat';
 import RestaurantInformation from '../../screens/Restaurant/restaurantInformation/RestaurantInformation';
 import Checkout from '../../screens/Restaurant/checkout/Checkout';
+import OrderDetail from '../../screens/Accomodation/orderDetail/OrderDetail';
 import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
 import Notifications from '../../screens/notifications/Notifications';
 import Profile from '../../screens/profile/Profile';
@@ -53,6 +54,7 @@ const FoodStack: FC = () => {
         component={Notifications}
       />
       <FoodStackNavigator.Screen name="FoodMyOrders" component={MyOrders} />
+      <FoodStackNavigator.Screen name="FoodOrderDetail" component={OrderDetail} />
       <FoodStackNavigator.Screen name="FoodWishlists" component={Wishlists} />
       <FoodStackNavigator.Screen name="Dummy" component={DummyPage} />
     </FoodStackNavigator.Navigator>

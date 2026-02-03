@@ -1,46 +1,134 @@
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import colors from '../../../config/colors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import PrimaryHeader from '../../../components/primaryHeader/PrimaryHeader';
-import SearchWithFilters from '../../../components/searchWithFilters/SearchWithFilters';
-import labels from '../../../config/labels';
-import { RecommendedCard } from '../../dummyPage/DummyPage';
-import images from '../../../config/images';
-import AccomodationTabButtons from '../../../components/accomodationTabButtons/AccomodationTabButtons';
 import WrapperContainer from '../../../components/wrapperContainer/WrapperContainer';
+import images from '../../../config/images';
 import { useNavigation } from '@react-navigation/native';
 import FoodItemCard from '../../../components/foodItemCard/FoodItemCard';
+import { useGetOrdersByUserIdQuery } from '../../../redux/services/restaurant.service';
+import fonts from '../../../config/fonts';
+
+type OrderItem = {
+  id: number;
+  orderId: number;
+  itemId: number;
+  quantity: number;
+  status: string;
+  item: {
+    id: number;
+    name: string;
+    description?: string;
+    price: number;
+    category?: string;
+    image?: string;
+  };
+};
+
+type Order = {
+  id: number;
+  userId: number;
+  restaurantId: number;
+  subTotal: number;
+  totalAmount: number;
+  tax: number;
+  deliveryFee: number;
+  status: string;
+  createdAt: string;
+  items: OrderItem[];
+  restaurant: {
+    id: number;
+    name: string;
+    logo?: string;
+    location?: string;
+  };
+  deliveryAddress?: {
+    lat: number;
+    lng: number;
+    location?: string;
+  };
+};
 
 const MyOrders = () => {
   const navigation = useNavigation<any>();
-  // console.log('navigation', navigation.getState());
+
+  const { data: orderResponse, isLoading, refetch } = useGetOrdersByUserIdQuery({});
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refetch();
+    });
+    return unsubscribe;
+  }, [navigation, refetch]);
+
+  const ordersList = useMemo((): Order[] => {
+    const raw = orderResponse?.data ?? orderResponse;
+    return Array.isArray(raw) ? raw : [];
+  }, [orderResponse]);
+
+  const handleOrderPress = useCallback(
+    (order: Order) => {
+      navigation.navigate('FoodOrderDetail', { orderId: order.id });
+    },
+    [navigation]
+  );
+
+  const renderOrderItem = useCallback(
+    ({ item }: { item: Order }) => {
+      const firstItem = item.items?.[0]?.item;
+      const imageSrc =
+        firstItem?.image
+          ? { uri: firstItem.image }
+          : item.restaurant?.logo
+            ? { uri: item.restaurant.logo }
+            : (images.newly_opened ?? images.placeholder);
+      const itemSummary =
+        item.items?.length > 1
+          ? `${item.items[0].item?.name} +${item.items.length - 1} more`
+          : firstItem?.name ?? 'Order';
+      const deliveryLocation = item.deliveryAddress?.location ?? item.restaurant?.name ?? '';
+      return (
+        <FoodItemCard
+          image={imageSrc as any}
+          title={item.restaurant?.name ?? `Order #${item.id}`}
+          description={`${item.status} · ${itemSummary}${deliveryLocation ? ` · ${deliveryLocation}` : ''}`}
+          price={Number(item.totalAmount) ?? 0}
+          rating={0}
+          reviewCount={0}
+          onPress={() => handleOrderPress(item)}
+        />
+      );
+    },
+    [handleOrderPress]
+  );
+
+  const keyExtractor = useCallback((item: Order) => String(item.id), []);
+
   return (
-    <WrapperContainer title="My Orders" navigation={navigation}>
-      {/* <View style={styles.mainContainer}>
-        <AccomodationTabButtons data={['Hotels', 'Foods', 'Rides']} />
-        <SearchWithFilters placeholder={labels.whatareYouLookingFor} />
-      </View> */}
-      {/* <View> */}
-      <FlatList
-        data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-        renderItem={({ item }) => (
-          <FoodItemCard
-            image={images.newly_opened}
-            title="Pretzel Chicken Noodle Soup - Regular"
-            description="Noodles"
-            price={100}
-            rating={4.5}
-            reviewCount={10}
-            onPress={() => navigation.navigate('FoodDetails')}
-          />
-        )}
-        //   keyExtractor={item => item.id}
-        horizontal={false}
-        contentContainerStyle={styles.hotelForYou}
-        showsHorizontalScrollIndicator={false}
-      />
-      {/* </View> */}
+    <WrapperContainer title="My Orders" navigation={navigation} onBackPress={() => navigation.goBack()}>
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.c_0162C0} />
+        </View>
+      ) : ordersList.length === 0 ? (
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>No orders yet</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={ordersList}
+          renderItem={renderOrderItem}
+          keyExtractor={keyExtractor}
+          horizontal={false}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </WrapperContainer>
   );
 };
@@ -48,27 +136,21 @@ const MyOrders = () => {
 export default MyOrders;
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.c_0162C0,
-    flex: 1,
-  },
-  scrollViewContent: {
-    backgroundColor: colors.white,
-    flex: 1,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    // paddingHorizontal: 20,
-  },
-  hotelForYou: {
+  listContent: {
     paddingHorizontal: 20,
     marginTop: 20,
     gap: 20,
     paddingBottom: 50,
   },
-  mainContainer: {
-    paddingTop: 30,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    // backgroundColor: 'red',
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    color: colors.c_666666,
   },
 });

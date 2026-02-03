@@ -82,7 +82,7 @@ const CalenderBooking = ({ navigation, route }: { navigation?: any, route: Route
         checkOutDate: checkOutDateRaw,
       });
       console.log('response ===>', response);
-      ShowToast('success', response.data.message || 'Availability checked successfully');
+      ShowToast('success', response?.data?.message || 'Availability checked successfully');
       navigation?.navigate('Checkout', {
         checkIn: checkInDateRaw,
         checkOut: checkOutDateRaw,
@@ -90,11 +90,11 @@ const CalenderBooking = ({ navigation, route }: { navigation?: any, route: Route
         checkOutDisplay: checkOutDate,
         hotelId: hotelId,
         ownerId: ownerId,
-        hotel: response.data.data,
+        hotel: response.data.data?.hotel,
       });
     } catch (error) {
       console.log('error ===>', error);
-      ShowToast('error', 'Cannot check availability at the moment');
+      ShowToast('error', 'Not Availble Currently');
     }
   };
 
