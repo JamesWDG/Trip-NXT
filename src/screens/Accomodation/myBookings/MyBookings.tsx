@@ -5,7 +5,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import colors from '../../../config/colors';
 import { RecommendedCard } from '../../dummyPage/DummyPage';
 import images from '../../../config/images';
@@ -104,12 +104,16 @@ const MyBookings = () => {
 
   const handleTabChange = useCallback((index: number) => {
     setActiveTab(index);
-    if (index === TAB_INDEX_HOTELS) {
+  }, []);
+
+  // Refetch when activeTab changes - runs after the active query has started (skip updated)
+  useEffect(() => {
+    if (activeTab === TAB_INDEX_HOTELS) {
       refetchHotelBookings();
-    } else if (index === TAB_INDEX_FOODS) {
+    } else if (activeTab === TAB_INDEX_FOODS) {
       refetchOrders();
     }
-  }, [refetchHotelBookings, refetchOrders]);
+  }, [activeTab, refetchHotelBookings, refetchOrders]);
 
   const hotelBookingsList = useMemo((): HotelBookingItem[] => {
     const raw = hotelBookingsData?.data ?? hotelBookingsData;

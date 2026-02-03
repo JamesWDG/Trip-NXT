@@ -27,20 +27,27 @@ import { useNavigation } from '@react-navigation/native';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import { useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
 
+type HotelItem = {
+  id?: number;
+  name?: string;
+  images?: string[];
+  rentPerDay?: number;
+  location?: { city?: string; state?: string; country?: string };
+};
+
 const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const { bottom } = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const style = useMemo(() => contentContainerStyle(bottom), [bottom]);
   const [getHotels] = useLazyGetHotelsQuery();
-  const [hotels, setHotels] = useState([]);
+  const [hotels, setHotels] = useState<HotelItem[]>([]);
   const fetchHotels = async () => {
     try {
-      const res = await getHotels({}).unwrap();
-      console.log('hotels response ===>', res);
-      setHotels(res.data.data);
+      const res = await getHotels(1).unwrap();
+      setHotels((res?.data?.data ?? []) as HotelItem[]);
     } catch (error) {
-      console.log('hotels error ===>', error);
+      setHotels([]);
     }
   }
 
@@ -77,8 +84,8 @@ const Home = () => {
       </ImageBackground>
 
       <FlatList
-        data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
-        keyExtractor={(item) => String(item)}
+        data={hotels}
+        keyExtractor={(item) => String(item?.id ?? Math.random())}
         contentContainerStyle={[
           GeneralStyles.flexGrow,
           style?.contentContainerStyle,
@@ -98,7 +105,7 @@ const Home = () => {
                 </Text>
               </View>
               <AccomodationCard
-                list={hotels}
+                list={hotels as any}
                 navigation={navigation}
               />
             </View>
@@ -113,19 +120,26 @@ const Home = () => {
             </View>
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.recommendedCardItem}>
-            <RecommendedCard
-              image={images.recommended_accomodation}
-              title="Book Your Place"
-              description={'$180/night'}
-              price={100}
-              rating={4.5}
-              location={'Kingdom Tower, Brazil'}
-              onPress={() => navigation.navigate('HotelDetails')}
-            />
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const hotel = item as HotelItem;
+          const imageSrc = hotel?.images?.[0] ? { uri: hotel.images[0] } : images.recommended_accomodation;
+          const locationStr = hotel?.location
+            ? [hotel.location.city, hotel.location.state, hotel.location.country].filter(Boolean).join(', ')
+            : '—';
+          return (
+            <View style={styles.recommendedCardItem}>
+              <RecommendedCard
+                image={imageSrc}
+                title={hotel?.name ?? 'Hotel'}
+                description={`$${Number(hotel?.rentPerDay ?? 0).toFixed(0)}/night`}
+                price={Number(hotel?.rentPerDay) ?? 0}
+                rating={4.5}
+                location={locationStr}
+                onPress={() => navigation.navigate('HotelDetails', { hotel })}
+              />
+            </View>
+          );
+        }}
       />
 
       <DrawerModal

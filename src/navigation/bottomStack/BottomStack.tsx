@@ -33,8 +33,9 @@ const BottomStack: FC = () => {
   const fetchUserDetails = async () => {
     try {
       const res = await getUser(undefined).unwrap();
-      console.log('user detail response ===>', res);
-      dispatch(saveCredentials(res.data));
+      if (res?.data) {
+        dispatch(saveCredentials(res.data));
+      }
     } catch (error) {
       console.log('error while fetching user details ===>', error);
     }
