@@ -14,6 +14,8 @@ import HotelDetails from '../../screens/Accomodation/hotelDetails/HotelDetails';
 import RealtorProfile from '../../screens/realtorProfile/RealtorProfile';
 import CalenderBooking from '../../screens/Accomodation/calenderBooking/CalenderBooking';
 import Checkout from '../../screens/Accomodation/checkout/Checkout';
+import OrderDetail from '../../screens/Accomodation/orderDetail/OrderDetail';
+import HotelBookingDetail from '../../screens/Accomodation/hotelBookingDetail/HotelBookingDetail';
 import Profile from '../../screens/profile/Profile';
 import Chat from '../../screens/messages/Chat';
 import Notifications from '../../screens/notifications/Notifications';
@@ -61,6 +63,14 @@ const AccomodationStack: FC = () => {
       <AccomodationStackNavigator.Screen
         name="MyBookings"
         component={MyBookings}
+      />
+      <AccomodationStackNavigator.Screen
+        name="OrderDetail"
+        component={OrderDetail}
+      />
+      <AccomodationStackNavigator.Screen
+        name="HotelBookingDetail"
+        component={HotelBookingDetail}
       />
       <AccomodationStackNavigator.Screen
         name="Recommended"

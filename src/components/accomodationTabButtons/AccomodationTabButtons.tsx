@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -10,30 +10,47 @@ import {
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 
-let TABS = ['User', 'Vendor', 'Food'];
-
-const AccomodationTabButtons = ({ data }: { data: string[] }) => {
-  TABS = data;
-  const [activeIndex, setActiveIndex] = useState(0);
+const AccomodationTabButtons = ({
+  data,
+  activeIndex: controlledIndex,
+  onTabChange,
+}: {
+  data: string[];
+  activeIndex?: number;
+  onTabChange?: (index: number) => void;
+}) => {
+  const [internalIndex, setInternalIndex] = useState(0);
+  const activeIndex = controlledIndex !== undefined ? controlledIndex : internalIndex;
   const [containerWidth, setContainerWidth] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
+  const TABS = data;
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
     setContainerWidth(width);
   };
 
+  const tabWidth = TABS.length > 0 ? containerWidth / TABS.length : 0;
+
+  useEffect(() => {
+    if (tabWidth > 0) {
+      Animated.spring(translateX, {
+        toValue: tabWidth * activeIndex,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [activeIndex, tabWidth]);
+
   const handlePress = (index: number) => {
-    setActiveIndex(index);
-    const tabWidth = containerWidth / TABS.length;
-
-    Animated.spring(translateX, {
-      toValue: tabWidth * index,
-      useNativeDriver: true,
-    }).start();
+    if (controlledIndex === undefined) setInternalIndex(index);
+    onTabChange?.(index);
+    if (tabWidth > 0) {
+      Animated.spring(translateX, {
+        toValue: tabWidth * index,
+        useNativeDriver: true,
+      }).start();
+    }
   };
-
-  const tabWidth = containerWidth / TABS.length;
 
   return (
     <View style={styles.wrapper}>

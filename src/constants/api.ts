@@ -17,6 +17,12 @@ type endpointTypes = {
     GET_HOTELS: string;
     CHECK_AVAILABILITY: string;
     CREATE_BOOKING: string;
+    GET_ORDERS_BY_USER_ID: string;
+    GET_SINGLE_ORDER: (id: number) => string;
+    UPDATE_ORDER_STATUS: (id: number) => string;
+    GET_ALL_HOTEL_BOOKINGS_FOR_USER: string;
+    GET_SINGLE_HOTEL_BOOKING: (id: number) => string;
+    UPDATE_HOTEL_BOOKING_STATUS: (id: number) => string;
 }
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
@@ -41,4 +47,10 @@ export const endpoint: endpointTypes = {
     GET_HOTELS: 'hotel/',
     CHECK_AVAILABILITY: '/booking/check-availability',
     CREATE_BOOKING: 'booking',
+    GET_ORDERS_BY_USER_ID: 'order/get-orders-by-user-id',
+    GET_SINGLE_ORDER: (id: number) => `order/get-single-order/${id}`,
+    UPDATE_ORDER_STATUS: (id: number) => `order/update-order-status/${id}`,
+    GET_ALL_HOTEL_BOOKINGS_FOR_USER: 'booking/get-all-hotel-bookings-for-user',
+    GET_SINGLE_HOTEL_BOOKING: (id: number) => `booking/get-single-hotel-booking/${id}`,
+    UPDATE_HOTEL_BOOKING_STATUS: (id: number) => `booking/update-hotel-booking-status/${id}`,
 }
