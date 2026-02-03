@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { CommonActions, NavigationProp, useNavigation } from '@react-navigation/native';
 import fonts from '../../config/fonts';
 import colors from '../../config/colors';
 import WrapperWithVideo from '../../components/wrappers/WrapperWithVideo';
@@ -125,7 +125,18 @@ const OtpVerify = ({ route }: { route: any }) => {
         if (type === 'reset') {
           (navigation as any).navigate('ResetPassword', { type, email });
         }
+else{
+
+  navigation.dispatch(
+    CommonActions.reset({
+      index: 0,
+      routes: [{ name: 'app' }],
+    })
+  )
+}
       }
+
+
       // console.log('Verifying OTP:', otpString);
 
       // Alert.alert('Success', 'OTP verified successfully!', [
