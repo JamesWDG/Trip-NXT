@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CircleX, LogOut } from 'lucide-react-native';
-import { CommonActions } from '@react-navigation/native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import images from '../../config/images';
 import IconsWithTitle from '../iconsWithTitle/IconsWithTitle';
 import colors from '../../config/colors';
@@ -50,6 +50,7 @@ const importantLinksData = [
     id: 1,
     name: 'My Bookings',
     image: images.calender,
+    navigation: 'MyBookings',
   },
   {
     id: 2,
@@ -91,6 +92,7 @@ interface IDrawerModal {
 }
 const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   const [logoutUser, { isLoading }] = useLogoutMutation();
   const dispatch = useDispatch();
@@ -139,7 +141,14 @@ const DrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
         title={item.name}
         divider={true}
         dividerColor={colors.c_111111}
-        onPress={() => {}}
+        onPress={() => {
+          if(item?.navigation){
+            setIsModalVisible(false);
+            navigation.dispatch(
+              CommonActions.navigate(item.navigation as never),
+            );
+          }
+        }}
       />
     );
   };
