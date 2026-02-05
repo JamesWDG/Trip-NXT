@@ -10,6 +10,7 @@ import Wishlists from '../../screens/Accomodation/wishlists/Wishlists';
 import ThankYouScreen from '../../screens/Accomodation/thankYouScreen/ThankYouScreen';
 import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
 import AdvancedFilter from '../../screens/Accomodation/advancedFilter/AdvancedFilter';
+import HotelSearchResults from '../../screens/Accomodation/hotelSearchResults/HotelSearchResults';
 import HotelDetails from '../../screens/Accomodation/hotelDetails/HotelDetails';
 import RealtorProfile from '../../screens/realtorProfile/RealtorProfile';
 import CalenderBooking from '../../screens/Accomodation/calenderBooking/CalenderBooking';
@@ -47,6 +48,10 @@ const AccomodationStack: FC = () => {
       <AccomodationStackNavigator.Screen
         name="AdvancedFilter"
         component={AdvancedFilter}
+      />
+      <AccomodationStackNavigator.Screen
+        name="HotelSearchResults"
+        component={HotelSearchResults}
       />
       <AccomodationStackNavigator.Screen
         name="TripDetails"

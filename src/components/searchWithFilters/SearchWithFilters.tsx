@@ -20,6 +20,7 @@ interface Params {
   navigation?: any;
   filter?: boolean;
   onFocus?: () => void;
+  onFilterPress?: () => void;
 }
 const SearchWithFilters = ({
   placeholder,
@@ -28,9 +29,14 @@ const SearchWithFilters = ({
   navigation,
   filter = true,
   onFocus,
+  onFilterPress,
 }: Params) => {
   const handleFilterPress = () => {
-    navigation?.navigate('AdvancedFilter');
+    if (onFilterPress) {
+      onFilterPress();
+    } else {
+      navigation?.navigate('AdvancedFilter');
+    }
   };
 
   return (

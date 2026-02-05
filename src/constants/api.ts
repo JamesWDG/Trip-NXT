@@ -3,6 +3,7 @@ type endpointTypes = {
     LOGIN: string;
     SIGNUP: string;
     LOGOUT: string;
+    REFRESH_TOKEN: string;
     FORGOT_PASSWORD: string;
     VERIFY_OTP: string;
     RESEND_OTP: string;
@@ -11,10 +12,12 @@ type endpointTypes = {
     SOCIAL_LOGIN: string;
     UPDATE_USER_PROFILE: (id: number) => string;
     RESTAURANT_GET: (page: number) => string;
+    RESTAURANT_FILTER: string;
     RESTAURANT_GET_MENU: (id: number) => string;
     CREATE_ORDER: string;
     GET_ITEM_WITH_ID: (id: string) => string;
     GET_HOTELS: string;
+    GET_HOTELS_FILTER: string;
     CHECK_AVAILABILITY: string;
     CREATE_BOOKING: string;
     GET_ORDERS_BY_USER_ID: string;
@@ -37,14 +40,17 @@ export const endpoint: endpointTypes = {
     VERIFY_OTP: 'user/verify-otp',
     RESEND_OTP: 'user/resend-otp',
     RESET_PASSWORD: 'user/reset-password',
+    REFRESH_TOKEN: 'user/refresh-token',
     GET_USER_PROFILE: '/user/get-auth-user',
     SOCIAL_LOGIN: 'user/social-login',
     UPDATE_USER_PROFILE: (id:number) => `/user/update-user/${id}`,
     RESTAURANT_GET: (page:number) => `restaurant/get?page=${page}`,
+    RESTAURANT_FILTER: 'restaurant/filter',
     RESTAURANT_GET_MENU: (id:number) => `restaurant/get-restaurant-with-menu/${id}`,
     CREATE_ORDER: 'order/create-order',
     GET_ITEM_WITH_ID: (id) => `menu/get-cart-items/${id}`,
     GET_HOTELS: 'hotel/',
+    GET_HOTELS_FILTER: 'hotel/filter',
     CHECK_AVAILABILITY: '/booking/check-availability',
     CREATE_BOOKING: 'booking',
     GET_ORDERS_BY_USER_ID: 'order/get-orders-by-user-id',

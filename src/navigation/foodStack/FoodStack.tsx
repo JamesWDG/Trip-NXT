@@ -6,6 +6,8 @@ import DummyPage from '../../screens/dummyPage/DummyPage';
 import Home from '../../screens/Restaurant/home/Home';
 import Wishlists from '../../screens/Restaurant/wishlist/WishList';
 import MyOrders from '../../screens/Restaurant/myOrders/MyOrders';
+import RestaurantFilter from '../../screens/Restaurant/restaurantFilter/RestaurantFilter';
+import RestaurantSearchResults from '../../screens/Restaurant/restaurantSearchResults/RestaurantSearchResults';
 import RestaurantInfo from '../../screens/Restaurant/restaurantInfo/RestaurantInfo';
 import FoodDetails from '../../screens/Restaurant/foodDetails/FoodDetails';
 import Reviews from '../../screens/Restaurant/reviews/Reviews';
@@ -25,6 +27,8 @@ const FoodStack: FC = () => {
   return (
     <FoodStackNavigator.Navigator screenOptions={{ headerShown: false }}>
       <FoodStackNavigator.Screen name="FoodHome" component={Home} />
+      <FoodStackNavigator.Screen name="FoodRestaurantFilter" component={RestaurantFilter} />
+      <FoodStackNavigator.Screen name="FoodRestaurantSearchResults" component={RestaurantSearchResults} />
       <FoodStackNavigator.Screen name="FoodCheckout" component={Checkout} />
       <FoodStackNavigator.Screen
         name="FoodTripDetails"

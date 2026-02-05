@@ -16,12 +16,14 @@ interface User {
 export interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   rememberMe: boolean;
 }
 
 const initialState: AuthState = {
   user: null,
   token: null,
+  refreshToken: null,
   rememberMe: false,
 };
 
@@ -32,6 +34,11 @@ const authSlice = createSlice({
     setLogout: state => {
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
+    },
+    setCredentials: (state, action) => {
+      if (action.payload?.accessToken) state.token = action.payload.accessToken;
+      if (action.payload?.refreshToken) state.refreshToken = action.payload.refreshToken;
     },
     setRememberMe: (state, action) => {
       state.rememberMe = action.payload;
@@ -64,6 +71,7 @@ const authSlice = createSlice({
       (state, action) => {
         if (action.payload?.data && action.payload?.data?.type !== 'reset') {
           state.token = action.payload.data?.accessToken;
+          if (action.payload.data?.refreshToken) state.refreshToken = action.payload.data.refreshToken;
         }
       },
     );
@@ -72,6 +80,7 @@ const authSlice = createSlice({
       (state, action) => {
         if (action.payload?.data) {
           state.token = action.payload.data?.accessToken;
+          if (action.payload.data?.refreshToken) state.refreshToken = action.payload.data.refreshToken;
         }
       },
     );
@@ -80,6 +89,16 @@ const authSlice = createSlice({
       (state, action) => {
         if (action.payload?.data) {
           state.token = action.payload.data?.accessToken;
+          if (action.payload.data?.refreshToken) state.refreshToken = action.payload.data.refreshToken;
+        }
+      },
+    );
+    builder.addMatcher(
+      authApi.endpoints.refreshToken.matchFulfilled,
+      (state, action) => {
+        if (action.payload?.data) {
+          state.token = action.payload.data?.accessToken;
+          if (action.payload.data?.refreshToken) state.refreshToken = action.payload.data.refreshToken;
         }
       },
     );
@@ -88,6 +107,7 @@ const authSlice = createSlice({
       (state, action) => {
         if (action.payload?.data) {
           state.token = null;
+          state.refreshToken = null;
           state.user = null;
         }
       },
@@ -95,7 +115,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { setLogout, setRememberMe, saveCredentials, clearCredentials } =
+export const { setLogout, setRememberMe, saveCredentials, clearCredentials, setCredentials } =
   authSlice.actions;
 
 export default authSlice.reducer;

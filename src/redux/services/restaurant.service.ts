@@ -11,6 +11,32 @@ export const restaurantApi = baseApi.injectEndpoints({
             }),
             providesTags: ['Restaurant']
         }),
+        getFilteredRestaurants: builder.query({
+            query: (params: {
+                city?: string;
+                minRadius?: number;
+                maxRadius?: number;
+                day?: string;
+                time?: string;
+                page?: number;
+                limit?: number;
+            }) => {
+                const search = new URLSearchParams();
+                if (params.city) search.set('city', params.city);
+                if (params.minRadius != null) search.set('minRadius', String(params.minRadius));
+                if (params.maxRadius != null) search.set('maxRadius', String(params.maxRadius));
+                if (params.day) search.set('day', params.day);
+                if (params.time) search.set('time', params.time);
+                if (params.page != null) search.set('page', String(params.page));
+                if (params.limit != null) search.set('limit', String(params.limit));
+                const qs = search.toString();
+                return {
+                    url: `${endpoint.RESTAURANT_FILTER}${qs ? `?${qs}` : ''}`,
+                    method: 'GET',
+                };
+            },
+            providesTags: ['Restaurant'],
+        }),
         restaurantGetMenu: builder.query({
             query: (id: number) => ({
                 url: endpoint.RESTAURANT_GET_MENU(id),
@@ -61,6 +87,7 @@ export const restaurantApi = baseApi.injectEndpoints({
 
 export const {
     useLazyRestaurantGetQuery,
+    useLazyGetFilteredRestaurantsQuery,
     useLazyRestaurantGetMenuQuery,
     useCreateOrderMutation,
     useLazyGetItemWithIdQuery,

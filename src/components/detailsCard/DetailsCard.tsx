@@ -18,6 +18,7 @@ interface Params {
   numberOfBeds: number;
   numberOfBathrooms: number;
   numberOfGuests: number;
+  roomType?: string;
 }
 const DetailsCard = ({
   reviews,
@@ -31,11 +32,21 @@ const DetailsCard = ({
   title,
   description,
   features,
+  roomType,
 }: Params) => {
+  const roomTypeLabel = roomType
+    ? String(roomType).charAt(0).toUpperCase() + String(roomType).slice(1).toLowerCase()
+    : null;
+
   return (
     <View style={styles.container}>
       <View>
         <Text style={styles.title}>{title}</Text>
+        {roomTypeLabel ? (
+          <View style={styles.roomTypeBadge}>
+            <Text style={styles.roomTypeText}>Room type: {roomTypeLabel}</Text>
+          </View>
+        ) : null}
       </View>
       <View style={styles.priceContainer}>
         <View>
@@ -121,6 +132,19 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   title: { fontSize: 20, fontFamily: fonts.medium, marginBottom: 6 },
+  roomTypeBadge: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.c_F3F3F3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  roomTypeText: {
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    color: colors.c_666666,
+  },
   featureItemText: {
     fontFamily: fonts.medium,
     fontSize: 12,

@@ -16,14 +16,18 @@ import fonts from '../../config/fonts';
 interface Params {
   placeholder: string;
   title?: string;
+  value?: string;
+  onChangeText?: (text: string) => void;
   otherStyles?: ViewStyle;
 }
-const SearchWithInput = ({ placeholder, title, otherStyles }: Params) => {
+const SearchWithInput = ({ placeholder, title, value, onChangeText, otherStyles }: Params) => {
   return (
     <View style={styles.container}>
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, otherStyles]}>
         <TextInput
           placeholder={placeholder}
+          value={value}
+          onChangeText={onChangeText}
           style={styles.input}
           placeholderTextColor={colors.c_666666}
         />

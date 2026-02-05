@@ -44,7 +44,7 @@ const Home = () => {
   const [hotels, setHotels] = useState<HotelItem[]>([]);
   const fetchHotels = async () => {
     try {
-      const res = await getHotels(1).unwrap();
+      const res = await getHotels({}).unwrap();
       setHotels((res?.data?.data ?? []) as HotelItem[]);
     } catch (error) {
       setHotels([]);

@@ -62,6 +62,7 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
             numberOfBathrooms={route.params?.hotel?.numberOfBathrooms}
             numberOfGuests={route.params?.hotel?.numberOfGuests}
             features={route.params?.hotel?.features || []}
+            roomType={route.params?.hotel?.hotelType}
           />
 
           <View

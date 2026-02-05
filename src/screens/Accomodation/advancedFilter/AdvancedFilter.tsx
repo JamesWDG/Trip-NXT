@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -6,27 +7,38 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeftIcon } from 'lucide-react-native';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import images from '../../../config/images';
-import SearchWithInput from '../../../components/searchWithInput/SearchWithInput';
 import DateInput from '../../../components/dateInput/DateInput';
 import DropdownSelect from '../../../components/dropdownSelect/DropdownSelect';
 import PriceRangeSlider from '../../../components/priceRangeSlider/PriceRangeSlider';
-import RatingButtons from '../../../components/ratingButtons/RatingButtons';
-import GradientButton from '../../../components/gradientButton/GradientButton';
 import { width } from '../../../config/constants';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
 import CalendarRangePicker from '../../../components/calendarRangePicker/CalendarRangePicker';
 
+const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
+const ROOM_TYPE_OPTIONS = ['Standard', 'Budget', 'Luxury'];
+const GUEST_OPTIONS = ['1', '2', '3', '4', '5', '6', '7', '8+'];
+const ROOM_OPTIONS = ['1', '2', '3', '4', '5+'];
+
+type CitySuggestion = { id: string; city: string; description: string };
+
 const AdvancedFilter = ({ navigation }: { navigation?: any }) => {
   const { top } = useSafeAreaInsets();
+  const [city, setCity] = useState<string>('');
+  const [citySuggestions, setCitySuggestions] = useState<CitySuggestion[]>([]);
+  const [showCityDropdown, setShowCityDropdown] = useState<boolean>(false);
+  const [citySearchLoading, setCitySearchLoading] = useState<boolean>(false);
+  const cityDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [checkInDate, setCheckInDate] = useState<string>('');
   const [checkOutDate, setCheckOutDate] = useState<string>('');
   const [checkInDateRaw, setCheckInDateRaw] = useState<string>('');
@@ -34,6 +46,8 @@ const AdvancedFilter = ({ navigation }: { navigation?: any }) => {
   const [guests, setGuests] = useState<string>('');
   const [rooms, setRooms] = useState<string>('');
   const [roomType, setRoomType] = useState<string>('');
+  const [priceMin, setPriceMin] = useState<number>(100);
+  const [priceMax, setPriceMax] = useState<number>(300);
   const [showCalendar, setShowCalendar] = useState<boolean>(false);
 
   const headerStyles = useMemo(() => makeHeaderStyles(top), [top]);
@@ -59,6 +73,64 @@ const AdvancedFilter = ({ navigation }: { navigation?: any }) => {
     } ${date.getDate()}, ${date.getFullYear()}`;
   };
 
+  const fetchCitySuggestions = useCallback(async (query: string): Promise<CitySuggestion[]> => {
+    if (!query || query.length < 2) return [];
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+        query,
+      )}&key=${GOOGLE_PLACES_API_KEY}&types=(regions)&language=en`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.status === 'OK' && data.predictions && Array.isArray(data.predictions)) {
+        return data.predictions.map((p: any, index: number) => {
+          const main = p.structured_formatting?.main_text || p.description?.split(',')[0]?.trim() || '';
+          const secondary = p.structured_formatting?.secondary_text || p.description || '';
+          return {
+            id: `city-${p.place_id || index}`,
+            city: main,
+            description: secondary ? `${main}, ${secondary}` : main,
+          };
+        });
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const handleCityChange = useCallback(
+    (text: string) => {
+      setCity(text);
+      if (cityDebounceRef.current) clearTimeout(cityDebounceRef.current);
+      if (text.length < 2) {
+        setCitySuggestions([]);
+        setShowCityDropdown(false);
+        return;
+      }
+      setShowCityDropdown(true);
+      cityDebounceRef.current = setTimeout(async () => {
+        cityDebounceRef.current = null;
+        setCitySearchLoading(true);
+        const results = await fetchCitySuggestions(text);
+        setCitySuggestions(results);
+        setCitySearchLoading(false);
+      }, 400);
+    },
+    [fetchCitySuggestions],
+  );
+
+  const handleSelectCity = useCallback((suggestion: CitySuggestion) => {
+    setCity(suggestion.city);
+    setCitySuggestions([]);
+    setShowCityDropdown(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (cityDebounceRef.current) clearTimeout(cityDebounceRef.current);
+    };
+  }, []);
+
   const handleDateRangeSelect = (startDate: string, endDate: string) => {
     if (startDate) {
       setCheckInDateRaw(startDate);
@@ -73,9 +145,28 @@ const AdvancedFilter = ({ navigation }: { navigation?: any }) => {
     }
   };
 
+  const parseCount = (s: string): number | undefined => {
+    if (!s) return undefined;
+    const match = s.replace(/\D/g, '');
+    if (match === '' || match === '+') return undefined;
+    const n = parseInt(match, 10);
+    return Number.isNaN(n) ? undefined : n;
+  };
+
   const handleSearch = () => {
-    // Handle search logic
-    console.log('Search with filters');
+    const filters = {
+      city: city.trim() || undefined,
+      checkInDate: checkInDateRaw || undefined,
+      checkOutDate: checkOutDateRaw || undefined,
+      guests: parseCount(guests),
+      rooms: parseCount(rooms),
+      roomType: roomType ? roomType.toLowerCase() : undefined,
+      priceMin: priceMin ?? 100,
+      priceMax: priceMax ?? 300,
+      page: 1,
+      limit: 20,
+    };
+    navigation?.navigate('HotelSearchResults', { filters });
   };
 
   return (
@@ -107,16 +198,46 @@ const AdvancedFilter = ({ navigation }: { navigation?: any }) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* City Filter */}
+            {/* City Filter - type to search city */}
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>City</Text>
-              <View style={styles.searchContainer}>
-                <SearchWithInput placeholder="Search City Here..." />
+              <View style={styles.cityInputWrapper}>
+                <TextInput
+                  placeholder="Search city..."
+                  placeholderTextColor={colors.c_666666}
+                  style={styles.cityInput}
+                  value={city}
+                  onChangeText={handleCityChange}
+                  onFocus={() => citySuggestions.length > 0 && setShowCityDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowCityDropdown(false), 200)}
+                />
+                {citySearchLoading && (
+                  <View style={styles.cityLoader}>
+                    <ActivityIndicator size="small" color={colors.c_0162C0} />
+                  </View>
+                )}
+                {showCityDropdown && citySuggestions.length > 0 && (
+                  <View style={styles.cityDropdown}>
+                    {citySuggestions.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={styles.cityDropdownItem}
+                        onPress={() => handleSelectCity(item)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.cityDropdownText} numberOfLines={1}>
+                          {item.description}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </View>
             </View>
 
-            {/* Date Selection */}
+            {/* Date Selection - only hotels not booked between these dates */}
             <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Check-in & Check-out</Text>
               <View style={styles.dateInputsRow}>
                 <DateInput
                   placeholder="Check In"
@@ -131,45 +252,52 @@ const AdvancedFilter = ({ navigation }: { navigation?: any }) => {
                   otherStyles={styles.dateInputHalf}
                 />
               </View>
+              <Text style={styles.hintText}>
+                Only hotels available for these dates will be shown (booked hotels excluded).
+              </Text>
             </View>
 
-            {/* Guests and Rooms */}
+            {/* Guests & Rooms */}
             <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Guests & Rooms</Text>
               <View style={styles.dropdownRow}>
                 <DropdownSelect
                   placeholder="Guests"
                   value={guests}
                   onSelect={value => setGuests(value)}
+                  options={GUEST_OPTIONS}
                   otherStyles={styles.dropdownHalf}
                 />
                 <DropdownSelect
                   placeholder="Rooms"
                   value={rooms}
                   onSelect={value => setRooms(value)}
+                  options={ROOM_OPTIONS}
                   otherStyles={styles.dropdownHalf}
                 />
               </View>
             </View>
 
-            {/* Price Range */}
+            {/* Price Range Per Day */}
             <View style={styles.section}>
-              <PriceRangeSlider onRangeChange={(min, max) => {}} />
+              <Text style={styles.sectionLabel}>Price range per day</Text>
+              <PriceRangeSlider
+                onRangeChange={(min, max) => {
+                  setPriceMin(min);
+                  setPriceMax(max);
+                }}
+              />
             </View>
 
             {/* Room Type */}
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Rooms Type</Text>
+              <Text style={styles.sectionLabel}>Room type</Text>
               <DropdownSelect
-                placeholder="Room Type"
+                placeholder="Room type"
                 value={roomType}
                 onSelect={value => setRoomType(value)}
+                options={ROOM_TYPE_OPTIONS}
               />
-            </View>
-
-            {/* Ratings */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Ratings</Text>
-              <RatingButtons onRatingSelect={rating => {}} />
             </View>
 
             {/* Search Button */}
@@ -303,8 +431,60 @@ const styles = StyleSheet.create({
     color: colors.black,
     marginBottom: 12,
   },
-  searchContainer: {
+  hintText: {
+    fontSize: 12,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
     marginTop: 8,
+    marginBottom: 4,
+  },
+  cityInputWrapper: {
+    position: 'relative',
+    marginTop: 8,
+  },
+  cityInput: {
+    backgroundColor: colors.white,
+    borderRadius: 100,
+    height: 48,
+    paddingHorizontal: 20,
+    fontSize: 14,
+    fontFamily: fonts.normal,
+    color: colors.black,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  cityLoader: {
+    position: 'absolute',
+    right: 16,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  cityDropdown: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginTop: 6,
+    maxHeight: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+    overflow: 'hidden',
+  },
+  cityDropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.c_F3F3F3,
+  },
+  cityDropdownText: {
+    fontSize: 14,
+    fontFamily: fonts.normal,
+    color: colors.black,
   },
   dateInputsRow: {
     flexDirection: 'row',

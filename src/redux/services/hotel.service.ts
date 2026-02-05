@@ -41,6 +41,40 @@ const hotelApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Hotel'],
         }),
+        getFilteredHotels: builder.query({
+            query: (params: {
+                city?: string;
+                checkInDate?: string;
+                checkOutDate?: string;
+                priceMin?: number;
+                priceMax?: number;
+                roomType?: string;
+                guests?: number;
+                rooms?: number;
+                minRating?: number;
+                page?: number;
+                limit?: number;
+            }) => {
+                const search = new URLSearchParams();
+                if (params.city) search.set('city', params.city);
+                if (params.checkInDate) search.set('checkInDate', params.checkInDate);
+                if (params.checkOutDate) search.set('checkOutDate', params.checkOutDate);
+                if (params.priceMin != null) search.set('priceMin', String(params.priceMin));
+                if (params.priceMax != null) search.set('priceMax', String(params.priceMax));
+                if (params.roomType) search.set('roomType', params.roomType.toLowerCase());
+                if (params.guests != null) search.set('guests', String(params.guests));
+                if (params.rooms != null) search.set('rooms', String(params.rooms));
+                if (params.minRating != null) search.set('minRating', String(params.minRating));
+                if (params.page != null) search.set('page', String(params.page));
+                if (params.limit != null) search.set('limit', String(params.limit));
+                const qs = search.toString();
+                return {
+                    url: `${endpoint.GET_HOTELS_FILTER}${qs ? `?${qs}` : ''}`,
+                    method: 'GET',
+                };
+            },
+            providesTags: ['Hotel'],
+        }),
         getHotelBookingsForUser: builder.query({
             query: () => ({
                 url: endpoint.GET_ALL_HOTEL_BOOKINGS_FOR_USER,
@@ -74,4 +108,5 @@ export const {
     useGetHotelBookingsForUserQuery,
     useGetSingleHotelBookingQuery,
     useUpdateHotelBookingStatusMutation,
+    useLazyGetFilteredHotelsQuery,
 } = hotelApi;

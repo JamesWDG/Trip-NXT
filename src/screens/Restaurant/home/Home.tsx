@@ -73,6 +73,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
         <SearchWithFilters
           placeholder={labels.whatDoYouWantToEat}
           navigation={navigation}
+          onFilterPress={() => navigation.navigate('FoodRestaurantFilter')}
         />
       </ImageBackground>
 

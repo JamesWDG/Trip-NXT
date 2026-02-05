@@ -53,6 +53,13 @@ export const authApi = baseApi.injectEndpoints({
         method: 'POST',
       }),
     }),
+    refreshToken: builder.mutation({
+      query: (body: { refreshToken: string }) => ({
+        url: endpoint.REFRESH_TOKEN,
+        method: 'POST',
+        body,
+      }),
+    }),
     getUser: builder.query({
       query: () => ({
         url: endpoint.GET_USER_PROFILE,
@@ -84,6 +91,7 @@ export const {
   useResendOTPMutation,
   useResetPasswordMutation,
   useLogoutMutation,
+  useRefreshTokenMutation,
   useLazyGetUserQuery,
   useUpdateUserMutation,
   useSocialLoginMutation,

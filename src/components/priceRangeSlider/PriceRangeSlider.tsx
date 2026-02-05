@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, PanResponder, Dimensions } from 'react-native';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 
@@ -41,6 +41,10 @@ const PriceRangeSlider = ({
 
   const minHandleRef = useRef<View>(null);
   const maxHandleRef = useRef<View>(null);
+
+  useEffect(() => {
+    onRangeChange?.(minValue, maxValue);
+  }, []);
 
   const minPanResponder = useRef(
     PanResponder.create({
