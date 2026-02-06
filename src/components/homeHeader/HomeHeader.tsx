@@ -29,7 +29,11 @@ const HomeHeader = ({ navigation, onPress, bag = true }: HomeHeaderProps) => {
 
   return (
     <View style={HomeHeaderStyle.container}>
-      <TouchableOpacity onPress={onPress}>
+      <TouchableOpacity
+        onPress={onPress}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        activeOpacity={0.7}
+      >
         <Image source={images.hamburger} style={styles.hamburgerImage} />
       </TouchableOpacity>
 

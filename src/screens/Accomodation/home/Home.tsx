@@ -259,6 +259,10 @@ const styles = StyleSheet.create({
     height: height * 0.4,
     paddingHorizontal: 20,
   },
+  headerZIndex: {
+    zIndex: 10,
+    elevation: 10,
+  },
   listContainer: {
     marginTop: 30,
   },

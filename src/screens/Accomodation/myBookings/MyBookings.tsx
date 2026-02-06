@@ -1,11 +1,11 @@
 import {
-  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import colors from '../../../config/colors';
 import { RecommendedCard } from '../../dummyPage/DummyPage';
 import images from '../../../config/images';
@@ -213,8 +213,23 @@ const MyBookings = () => {
       {activeTab === TAB_INDEX_HOTELS && (
         <>
           {isLoadingHotels ? (
-            <View style={styles.centered}>
-              <ActivityIndicator size="large" color={colors.c_0162C0} />
+            <View style={styles.skeletonWrap}>
+              <SkeletonPlaceholder
+                borderRadius={10}
+                backgroundColor={colors.c_F3F3F3}
+                highlightColor={colors.c_DDDDDD}
+              >
+                {[1, 2, 3, 4].map((i) => (
+                  <View key={i} style={styles.skeletonHotelCard}>
+                    <View style={styles.skeletonHotelImage} />
+                    <View style={styles.skeletonHotelBody}>
+                      <View style={styles.skeletonHotelTitle} />
+                      <View style={styles.skeletonHotelDesc} />
+                      <View style={styles.skeletonHotelMeta} />
+                    </View>
+                  </View>
+                ))}
+              </SkeletonPlaceholder>
             </View>
           ) : hotelBookingsList.length === 0 ? (
             <View style={styles.centered}>
@@ -236,8 +251,23 @@ const MyBookings = () => {
       {activeTab === TAB_INDEX_FOODS && (
         <>
           {isLoadingOrders ? (
-            <View style={styles.centered}>
-              <ActivityIndicator size="large" color={colors.c_0162C0} />
+            <View style={styles.skeletonWrap}>
+              <SkeletonPlaceholder
+                borderRadius={10}
+                backgroundColor={colors.c_F3F3F3}
+                highlightColor={colors.c_DDDDDD}
+              >
+                {[1, 2, 3, 4].map((i) => (
+                  <View key={i} style={styles.skeletonOrderCard}>
+                    <View style={styles.skeletonOrderImage} />
+                    <View style={styles.skeletonOrderBody}>
+                      <View style={styles.skeletonOrderTitle} />
+                      <View style={styles.skeletonOrderDesc} />
+                      <View style={styles.skeletonOrderPrice} />
+                    </View>
+                  </View>
+                ))}
+              </SkeletonPlaceholder>
             </View>
           ) : ordersGrouped.length === 0 ? (
             <View style={styles.centered}>
@@ -282,5 +312,73 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: 16,
     color: colors.c_666666,
+  },
+  skeletonWrap: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 50,
+  },
+  skeletonHotelCard: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  skeletonHotelImage: {
+    width: 120,
+    height: 150,
+    borderRadius: 12,
+  },
+  skeletonHotelBody: {
+    flex: 1,
+    marginLeft: 14,
+    justifyContent: 'center',
+  },
+  skeletonHotelTitle: {
+    width: '70%',
+    height: 16,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonHotelDesc: {
+    width: '50%',
+    height: 12,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonHotelMeta: {
+    width: '40%',
+    height: 12,
+    borderRadius: 4,
+  },
+  skeletonOrderCard: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  skeletonOrderImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+  },
+  skeletonOrderBody: {
+    flex: 1,
+    marginLeft: 14,
+    justifyContent: 'center',
+  },
+  skeletonOrderTitle: {
+    width: '65%',
+    height: 14,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonOrderDesc: {
+    width: '90%',
+    height: 12,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonOrderPrice: {
+    width: '30%',
+    height: 14,
+    borderRadius: 4,
   },
 });

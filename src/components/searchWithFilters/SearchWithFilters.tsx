@@ -76,7 +76,10 @@ const styles = StyleSheet.create({
     color: colors.black,
     fontSize: 14,
     fontFamily: fonts.normal,
-    height: 40,
+    // height: 40,
+    alignContent:"center",
+    alignItems:"center",
+    justifyContent:"center",
   },
   inputContainer: {
     backgroundColor: colors.white,
@@ -86,6 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
+    
     gap: 10,
     paddingHorizontal: 15,
     shadowColor: '#000000',

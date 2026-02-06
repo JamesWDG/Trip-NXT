@@ -115,7 +115,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
               onSeeAllPress={() => navigation.navigate('FoodRestaurantInfo')}
             />
           </View>
-          {loadingNewRestaurant ? (
+          {loadingNewRestaurant && newRestaurant.length === 0 ? (
             <View style={styles.newlyOpenedSkeletonWrap}>
               <SkeletonPlaceholder
                 borderRadius={10}
@@ -147,7 +147,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
           <SectionHeader title="Popular Food" onSeeAllPress={() => navigation.navigate('PopularFoodList')} />
         </View>
 
-        {loadingPopularMenus ? (
+        {loadingPopularMenus && popularMenus.length === 0 ? (
           <View style={styles.popularFoodSkeletonWrap}>
             <SkeletonPlaceholder
               borderRadius={10}
