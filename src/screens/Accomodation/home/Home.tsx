@@ -1,11 +1,13 @@
 import {
   FlatList,
   ImageBackground,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import images from '../../../config/images';
 import { height, width } from '../../../config/constants';
 import colors from '../../../config/colors';
@@ -21,6 +23,7 @@ import {
 } from '../../../constants/Accomodation';
 import AccomodationCard from '../../../components/accomodationCard/AccomodationCard';
 import HomeCarousel from '../../../components/homeCarousel/HomeCarousel';
+import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import { RecommendedCard } from '../../dummyPage/DummyPage';
 import DrawerModal from '../../../components/drawerModal/DrawerModal';
 import { useNavigation } from '@react-navigation/native';
@@ -37,29 +40,33 @@ type HotelItem = {
 
 const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [loadingHotels, setLoadingHotels] = useState(true);
   const { bottom } = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const style = useMemo(() => contentContainerStyle(bottom), [bottom]);
   const [getHotels] = useLazyGetHotelsQuery();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
   const fetchHotels = async () => {
+    setLoadingHotels(true);
     try {
       const res = await getHotels({}).unwrap();
       setHotels((res?.data?.data ?? []) as HotelItem[]);
     } catch (error) {
       setHotels([]);
+    } finally {
+      setLoadingHotels(false);
     }
-  }
+  };
 
   useEffect(() => {
-    const subscribe = navigation.addListener('focus',()=>{
+    const subscribe = navigation.addListener('focus', () => {
       fetchHotels();
-    })
+    });
     return subscribe;
-  },[])
+  }, []);
 
   return (
-    <View style={GeneralStyles.flex}>
+    <View style={[GeneralStyles.flex, styles.screenBackground]}>
       <ImageBackground
         source={images.accomodation_home}
         style={styles.imageBackground}
@@ -83,64 +90,126 @@ const Home = () => {
         />
       </ImageBackground>
 
-      <FlatList
-        data={hotels}
-        keyExtractor={(item) => String(item?.id ?? Math.random())}
-        contentContainerStyle={[
-          GeneralStyles.flexGrow,
-          style?.contentContainerStyle,
-        ]}
-        showsVerticalScrollIndicator={false}
-        style={GeneralStyles.flex}
-        ListHeaderComponent={
-          <View>
-            <View style={styles.listContainer}>
-              <ListWithIcon list={IconListArray} />
+      {loadingHotels && hotels.length === 0 ? (
+        <ScrollView
+          style={[GeneralStyles.flex, styles.screenBackground]}
+          contentContainerStyle={[GeneralStyles.flexGrow, style?.contentContainerStyle]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.listContainer}>
+            <ListWithIcon list={IconListArray} />
+          </View>
+          <View style={styles.gap}>
+            <View style={styles.paddingleft}>
+              <Text style={styles.yourNextGatewayText}>
+                {labels.yourNexGateway}
+              </Text>
             </View>
-
-            <View style={styles.gap}>
-              <View style={styles.paddingleft}>
-                <Text style={styles.yourNextGatewayText}>
-                  {labels.yourNexGateway}
-                </Text>
-              </View>
-              <AccomodationCard
-                list={hotels as any}
-                navigation={navigation}
-              />
-            </View>
-            {/*<HomeCarousel data={CarouselData} /> */}
-
-            <View style={styles.gap}>
-              <View style={styles.paddingleft}>
-                <Text style={styles.yourNextGatewayText}>
-                  {labels.hotelsForYou}
-                </Text>
-              </View>
+            <View style={styles.skeletonAccomodationWrap}>
+              <SkeletonPlaceholder
+                borderRadius={10}
+                backgroundColor={colors.c_F3F3F3}
+                highlightColor={colors.c_DDDDDD}
+              >
+                <View style={styles.skeletonAccomodationRow}>
+                  {[1, 2, 3, 4].map((i) => (
+                    <View key={i} style={styles.skeletonAccomodationCard}>
+                      <View style={styles.skeletonAccomodationImage} />
+                      <View style={styles.skeletonAccomodationTitle} />
+                    </View>
+                  ))}
+                </View>
+              </SkeletonPlaceholder>
             </View>
           </View>
-        }
-        renderItem={({ item }) => {
-          const hotel = item as HotelItem;
-          const imageSrc = hotel?.images?.[0] ? { uri: hotel.images[0] } : images.recommended_accomodation;
-          const locationStr = hotel?.location
-            ? [hotel.location.city, hotel.location.state, hotel.location.country].filter(Boolean).join(', ')
-            : '—';
-          return (
-            <View style={styles.recommendedCardItem}>
-              <RecommendedCard
-                image={imageSrc}
-                title={hotel?.name ?? 'Hotel'}
-                description={`$${Number(hotel?.rentPerDay ?? 0).toFixed(0)}/night`}
-                price={Number(hotel?.rentPerDay) ?? 0}
-                rating={4.5}
-                location={locationStr}
-                onPress={() => navigation.navigate('HotelDetails', { hotel })}
+          <View style={styles.gap}>
+            <View style={GeneralStyles.paddingHorizontal}>
+              <SectionHeader
+                title={labels.hotelsForYou}
+                onSeeAllPress={() => navigation.navigate('AllHotels')}
               />
             </View>
-          );
-        }}
-      />
+          </View>
+          <View style={styles.skeletonRecommendedWrap}>
+            <SkeletonPlaceholder
+              borderRadius={10}
+              backgroundColor={colors.c_F3F3F3}
+              highlightColor={colors.c_DDDDDD}
+            >
+              {[1, 2, 3, 4].map((i) => (
+                <View key={i} style={styles.skeletonRecommendedCard}>
+                  <View style={styles.skeletonRecommendedImage} />
+                  <View style={styles.skeletonRecommendedBody}>
+                    <View style={styles.skeletonRecommendedTitle} />
+                    <View style={styles.skeletonRecommendedDesc} />
+                    <View style={styles.skeletonRecommendedMeta} />
+                  </View>
+                </View>
+              ))}
+            </SkeletonPlaceholder>
+          </View>
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={hotels}
+          keyExtractor={(item) => String(item?.id ?? Math.random())}
+          contentContainerStyle={[
+            GeneralStyles.flexGrow,
+            style?.contentContainerStyle,
+          ]}
+          showsVerticalScrollIndicator={false}
+          style={[GeneralStyles.flex, styles.screenBackground]}
+          ListHeaderComponent={
+            <View>
+              <View style={styles.listContainer}>
+                <ListWithIcon list={IconListArray} />
+              </View>
+
+              <View style={styles.gap}>
+                <View style={styles.paddingleft}>
+                  <Text style={styles.yourNextGatewayText}>
+                    {labels.yourNexGateway}
+                  </Text>
+                </View>
+                <AccomodationCard
+                  list={hotels as any}
+                  navigation={navigation}
+                />
+              </View>
+              {/*<HomeCarousel data={CarouselData} /> */}
+
+              <View style={styles.gap}>
+                <View style={GeneralStyles.paddingHorizontal}>
+                  <SectionHeader
+                    title={labels.hotelsForYou}
+                    onSeeAllPress={() => navigation.navigate('AllHotels')}
+                  />
+                </View>
+              </View>
+            </View>
+          }
+          renderItem={({ item }) => {
+            const hotel = item as HotelItem;
+            const imageSrc = hotel?.images?.[0] ? { uri: hotel.images[0] } : images.recommended_accomodation;
+            const locationStr = hotel?.location
+              ? [hotel.location.city, hotel.location.state, hotel.location.country].filter(Boolean).join(', ')
+              : '—';
+            return (
+              <View style={styles.recommendedCardItem}>
+                <RecommendedCard
+                  image={imageSrc}
+                  title={hotel?.name ?? 'Hotel'}
+                  description={`$${Number(hotel?.rentPerDay ?? 0).toFixed(0)}/night`}
+                  price={Number(hotel?.rentPerDay) ?? 0}
+                  rating={4.5}
+                  location={locationStr}
+                  onPress={() => navigation.navigate('HotelDetails', { hotel })}
+                />
+              </View>
+            );
+          }}
+        />
+      )}
 
       <DrawerModal
         visible={isModalVisible}
@@ -159,6 +228,9 @@ const contentContainerStyle = (bottom: number) =>
 export default Home;
 
 const styles = StyleSheet.create({
+  screenBackground: {
+    backgroundColor: colors.white,
+  },
   slide: {
     width: width,
     height: 200,
@@ -231,5 +303,62 @@ const styles = StyleSheet.create({
   imageStyle: {
     borderRadius: 10,
     width: width * 0.9,
+  },
+  skeletonAccomodationWrap: {
+    paddingLeft: 20,
+    marginBottom: 8,
+  },
+  skeletonAccomodationRow: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  skeletonAccomodationCard: {
+    width: 100,
+  },
+  skeletonAccomodationImage: {
+    width: 100,
+    height: 120,
+    borderRadius: 10,
+  },
+  skeletonAccomodationTitle: {
+    width: '80%',
+    height: 12,
+    borderRadius: 4,
+    marginTop: 10,
+  },
+  skeletonRecommendedWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  skeletonRecommendedCard: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  skeletonRecommendedImage: {
+    width: 120,
+    height: 150,
+    borderRadius: 12,
+  },
+  skeletonRecommendedBody: {
+    flex: 1,
+    marginLeft: 14,
+    justifyContent: 'center',
+  },
+  skeletonRecommendedTitle: {
+    width: '70%',
+    height: 16,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonRecommendedDesc: {
+    width: '50%',
+    height: 12,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonRecommendedMeta: {
+    width: '40%',
+    height: 12,
+    borderRadius: 4,
   },
 });

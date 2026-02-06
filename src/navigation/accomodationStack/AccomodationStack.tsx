@@ -11,6 +11,7 @@ import ThankYouScreen from '../../screens/Accomodation/thankYouScreen/ThankYouSc
 import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
 import AdvancedFilter from '../../screens/Accomodation/advancedFilter/AdvancedFilter';
 import HotelSearchResults from '../../screens/Accomodation/hotelSearchResults/HotelSearchResults';
+import AllHotels from '../../screens/Accomodation/allHotels/AllHotels';
 import HotelDetails from '../../screens/Accomodation/hotelDetails/HotelDetails';
 import RealtorProfile from '../../screens/realtorProfile/RealtorProfile';
 import CalenderBooking from '../../screens/Accomodation/calenderBooking/CalenderBooking';
@@ -52,6 +53,10 @@ const AccomodationStack: FC = () => {
       <AccomodationStackNavigator.Screen
         name="HotelSearchResults"
         component={HotelSearchResults}
+      />
+      <AccomodationStackNavigator.Screen
+        name="AllHotels"
+        component={AllHotels}
       />
       <AccomodationStackNavigator.Screen
         name="TripDetails"
