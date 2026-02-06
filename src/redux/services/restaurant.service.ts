@@ -5,10 +5,14 @@ import { baseApi } from "./api";
 export const restaurantApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         restaurantGet: builder.query({
-            query: (page: number) => ({
-                url: endpoint.RESTAURANT_GET(page),
-                method: 'GET',
-            }),
+            query: (args: number | { page: number; limit?: number }) => {
+                const page = typeof args === 'number' ? args : args.page;
+                const limit = typeof args === 'number' ? undefined : args.limit;
+                return {
+                    url: endpoint.RESTAURANT_GET(page, limit),
+                    method: 'GET',
+                };
+            },
             providesTags: ['Restaurant']
         }),
         getFilteredRestaurants: builder.query({
@@ -57,6 +61,13 @@ export const restaurantApi = baseApi.injectEndpoints({
                 method: 'GET',
             })
         }),
+        getPopularMenus: builder.query({
+            query: (limit?: number) => ({
+                url: limit != null ? `${endpoint.MENU_POPULAR}?limit=${limit}` : endpoint.MENU_POPULAR,
+                method: 'GET',
+            }),
+            providesTags: ['Restaurant'],
+        }),
         getOrdersByUserId: builder.query({
             query: () => ({
                 url: endpoint.GET_ORDERS_BY_USER_ID,
@@ -94,4 +105,5 @@ export const {
     useGetOrdersByUserIdQuery,
     useGetSingleOrderQuery,
     useUpdateOrderStatusMutation,
+    useLazyGetPopularMenusQuery,
 } = restaurantApi;

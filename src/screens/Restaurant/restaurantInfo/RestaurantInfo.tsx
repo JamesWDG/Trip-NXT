@@ -1,19 +1,35 @@
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import React, { useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
 import GeneralStyles from '../../../utils/GeneralStyles';
-import HomeHeader from '../../../components/homeHeader/HomeHeader';
 import { NavigationProp } from '@react-navigation/native';
 import RestaurantHeader from '../../../components/RestaurantHeader/ReataurantHeader';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
-import { CarouselData } from '../../../constants/Accomodation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import colors from '../../../config/colors';
+import fonts from '../../../config/fonts';
 import SearchWithFilters from '../../../components/searchWithFilters/SearchWithFilters';
 import labels from '../../../config/labels';
-import FoodCard from '../../../components/foodCard/FoodCard';
-import FoodReviewCard from '../../../components/foodReviewCard/FoodReviewCard';
 import images from '../../../config/images';
-import RestaurantCard from '../../../components/restaurantCard/RestaurantCard';
+import FastImage from 'react-native-fast-image';
+import { useLazyRestaurantGetQuery } from '../../../redux/services/restaurant.service';
+import RestaurantListSkeleton from '../../../components/restaurantListSkeleton/RestaurantListSkeleton';
+
+const getRestaurantImage = (item: any) => {
+  const logo = item?.logo;
+  const banner = item?.banner;
+  if (logo && typeof logo === 'string' && logo.startsWith('http')) return { uri: logo };
+  if (banner && typeof banner === 'string' && banner.startsWith('http')) return { uri: banner };
+  return images.placeholder;
+};
+
+const PAGE_SIZE = 10;
 
 const RestaurantInfo = ({
   navigation,
@@ -21,10 +37,45 @@ const RestaurantInfo = ({
   navigation: NavigationProp<any>;
 }) => {
   const { top } = useSafeAreaInsets();
-  const [wishlist, setWishlist] = useState(false);
-  const wishlistButtonStyles = useMemo(() => {
-    return wishlistButton(wishlist, top);
-  }, [wishlist]);
+  const [restaurants, setRestaurants] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [restaurantGet] = useLazyRestaurantGetQuery();
+
+  const loadRestaurants = useCallback(
+    async (pageNum: number, append: boolean) => {
+      if (pageNum > totalPages && append) return;
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+      try {
+        const res = await restaurantGet({ page: pageNum, limit: PAGE_SIZE }).unwrap();
+        const list = res.data?.restaurants ?? [];
+        const total = res.data?.total ?? 0;
+        setRestaurants(prev => (append ? [...prev, ...list] : list));
+        setTotalPages(Math.ceil(total / PAGE_SIZE) || 1);
+        setPage(pageNum);
+      } catch (_) {}
+      finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [restaurantGet, totalPages],
+  );
+
+  React.useEffect(() => {
+    loadRestaurants(1, false);
+  }, []);
+
+  const handleEndReached = useCallback(() => {
+    if (loading || loadingMore || page >= totalPages) return;
+    loadRestaurants(page + 1, true);
+  }, [loading, loadingMore, page, totalPages, loadRestaurants]);
+
+  const wishlistButtonStyles = useMemo(() => wishlistButton(false, top), [top]);
+
   return (
     <View style={GeneralStyles.flex}>
       <View style={styles.headerContainer}>
@@ -45,29 +96,51 @@ const RestaurantInfo = ({
             navigation={navigation}
             filter={false}
           />
-          <FlatList
-            data={[1, 2, 3, 4]}
-            style={{ flex: 1 }}
-            contentContainerStyle={styles.contentContainerStyle}
-            keyExtractor={(item, index) => item.toString()}
-            renderItem={() => (
-              <RestaurantCard
-                image={images.newly_opened || images.foodHome}
-                restaurantName="Restaurant Name"
-                rating={4.8}
-                reviewCount={150}
-                location="New York City, NY"
-                onPress={() => {
-                  navigation.navigate('FoodRestaurantInformation');
-                  // Handle card press
-                }}
-                onHeartPress={isFavorite => {
-                  console.log('Favorite:', isFavorite);
-                }}
-              />
-            )}
-            showsVerticalScrollIndicator={false}
-          />
+          {loading && restaurants.length === 0 ? (
+            <RestaurantListSkeleton />
+          ) : (
+            <FlatList
+              data={restaurants}
+              style={styles.list}
+              contentContainerStyle={styles.contentContainerStyle}
+              keyExtractor={item => String(item.id)}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.cardRow}
+                  onPress={() => navigation.navigate('FoodRestaurantInformation', {
+                    id: item.id,
+                    name: item.name,
+                    logo: item.logo,
+                    description: item.description,
+                    banner: item.banner,
+                    createdAt: item.createdAt,
+                    deliveryRadius: item.deliveryRadius,
+                  })}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.imageWrap}>
+                    <FastImage
+                      source={getRestaurantImage(item)}
+                      style={styles.cardImage}
+                      resizeMode="cover"
+                    />
+                  </View>
+                  <View style={styles.cardTextWrap}>
+                    <Text numberOfLines={1} style={styles.cardTitle}>
+                      {item?.name || 'Restaurant'}
+                    </Text>
+                    <Text numberOfLines={2} style={styles.cardDesc}>
+                      {item?.description?.trim() || 'View menu'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={colors.c_0162C0} style={styles.footerLoader} /> : null}
+              onEndReached={handleEndReached}
+              onEndReachedThreshold={0.3}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </View>
       </View>
     </View>
@@ -118,7 +191,49 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainerStyle: {
-    // marginTop: 35,
     flexGrow: 1,
+    paddingBottom: 24,
   },
+  list: { flex: 1 },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  imageWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: colors.c_F3F3F3,
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cardTextWrap: {
+    flex: 1,
+    marginLeft: 14,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontFamily: fonts.semibold,
+    color: colors.black,
+    marginBottom: 4,
+  },
+  cardDesc: {
+    fontSize: 13,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
+  },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
+  footerLoader: { paddingVertical: 16 },
 });

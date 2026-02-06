@@ -11,11 +11,12 @@ type endpointTypes = {
     GET_USER_PROFILE: string;
     SOCIAL_LOGIN: string;
     UPDATE_USER_PROFILE: (id: number) => string;
-    RESTAURANT_GET: (page: number) => string;
+    RESTAURANT_GET: (page: number, limit?: number) => string;
     RESTAURANT_FILTER: string;
     RESTAURANT_GET_MENU: (id: number) => string;
     CREATE_ORDER: string;
     GET_ITEM_WITH_ID: (id: string) => string;
+    MENU_POPULAR: string;
     GET_HOTELS: string;
     GET_HOTELS_FILTER: string;
     CHECK_AVAILABILITY: string;
@@ -44,11 +45,12 @@ export const endpoint: endpointTypes = {
     GET_USER_PROFILE: '/user/get-auth-user',
     SOCIAL_LOGIN: 'user/social-login',
     UPDATE_USER_PROFILE: (id:number) => `/user/update-user/${id}`,
-    RESTAURANT_GET: (page:number) => `restaurant/get?page=${page}`,
+    RESTAURANT_GET: (page: number, limit?: number) => limit != null ? `restaurant/get?page=${page}&limit=${limit}` : `restaurant/get?page=${page}`,
     RESTAURANT_FILTER: 'restaurant/filter',
     RESTAURANT_GET_MENU: (id:number) => `restaurant/get-restaurant-with-menu/${id}`,
     CREATE_ORDER: 'order/create-order',
     GET_ITEM_WITH_ID: (id) => `menu/get-cart-items/${id}`,
+    MENU_POPULAR: 'menu/popular',
     GET_HOTELS: 'hotel/',
     GET_HOTELS_FILTER: 'hotel/filter',
     CHECK_AVAILABILITY: '/booking/check-availability',

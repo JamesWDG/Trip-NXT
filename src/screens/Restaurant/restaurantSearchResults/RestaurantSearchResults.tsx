@@ -1,5 +1,4 @@
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
@@ -15,6 +14,7 @@ import fonts from '../../../config/fonts';
 import { useLazyGetFilteredRestaurantsQuery } from '../../../redux/services/restaurant.service';
 import type { RestaurantFilterParams } from '../restaurantFilter/RestaurantFilter';
 import images from '../../../config/images';
+import RestaurantListSkeleton from '../../../components/restaurantListSkeleton/RestaurantListSkeleton';
 
 type RestaurantItem = {
   id?: number;
@@ -82,8 +82,8 @@ const RestaurantSearchResults = () => {
   return (
     <WrapperContainer title="Restaurants" onBackPress={() => navigation?.goBack()}>
       {isLoading && restaurantList.length === 0 ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.c_0162C0} />
+        <View style={styles.skeletonWrap}>
+          <RestaurantListSkeleton />
         </View>
       ) : isError ? (
         <View style={styles.centered}>
@@ -140,6 +140,11 @@ const RestaurantSearchResults = () => {
 export default RestaurantSearchResults;
 
 const styles = StyleSheet.create({
+  skeletonWrap: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
   listContent: {
     paddingHorizontal: 20,
     paddingTop: 20,

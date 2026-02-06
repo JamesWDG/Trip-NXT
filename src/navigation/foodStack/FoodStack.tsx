@@ -16,6 +16,7 @@ import MyWallet from '../../screens/Restaurant/myWallet/MyWallet';
 import OrderTracking from '../../screens/Restaurant/ordersTracking/OrderTracking';
 import Chat from '../../screens/messages/Chat';
 import RestaurantInformation from '../../screens/Restaurant/restaurantInformation/RestaurantInformation';
+import PopularFoodList from '../../screens/Restaurant/popularFoodList/PopularFoodList';
 import Checkout from '../../screens/Restaurant/checkout/Checkout';
 import OrderDetail from '../../screens/Accomodation/orderDetail/OrderDetail';
 import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
@@ -49,6 +50,7 @@ const FoodStack: FC = () => {
       <FoodStackNavigator.Screen name="FoodCart" component={Cart} />
       <FoodStackNavigator.Screen name="FoodReviews" component={Reviews} />
       <FoodStackNavigator.Screen name="FoodDetails" component={FoodDetails as any} />
+      <FoodStackNavigator.Screen name="PopularFoodList" component={PopularFoodList} />
       <FoodStackNavigator.Screen
         name="FoodRestaurantInfo"
         component={RestaurantInfo}

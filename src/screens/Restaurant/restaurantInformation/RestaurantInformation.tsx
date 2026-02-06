@@ -23,6 +23,17 @@ import { height, ShowToast, width } from '../../../config/constants';
 import { RestaurantMenu } from '../../../constants/Food';
 import RestaurantInformationSkeleton from '../../../components/restaurantInformationSkeleton/RestaurantInformationSkeleton';
 
+const getLocationDisplay = (loc: string | object | null | undefined): string => {
+  if (loc == null) return '';
+  if (typeof loc === 'object') return (loc as any)?.address ?? (loc as any)?.city ?? '';
+  try {
+    const o = JSON.parse(loc as string);
+    return o?.address ?? o?.city ?? '';
+  } catch {
+    return '';
+  }
+};
+
 const RestaurantInformation: FC<{
   navigation: NavigationProp<ParamListBase, string>;
   route: RouteProp<{
@@ -150,7 +161,7 @@ const RestaurantInformation: FC<{
                 </Text>
                 <View style={styles.locationContainer}>
                   <MapPin size={16} color={colors.c_F47E20} />
-                  <Text style={styles.locationText}>{restaurantMenu?.location ? JSON.parse(restaurantMenu?.location as string)?.address : ''}</Text>
+                  <Text style={styles.locationText}>{getLocationDisplay(restaurantMenu?.location)}</Text>
                 </View>
               </View>
             </View>

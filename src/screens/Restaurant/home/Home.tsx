@@ -8,46 +8,64 @@ import {
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { NavigationProp } from '@react-navigation/native';
+import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import HomeHeader from '../../../components/homeHeader/HomeHeader';
 import images from '../../../config/images';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import SearchWithFilters from '../../../components/searchWithFilters/SearchWithFilters';
 import labels from '../../../config/labels';
-import { height } from '../../../config/constants';
+import { height, width } from '../../../config/constants';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import ListWithIcon from '../../../components/listWithIcon/ListWithIcon';
 import {
   FoodIconListArray,
-  FoodListCardType,
 } from '../../../constants/Food';
 import FoodCard from '../../../components/foodCard/FoodCard';
-import { CarouselData } from '../../../constants/Accomodation';
-import HomeCarousel from '../../../components/homeCarousel/HomeCarousel';
 import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import FoodCardWithBorder from '../../../components/foodCardWithBorder/FoodCardWithBorder';
 import FoodDrawerModal from '../../../components/drawerModal/FoodDrawerModal';
-import { useLazyRestaurantGetQuery } from '../../../redux/services/restaurant.service';
+import { useLazyRestaurantGetQuery, useLazyGetPopularMenusQuery } from '../../../redux/services/restaurant.service';
+
 const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [newRestaurant, setNewRestaurant] = useState([]);
-  const [restaurantGet, { data, isLoading }] = useLazyRestaurantGetQuery();
+  const [popularMenus, setPopularMenus] = useState<any[]>([]);
+  const [loadingNewRestaurant, setLoadingNewRestaurant] = useState(true);
+  const [loadingPopularMenus, setLoadingPopularMenus] = useState(true);
+  const [restaurantGet] = useLazyRestaurantGetQuery();
+  const [popularMenusGet] = useLazyGetPopularMenusQuery();
 
   const fetchData = async () => {
+    setLoadingNewRestaurant(true);
     try {
       const res = await restaurantGet(1).unwrap();
-      console.log("restaurant get response ===>", res);
-      setNewRestaurant(res.data.restaurants);
+      setNewRestaurant(res.data?.restaurants ?? []);
     } catch (error) {
-      console.log("restaurant get error ===>", error);
+      console.log('restaurant get error ===>', error);
+    } finally {
+      setLoadingNewRestaurant(false);
     }
-  }
+  };
+
+  const fetchPopularMenus = async () => {
+    setLoadingPopularMenus(true);
+    try {
+      const res = await popularMenusGet(12).unwrap();
+      setPopularMenus(res.data?.items ?? []);
+    } catch (error) {
+      console.log('popular menus error ===>', error);
+    } finally {
+      setLoadingPopularMenus(false);
+    }
+  };
 
   useEffect(() => {
     const subscribe = navigation.addListener('focus', () => {
       fetchData();
-    })
-    return subscribe; 
+      fetchPopularMenus();
+    });
+    return subscribe;
   }, []);
 
   return (
@@ -97,39 +115,80 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
               onSeeAllPress={() => navigation.navigate('FoodRestaurantInfo')}
             />
           </View>
-          <FoodCard
-            list={newRestaurant}
-            navigation={navigation}
-          />
+          {loadingNewRestaurant ? (
+            <View style={styles.newlyOpenedSkeletonWrap}>
+              <SkeletonPlaceholder
+                borderRadius={10}
+                backgroundColor={colors.c_F3F3F3}
+                highlightColor={colors.c_DDDDDD}
+              >
+                <View style={styles.newlyOpenedSkeletonRow}>
+                  {[1, 2, 3, 4].map((i) => (
+                    <View key={i} style={styles.newlyOpenedSkeletonCard}>
+                      <View style={styles.newlyOpenedSkeletonImage} />
+                      <View style={styles.newlyOpenedSkeletonTitle} />
+                      <View style={styles.newlyOpenedSkeletonDesc} />
+                    </View>
+                  ))}
+                </View>
+              </SkeletonPlaceholder>
+            </View>
+          ) : (
+            <FoodCard
+              list={newRestaurant}
+              navigation={navigation}
+            />
+          )}
         </View>
 
-        <HomeCarousel data={CarouselData as CarouselData[]} />
+        {/* <HomeCarousel data={CarouselData as CarouselData[]} /> */}
 
         <View style={GeneralStyles.paddingHorizontal}>
-          <SectionHeader title="Popular Food" onSeeAllPress={() => {}} />
+          <SectionHeader title="Popular Food" onSeeAllPress={() => navigation.navigate('PopularFoodList')} />
         </View>
 
-        <FlatList
-          data={[1, 2, 3, 4, 5, 6]}
-          numColumns={2}
-          scrollEnabled={false}
-          contentContainerStyle={styles.menuGridContainer}
-          columnWrapperStyle={styles.menuRow}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.menuCardWrapper}>
-              <FoodCardWithBorder
-                image={images.foodHome}
-                title="Pretzel Chicken Noodle Soup - Regular"
-                category="Noodles"
-                rating={4.7}
-                price={35}
-                hasFreeship={true}
-                onPress={() => navigation.navigate('FoodDetails')}
-              />
-            </View>
-          )}
-        />
+        {loadingPopularMenus ? (
+          <View style={styles.popularFoodSkeletonWrap}>
+            <SkeletonPlaceholder
+              borderRadius={10}
+              backgroundColor={colors.c_F3F3F3}
+              highlightColor={colors.c_DDDDDD}
+            >
+              <View style={styles.popularFoodSkeletonGrid}>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <View key={i} style={styles.popularFoodSkeletonCard}>
+                    <View style={styles.popularFoodSkeletonImage} />
+                    <View style={styles.popularFoodSkeletonTitle} />
+                    <View style={styles.popularFoodSkeletonCategory} />
+                    <View style={styles.popularFoodSkeletonPrice} />
+                  </View>
+                ))}
+              </View>
+            </SkeletonPlaceholder>
+          </View>
+        ) : (
+          <FlatList
+            data={popularMenus}
+            numColumns={2}
+            scrollEnabled={false}
+            contentContainerStyle={styles.menuGridContainer}
+            columnWrapperStyle={styles.menuRow}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => (
+              <View style={styles.menuCardWrapper}>
+                <FoodCardWithBorder
+                  image={item.image || images.foodHome}
+                  title={item.name}
+                  category={item.category || 'Food'}
+                  rating={0}
+                  price={item.price}
+                  hasFreeship={false}
+                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [] })}
+                />
+              </View>
+            )}
+          />
+        )}
         <FoodDrawerModal
           visible={isModalVisible}
           setIsModalVisible={setIsModalVisible}
@@ -206,5 +265,69 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     paddingBottom: 100,
+  },
+  newlyOpenedSkeletonWrap: {
+    paddingLeft: 20,
+    marginBottom: 8,
+  },
+  newlyOpenedSkeletonRow: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  newlyOpenedSkeletonCard: {
+    width: 100,
+  },
+  newlyOpenedSkeletonImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+  },
+  newlyOpenedSkeletonTitle: {
+    width: '80%',
+    height: 10,
+    borderRadius: 4,
+    marginTop: 10,
+  },
+  newlyOpenedSkeletonDesc: {
+    width: '60%',
+    height: 10,
+    borderRadius: 4,
+    marginTop: 6,
+  },
+  popularFoodSkeletonWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  popularFoodSkeletonGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  popularFoodSkeletonCard: {
+    width: (width - 52) / 2,
+    marginBottom: 12,
+  },
+  popularFoodSkeletonImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  popularFoodSkeletonTitle: {
+    width: '85%',
+    height: 14,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  popularFoodSkeletonCategory: {
+    width: '50%',
+    height: 12,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  popularFoodSkeletonPrice: {
+    width: '40%',
+    height: 14,
+    borderRadius: 4,
   },
 });

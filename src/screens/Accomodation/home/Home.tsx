@@ -109,7 +109,7 @@ const Home = () => {
                 navigation={navigation}
               />
             </View>
-            <HomeCarousel data={CarouselData} />
+            {/*<HomeCarousel data={CarouselData} /> */}
 
             <View style={styles.gap}>
               <View style={styles.paddingleft}>
