@@ -18,6 +18,7 @@ import SearchWithFilters from '../../../components/searchWithFilters/SearchWithF
 import { NavigationProp } from '@react-navigation/native';
 import LocationCard from '../../../components/locationCard/LocationCard';
 import CarDrawerModal from '../../../components/drawerModal/CarDrawerModal';
+import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
 
 const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -72,11 +73,22 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
             )}
           />
         </View>
-        <ImageBackground
+
+        <View style={styles.bookRideButtonWrap}>
+          <GradientButtonForAccomodation
+            title="Book a ride"
+            onPress={() => navigation?.navigate('BookARide' as never)}
+            fontSize={16}
+            fontFamily={fonts.bold}
+            otherStyles={styles.bookRideButton}
+          />
+        </View>
+
+        {/* <ImageBackground
           source={images.ride_home_traffic}
           style={styles.lowerImageStyles}
           resizeMode="stretch"
-        ></ImageBackground>
+        ></ImageBackground> */}
 
         <CarDrawerModal
           visible={isModalVisible}
@@ -167,5 +179,15 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingTop: 16,
     paddingLeft: 16,
+  },
+  bookRideButtonWrap: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
+  },
+  bookRideButton: {
+    backgroundColor: colors.c_0162C0,
+    borderRadius: 100,
+    height: 50,
   },
 });

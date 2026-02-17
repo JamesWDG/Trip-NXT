@@ -18,6 +18,8 @@ import YouArrived from '../../screens/Ride/youArrived/YouArrived';
 import TripDetailsForRide from '../../screens/Ride/tripDetails/TripDetails';
 import MyBookings from '../../screens/Ride/myBookings/MyBookings';
 import Notifications from '../../screens/notifications/Notifications';
+import BookARide from '../../screens/Ride/bookARide/BookARide';
+
 // import MyBookings from '../../screens/Ride/myBookings/MyBookings';
 const CarStackNavigator = createNativeStackNavigator();
 
@@ -25,6 +27,7 @@ const CarStack: FC = () => {
   return (
     <CarStackNavigator.Navigator screenOptions={{ headerShown: false }}>
       <CarStackNavigator.Screen name="RideHome" component={Home} />
+      <CarStackNavigator.Screen name="BookARide" component={BookARide} />
       <CarStackNavigator.Screen name="MyBookings" component={MyBookings} />
       <CarStackNavigator.Screen
         name="TripDetailsForRide"
