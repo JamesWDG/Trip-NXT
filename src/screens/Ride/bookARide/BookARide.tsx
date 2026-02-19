@@ -375,7 +375,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
               </View>
               <TouchableOpacity
                 style={styles.findRideButton}
-                onPress={() => {}}
+                onPress={() => navigation.navigate('FindARider')}
                 activeOpacity={0.8}
               >
                 <Text style={styles.findRideButtonText}>Find Ride</Text>
