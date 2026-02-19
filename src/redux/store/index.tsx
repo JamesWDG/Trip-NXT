@@ -5,10 +5,11 @@ import { authApi } from '../services/authService';
 import authReducer from '../slices/authSlice';
 import { baseApi } from '../services/api';
 import '../services/hotel.service';
-
+import locationReducer from '../slices/locationSlice';
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   auth: authReducer,
+  location: locationReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {

@@ -13,43 +13,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Geolocation from '@react-native-community/geolocation';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
+import MapViewDirections from 'react-native-maps-directions';
 import { width } from '../../../config/constants';
 import BottomSheetComponent, { BottomSheetComponentRef } from '../../../components/bottomSheetComp/BottomSheetComp';
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
 type PlaceSuggestion = { id: string; description: string; mainText: string };
-
-/** Decode Google encoded polyline to [{ latitude, longitude }, ...] */
-function decodePolyline(encoded: string): { latitude: number; longitude: number }[] {
-  const points: { latitude: number; longitude: number }[] = [];
-  let index = 0;
-  let lat = 0;
-  let lng = 0;
-  while (index < encoded.length) {
-    let result = 0;
-    let shift = 0;
-    let b: number;
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    const dlat = (result & 1) ? ~(result >> 1) : result >> 1;
-    lat += dlat;
-    result = 0;
-    shift = 0;
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    const dlng = (result & 1) ? ~(result >> 1) : result >> 1;
-    lng += dlng;
-    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
-  }
-  return points;
-}
 
 const DEFAULT_REGION = {
   latitude: 37.78825,
@@ -58,15 +28,18 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.0421,
 };
 
+type ActiveField = 'pickup' | 'dropoff' | null;
+
 const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
   const { top: safeTop, bottom: safeBottom } = useSafeAreaInsets();
-  const [location, setLocation] = useState('');
+  const [pickupText, setPickupText] = useState('');
+  const [pickupCoords, setPickupCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [dropoffText, setDropoffText] = useState('');
+  const [dropoffCoords, setDropoffCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [routePoints, setRoutePoints] = useState<{ latitude: number; longitude: number }[]>([]);
+  const [activeField, setActiveField] = useState<ActiveField>(null);
   const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,8 +70,13 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
   }, []);
 
   const handleChange = useCallback(
-    (text: string) => {
-      setLocation(text);
+    (field: ActiveField, text: string) => {
+      if (field === 'pickup') {
+        setPickupText(text);
+      } else {
+        setDropoffText(text);
+      }
+      setActiveField(field);
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (text.length < 2) {
         setSuggestions([]);
@@ -134,6 +112,18 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
     }
   }, []);
 
+  const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_PLACES_API_KEY}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const addr = data?.results?.[0]?.formatted_address;
+      return typeof addr === 'string' ? addr : 'Dropped pin';
+    } catch {
+      return 'Dropped pin';
+    }
+  }, []);
+
   const getCurrentPosition = useCallback((): Promise<{ latitude: number; longitude: number } | null> => {
     return new Promise((resolve) => {
       Geolocation.getCurrentPosition(
@@ -144,71 +134,57 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
     });
   }, []);
 
-  const fetchRoute = useCallback(
-    async (origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }) => {
-      try {
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_PLACES_API_KEY}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.status !== 'OK' || !data.routes?.[0]) return null;
-        const route = data.routes[0];
-        const leg = route.legs?.[0];
-        const points = route.overview_polyline?.points
-          ? decodePolyline(route.overview_polyline.points)
-          : [];
-        const distance = leg?.distance?.text ?? '';
-        const duration = leg?.duration?.text ?? '';
-        return { points, distance, duration };
-      } catch {
-        return null;
-      }
-    },
-    [],
-  );
-
   const handleSelect = useCallback(
     async (item: PlaceSuggestion) => {
-      setLocation(item.description);
+      const desc = item.description;
+      if (activeField === 'pickup') {
+        setPickupText(desc);
+        setPickupCoords(null);
+      } else {
+        setDropoffText(desc);
+        setDropoffCoords(null);
+      }
       setSuggestions([]);
       setShowDropdown(false);
       const coords = await fetchPlaceDetails(item.id);
       if (!coords) return;
-      setSelectedCoords(coords);
+      if (activeField === 'pickup') {
+        setPickupCoords(coords);
+      } else {
+        setDropoffCoords(coords);
+      }
       setRouteInfo(null);
-      setRoutePoints([]);
-      setLoadingRoute(true);
-      const origin = await getCurrentPosition();
-      if (origin) {
-        setCurrentLocation(origin);
-        const result = await fetchRoute(origin, coords);
-        if (result) {
-          setRoutePoints(result.points);
-          setRouteInfo({ distance: result.distance, duration: result.duration });
-          if (result.points.length > 0 && mapRef.current) {
-            mapRef.current.fitToCoordinates(
-              [origin, ...result.points, coords],
-              { edgePadding: { top: 80, right: 40, bottom: 80, left: 40 }, animated: true },
-            );
-          }
-        } else if (mapRef.current) {
-          mapRef.current.fitToCoordinates(
-            [origin, coords],
-            { edgePadding: { top: 80, right: 40, bottom: 80, left: 40 }, animated: true },
-          );
+      const origin = activeField === 'pickup' ? coords : pickupCoords;
+      const dest = activeField === 'dropoff' ? coords : dropoffCoords;
+      if (!origin || !dest) {
+        if (mapRef.current) {
+          mapRef.current.animateToRegion({ ...coords, latitudeDelta: 0.0122, longitudeDelta: 0.0121 }, 400);
         }
-      } else if (mapRef.current) {
+      }
+    },
+    [activeField, pickupCoords, dropoffCoords, fetchPlaceDetails],
+  );
+
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentPosition().then(async (pos) => {
+      if (cancelled || !pos) return;
+      setPickupCoords(pos);
+      setPickupText('Current location');
+      const address = await reverseGeocode(pos.latitude, pos.longitude);
+      if (!cancelled) setPickupText(address || 'Current location');
+      if (!cancelled && mapRef.current) {
         mapRef.current.animateToRegion({
-          ...coords,
+          ...pos,
           latitudeDelta: 0.0122,
           longitudeDelta: 0.0121,
         }, 400);
       }
-      setLoadingRoute(false);
-    },
-    [fetchPlaceDetails, getCurrentPosition, fetchRoute],
-  );
-
-  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+    });
+    return () => { cancelled = true; };
+  }, [getCurrentPosition, reverseGeocode]);
 
   useEffect(() => {
     if (loadingRoute || routeInfo) {
@@ -217,6 +193,42 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
       routeSheetRef.current?.close();
     }
   }, [loadingRoute, routeInfo]);
+
+  const handlePickupMarkerDragEnd = useCallback(
+    async (e: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) => {
+      const { latitude, longitude } = e.nativeEvent.coordinate;
+      setPickupCoords({ latitude, longitude });
+      const addr = await reverseGeocode(latitude, longitude);
+      setPickupText(addr);
+      if (dropoffCoords) {
+        setRouteInfo(null);
+      }
+    },
+    [dropoffCoords, reverseGeocode],
+  );
+
+  const handleDropoffMarkerDragEnd = useCallback(
+    async (e: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) => {
+      const { latitude, longitude } = e.nativeEvent.coordinate;
+      setDropoffCoords({ latitude, longitude });
+      const addr = await reverseGeocode(latitude, longitude);
+      setDropoffText(addr);
+      if (pickupCoords) {
+        setRouteInfo(null);
+      }
+    },
+    [pickupCoords, reverseGeocode],
+  );
+
+  const formatRouteInfo = useCallback((distanceKm: number, durationMin: number) => {
+    const distanceStr =
+      distanceKm >= 1 ? `${distanceKm.toFixed(1)} km` : `${Math.round(distanceKm * 1000)} m`;
+    const durationStr =
+      durationMin >= 60
+        ? `${Math.floor(durationMin / 60)} hr ${Math.round(durationMin % 60)} min`
+        : `${Math.round(durationMin)} min`;
+    return { distance: distanceStr, duration: durationStr };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -227,18 +239,32 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
       >
         <ChevronLeft color={colors.white} size={24} />
       </TouchableOpacity>
-      <View style={[styles.inputWrap, { top: safeTop + 77 }]}>
-        <MapPin size={20} color={colors.c_666666} />
-        <TextInput
-          style={styles.input}
-          placeholder="Search location..."
-          placeholderTextColor={colors.c_666666}
-          value={location}
-          onChangeText={handleChange}
-          onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
-          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-        />
-        {loading && (
+      <View style={[styles.inputsContainer, { top: safeTop + 56 }]}>
+        <View style={styles.inputWrap}>
+          <MapPin size={18} color={colors.green} />
+          <TextInput
+            style={styles.input}
+            placeholder="Pickup location"
+            placeholderTextColor={colors.c_666666}
+            value={pickupText}
+            onChangeText={(t) => handleChange('pickup', t)}
+            onFocus={() => setActiveField('pickup')}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+          />
+        </View>
+        <View style={[styles.inputWrap, styles.inputWrapSecond]}>
+          <MapPin size={18} color={colors.c_EE4026} />
+          <TextInput
+            style={styles.input}
+            placeholder="Drop-off location"
+            placeholderTextColor={colors.c_666666}
+            value={dropoffText}
+            onChangeText={(t) => handleChange('dropoff', t)}
+            onFocus={() => setActiveField('dropoff')}
+            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+          />
+        </View>
+        {loading && activeField && (
           <View style={styles.loader}>
             <ActivityIndicator size="small" color={colors.c_0162C0} />
           </View>
@@ -262,42 +288,52 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
         ref={mapRef}
         style={styles.map}
         initialRegion={DEFAULT_REGION}
-        showsUserLocation
-        zoomEnabled={true}
+        showsUserLocation={false}
+        zoomEnabled
       >
-        {currentLocation && (
+        {pickupCoords && (
           <Marker
-            coordinate={currentLocation}
-            title="Start"
-            description="Your location"
+            coordinate={pickupCoords}
+            title="Pickup"
+            description={pickupText || 'Pickup location'}
             pinColor={colors.green}
+            draggable
+            onDragEnd={handlePickupMarkerDragEnd}
           />
         )}
-        {selectedCoords && (
+        {dropoffCoords && (
           <Marker
-            coordinate={selectedCoords}
-            title="Destination"
-            description={location || 'Selected place'}
+            coordinate={dropoffCoords}
+            title="Drop-off"
+            description={dropoffText || 'Drop-off location'}
             pinColor={colors.c_EE4026}
+            draggable
+            onDragEnd={handleDropoffMarkerDragEnd}
           />
         )}
-        {(() => {
-          const lineCoords =
-            currentLocation && selectedCoords && routePoints.length > 0
-              ? [currentLocation, ...routePoints, selectedCoords]
-              : routePoints.length > 0
-                ? routePoints
-                : currentLocation && selectedCoords
-                  ? [currentLocation, selectedCoords]
-                  : [];
-          return lineCoords.length > 0 ? (
-            <Polyline
-              coordinates={lineCoords}
-              strokeColor={colors.c_0162C0}
-              strokeWidth={5}
-            />
-          ) : null;
-        })()}
+        {pickupCoords && dropoffCoords && (
+          <MapViewDirections
+            origin={pickupCoords}
+            destination={dropoffCoords}
+            apikey={GOOGLE_PLACES_API_KEY}
+            precision="low"
+            strokeWidth={5}
+            strokeColor={colors.c_0162C0}
+            onStart={() => setLoadingRoute(true)}
+            onReady={(result) => {
+              setLoadingRoute(false);
+              setRouteInfo(formatRouteInfo(result.distance, result.duration));
+              mapRef.current?.fitToCoordinates(result.coordinates, {
+                edgePadding: { top: 80, right: 40, bottom: 80, left: 40 },
+                animated: true,
+              });
+            }}
+            onError={() => {
+              setLoadingRoute(false);
+              setRouteInfo(null);
+            }}
+          />
+        )}
       </MapView>
       <BottomSheetComponent
         ref={routeSheetRef}
@@ -362,11 +398,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  inputWrap: {
+  inputsContainer: {
     position: 'absolute',
     left: 16,
     right: 16,
     zIndex: 10,
+  },
+  inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
@@ -381,6 +419,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
+  inputWrapSecond: {
+    marginTop: 8,
+  },
   input: {
     flex: 1,
     fontSize: 14,
@@ -393,13 +434,12 @@ const styles = StyleSheet.create({
   loader: {
     position: 'absolute',
     right: 12,
-    top: 0,
-    bottom: 0,
+    top: 58,
     justifyContent: 'center',
   },
   dropdown: {
     position: 'absolute',
-    top: 52,
+    top: 106,
     left: 0,
     right: 0,
     backgroundColor: colors.white,
