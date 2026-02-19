@@ -17,6 +17,8 @@ import MapView, { Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { width } from '../../../config/constants';
 import BottomSheetComponent, { BottomSheetComponentRef } from '../../../components/bottomSheetComp/BottomSheetComp';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
 type PlaceSuggestion = { id: string; description: string; mainText: string };
@@ -45,7 +47,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapRef = useRef<MapView>(null);
   const routeSheetRef = useRef<BottomSheetComponentRef>(null);
-
+  const { latitude, longitude } = useSelector((state: RootState) => state.location);
   const fetchSuggestions = useCallback(async (query: string): Promise<PlaceSuggestion[]> => {
     if (!query || query.length < 2) return [];
     try {
@@ -124,7 +126,14 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
     }
   }, []);
 
+  const getCurrentPositionFromRedux = useCallback((): { latitude: number; longitude: number } | null => {
+    if (latitude === 0 && longitude === 0) return null;
+    return { latitude, longitude };
+  }, [latitude, longitude]);
+
   const getCurrentPosition = useCallback((): Promise<{ latitude: number; longitude: number } | null> => {
+    const fromRedux = getCurrentPositionFromRedux();
+    if (fromRedux) return Promise.resolve(fromRedux);
     return new Promise((resolve) => {
       Geolocation.getCurrentPosition(
         (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
@@ -132,7 +141,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
       );
     });
-  }, []);
+  }, [getCurrentPositionFromRedux]);
 
   const handleSelect = useCallback(
     async (item: PlaceSuggestion) => {
@@ -169,19 +178,22 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
 
   useEffect(() => {
     let cancelled = false;
-    getCurrentPosition().then(async (pos) => {
+    getCurrentPosition().then((pos) => {
       if (cancelled || !pos) return;
-      setPickupCoords(pos);
+      const position = pos;
+      setPickupCoords(position);
       setPickupText('Current location');
-      const address = await reverseGeocode(pos.latitude, pos.longitude);
-      if (!cancelled) setPickupText(address || 'Current location');
-      if (!cancelled && mapRef.current) {
-        mapRef.current.animateToRegion({
-          ...pos,
-          latitudeDelta: 0.0122,
-          longitudeDelta: 0.0121,
-        }, 400);
-      }
+      (async () => {
+        const address = await reverseGeocode(position.latitude, position.longitude);
+        if (!cancelled) setPickupText(address || 'Current location');
+        if (!cancelled && mapRef.current) {
+          mapRef.current.animateToRegion({
+            ...position,
+            latitudeDelta: 0.0122,
+            longitudeDelta: 0.0121,
+          }, 400);
+        }
+      })();
     });
     return () => { cancelled = true; };
   }, [getCurrentPosition, reverseGeocode]);

@@ -2,13 +2,15 @@ import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import { FC, useCallback, useEffect, useRef } from 'react';
 import colors from '../../config/colors';
 import images from '../../config/images';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import { CommonActions } from '@react-navigation/native';
 import Geolocation from '@react-native-community/geolocation';
+import { setLocation } from '../../redux/slices/locationSlice';
 
 const Splash: FC<{ navigation: any }> = ({ navigation }) => {
   const animation = useRef(new Animated.Value(10)).current;
+  const dispatch = useDispatch();
   const { token } = useSelector((state: RootState) => state.auth);
   useEffect(() => {
     Animated.timing(animation, {
@@ -37,14 +39,22 @@ const Splash: FC<{ navigation: any }> = ({ navigation }) => {
     borderRadius: '50%',
   };
 
+  useEffect(() => {
+    getCurrentPosition();
+  }, []);
 
-  const getCurrentPosition = useCallback((): Promise<{ latitude: number; longitude: number } | null> => {
-    return new Promise((resolve) => {
+  const getCurrentPosition = useCallback(() => {
+    let promise = new Promise<{ latitude: number; longitude: number } | null>((resolve) => {
       Geolocation.getCurrentPosition(
         (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
         () => resolve(null),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
       );
+    });
+    promise.then((pos) => {
+      if (pos) {
+        dispatch(setLocation({ latitude: pos.latitude, longitude: pos.longitude }));
+      }
     });
   }, []);
   return (
