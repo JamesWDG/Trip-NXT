@@ -22,15 +22,19 @@ import GradientButtonForAccomodation from '../../../components/gradientButtonFor
 import GeneralStyles from '../../../utils/GeneralStyles';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { AccomodationCard } from '../../../constants/Accomodation';
+import { useWishList } from '../../../hooks/useWishlist';
 
 const HotelDetails = ({ navigation, route }: { navigation?: any, route: RouteProp<{ params: { hotel: AccomodationCard } }> }) => {
   const { top } = useSafeAreaInsets();
-  const [wishlist, setWishlist] = useState(false);
+  const { wishlist, handleAddToWishlist } = useWishList({ initialWishlist: route.params?.hotel?.wishlistId ? true : false, hotelId: route.params?.hotel?.id, type: 'hotel' });
   const nav = useNavigation<any>();
 
   const wishlistButtonStyles = useMemo(() => {
     return wishlistButton(wishlist, top);
   }, [wishlist]);
+
+  
+
   return (
     <View style={GeneralStyles.flex as ViewStyle}>
       <View style={styles.headerContainer}>
@@ -53,7 +57,7 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
           <DetailsCard
             title={route.params?.hotel?.name}
             reviews={11}
-            rating={route.params?.hotel?.rating || 10}
+            rating={route.params?.hotel?.avgRating || 0}
             rentPerDay={route.params?.hotel?.rentPerDay}
             rentPerHour={route.params?.hotel?.rentPerHour}
             location={(route.params?.hotel?.location?.city || '') + ', ' + (route.params?.hotel?.location?.state || '') + ', ' + (route.params?.hotel?.location?.country || '')}
@@ -88,7 +92,7 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
 
           <View style={styles.wishlistContainer}>
             <TouchableOpacity
-              onPress={() => setWishlist(!wishlist)}
+              onPress={handleAddToWishlist}
               style={wishlistButtonStyles.container}
             >
               <Heart

@@ -64,7 +64,14 @@ const TabBars = (props: BottomTabBarProps) => {
             <TouchableOpacity
               key={tab.name}
               style={styles.tab}
-              onPress={() => props.navigation.navigate(tab.navigation)}
+              onPress={() => {
+                console.log('tab.navigation', tab.navigation);
+                if(tab.navigation === 'Food'){
+                  props.navigation.navigate(tab.navigation,{screen: 'FoodHome'});
+                  return;
+                }
+                props.navigation.navigate(tab.navigation)
+              }}
             >
               <Image source={tab.image} style={styles.image} />
               <Text style={styles.tabText}>{tab.name}</Text>

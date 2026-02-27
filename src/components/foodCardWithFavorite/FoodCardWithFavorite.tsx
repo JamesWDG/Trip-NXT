@@ -15,12 +15,13 @@ import { width } from '../../config/constants';
 interface FoodCardWithFavoriteProps {
   image: ImageSourcePropType | string;
   title: string;
-  rating: number;
+  rating: number | string;
   reviewCount: number;
   price: number;
   onPress?: () => void;
   onFavoritePress?: (isFavorite: boolean) => void;
   isFavorite?: boolean;
+  showFavorite?: boolean;
 }
 
 const FoodCardWithFavorite = ({
@@ -32,6 +33,7 @@ const FoodCardWithFavorite = ({
   onPress,
   onFavoritePress,
   isFavorite: initialFavorite = false,
+  showFavorite = true,
 }: FoodCardWithFavoriteProps) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
 
@@ -61,18 +63,20 @@ const FoodCardWithFavorite = ({
             resizeMode="cover"
           />
         )}
-        <TouchableOpacity
-          style={styles.heartButton}
-          onPress={handleHeartPress}
-          activeOpacity={0.7}
-        >
-          <Heart
-            size={20}
-            color={isFavorite ? colors.c_EE4026 : colors.c_EE4026}
-            fill={isFavorite ? colors.c_EE4026 : 'transparent'}
-            strokeWidth={2}
-          />
-        </TouchableOpacity>
+        {
+          showFavorite && (<TouchableOpacity
+            style={styles.heartButton}
+            onPress={handleHeartPress}
+            activeOpacity={0.7}
+          >
+            <Heart
+              size={20}
+              color={isFavorite ? colors.c_EE4026 : colors.c_EE4026}
+              fill={isFavorite ? colors.c_EE4026 : 'transparent'}
+              strokeWidth={2}
+            />
+          </TouchableOpacity>
+          )}
       </View>
 
       <View style={styles.contentContainer}>

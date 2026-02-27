@@ -5,11 +5,12 @@ import { baseApi } from "./api";
 export const restaurantApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         restaurantGet: builder.query({
-            query: (args: number | { page: number; limit?: number }) => {
+            query: (args: number | { page: number; limit?: number, search?: string }) => {
                 const page = typeof args === 'number' ? args : args.page;
                 const limit = typeof args === 'number' ? undefined : args.limit;
+                const search = typeof args === 'number' ? undefined : args.search;
                 return {
-                    url: endpoint.RESTAURANT_GET(page, limit),
+                    url: endpoint.RESTAURANT_GET(page, limit, search || ''),
                     method: 'GET',
                 };
             },
@@ -65,8 +66,9 @@ export const restaurantApi = baseApi.injectEndpoints({
             query: (limit?: number) => ({
                 url: limit != null ? `${endpoint.MENU_POPULAR}?limit=${limit}` : endpoint.MENU_POPULAR,
                 method: 'GET',
+                invalidatesTags: ['Menu'],
             }),
-            providesTags: ['Restaurant'],
+            providesTags: ['Restaurant','Menu'],
         }),
         getOrdersByUserId: builder.query({
             query: () => ({
@@ -83,16 +85,29 @@ export const restaurantApi = baseApi.injectEndpoints({
             providesTags: (_result, _error, id) => [{ type: 'Restaurant' as const, id: `order-${id}` }],
         }),
         updateOrderStatus: builder.mutation({
-            query: ({ orderId, status, restaurantId }: { orderId: number; status: string; restaurantId: number }) => ({
+            query: ({ orderId, status }: { orderId: number; status: string; }) => ({
                 url: endpoint.UPDATE_ORDER_STATUS(orderId),
                 method: 'PUT',
-                body: { status, restaurantId },
+                body: { status },
             }),
             invalidatesTags: (_result, _error, { orderId }) => [
                 'Restaurant',
                 { type: 'Restaurant' as const, id: `order-${orderId}` },
             ],
         }),
+        getFeaturedItems: builder.query({
+            query: (id: number) => ({
+                url: endpoint.GET_FEATURED_ITEMS(id),
+                method: 'GET',
+            }),
+        }),
+        getItemsByCategory: builder.query({
+            query: (params : {category: string, restaurant:number}) => ({
+                url: endpoint.GET_ITEMS_BY_CATEGORY,
+                method: 'GET',
+                params
+            })
+        })
     })
 });
 
@@ -106,4 +121,6 @@ export const {
     useGetSingleOrderQuery,
     useUpdateOrderStatusMutation,
     useLazyGetPopularMenusQuery,
+    useLazyGetFeaturedItemsQuery,
+    useLazyGetItemsByCategoryQuery,
 } = restaurantApi;

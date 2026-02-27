@@ -66,7 +66,7 @@ const importantLinksData = [
     id: 4,
     name: 'Wishlist',
     image: images.heart,
-    navigation: 'FoodWishlists',
+    navigation: 'Wishlists',
   },
 ];
 

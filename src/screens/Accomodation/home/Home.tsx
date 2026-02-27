@@ -1,9 +1,12 @@
 import {
   FlatList,
+  Image,
   ImageBackground,
+  ImageSourcePropType,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
@@ -31,6 +34,7 @@ import GeneralStyles from '../../../utils/GeneralStyles';
 import { useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
 
 type HotelItem = {
+  avgRating?: number;
   id?: number;
   name?: string;
   images?: string[];
@@ -46,6 +50,7 @@ const Home = () => {
   const style = useMemo(() => contentContainerStyle(bottom), [bottom]);
   const [getHotels] = useLazyGetHotelsQuery();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
+  const iconStyle = useMemo(() => iconStyles(25, 25), [height, width]);
   const fetchHotels = async () => {
     setLoadingHotels(true);
     try {
@@ -162,7 +167,26 @@ const Home = () => {
           ListHeaderComponent={
             <View>
               <View style={styles.listContainer}>
-                <ListWithIcon list={IconListArray} />
+                {/* <ListWithIcon list={IconListArray} /> */}
+                {
+                  IconListArray.map((item, index) => (
+                    <TouchableOpacity
+                    style={{
+                      alignItems: 'center',
+                      width: 100,
+                      paddingBottom: 10,
+                    }}
+                    onPress={() => navigation.navigate('AccomodationCategory', { category: item.title, type: 'accomodation' })}
+                  >
+                    <Image
+                      source={item.icon as ImageSourcePropType}
+                      style={iconStyle.iconStyle}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.title}>{item.title}</Text>
+                  </TouchableOpacity>
+                  ))
+                }
               </View>
 
               <View style={styles.gap}>
@@ -201,7 +225,7 @@ const Home = () => {
                   title={hotel?.name ?? 'Hotel'}
                   description={`$${Number(hotel?.rentPerDay ?? 0).toFixed(0)}/night`}
                   price={Number(hotel?.rentPerDay) ?? 0}
-                  rating={4.5}
+                  rating={item?.avgRating ?? 0}
                   location={locationStr}
                   onPress={() => navigation.navigate('HotelDetails', { hotel })}
                 />
@@ -225,6 +249,10 @@ const contentContainerStyle = (bottom: number) =>
       paddingBottom: bottom + 60,
     },
   });
+  const iconStyles = (height: number, width: number) =>
+    StyleSheet.create({
+      iconStyle: { height: height, width: height },
+    });
 export default Home;
 
 const styles = StyleSheet.create({
@@ -265,6 +293,9 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     marginTop: 30,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-around'
   },
   accomodationText: {
     fontSize: 20,
@@ -364,5 +395,11 @@ const styles = StyleSheet.create({
     width: '40%',
     height: 12,
     borderRadius: 4,
+  },
+  title: {
+    fontSize: 12,
+    fontFamily: fonts.normal,
+    color: colors.black,
+    marginTop: 10,
   },
 });

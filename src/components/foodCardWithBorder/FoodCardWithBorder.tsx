@@ -5,13 +5,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Heart, Star } from 'lucide-react-native';
 import FastImage from 'react-native-fast-image';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
+import { useWishList } from '../../hooks/useWishlist';
 
 interface FoodCardWithBorderProps {
+  id: number;
   image: ImageSourcePropType | string;
   title: string;
   category: string;
@@ -21,9 +23,12 @@ interface FoodCardWithBorderProps {
   onPress?: () => void;
   onFavoritePress?: (isFavorite: boolean) => void;
   isFavorite?: boolean;
+  cb?: () => Promise<void>;
+  reviewCount?: number | undefined;
 }
 
 const FoodCardWithBorder = ({
+  id,
   image,
   title,
   category,
@@ -33,14 +38,15 @@ const FoodCardWithBorder = ({
   onPress,
   onFavoritePress,
   isFavorite: initialFavorite = false,
+  cb,
+  reviewCount,
 }: FoodCardWithBorderProps) => {
-  const [isFavorite, setIsFavorite] = useState(initialFavorite);
+  
+  const { wishlist, handleAddToWishlist } = useWishList({ initialWishlist: initialFavorite, dishId: id, type: 'dish', cb });
+  // const favorite = useMemo(()=>{
+  //   return isFavorite || initialFavorite;
+  // },[isFavorite, initialFavorite])
 
-  const handleHeartPress = () => {
-    const newFavoriteState = !isFavorite;
-    setIsFavorite(newFavoriteState);
-    onFavoritePress?.(newFavoriteState);
-  };
 
   return (
     <TouchableOpacity
@@ -65,13 +71,13 @@ const FoodCardWithBorder = ({
           )}
           <TouchableOpacity
             style={styles.heartButton}
-            onPress={handleHeartPress}
+            onPress={handleAddToWishlist}
             activeOpacity={0.7}
           >
             <Heart
               size={18}
-              color={isFavorite ? colors.c_EE4026 : colors.c_EE4026}
-              fill={isFavorite ? colors.c_EE4026 : 'transparent'}
+              color={wishlist ? colors.c_EE4026 : colors.c_EE4026}
+              fill={wishlist ? colors.c_EE4026 : 'transparent'}
               strokeWidth={2}
             />
           </TouchableOpacity>
@@ -87,6 +93,7 @@ const FoodCardWithBorder = ({
           <View style={styles.ratingContainer}>
             <Star size={14} color={colors.c_F47E20} fill={colors.c_F47E20} />
             <Text style={styles.rating}>{rating}</Text>
+            {reviewCount && <Text style={styles.reviewCount}>({reviewCount})</Text>}
           </View>
         </View>
         <View style={styles.priceContainer}>
@@ -180,6 +187,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   rating: {
+    fontSize: 14,
+    fontFamily: fonts.medium,
+    color: colors.c_2B2B2B,
+  },
+  reviewCount: {
     fontSize: 14,
     fontFamily: fonts.medium,
     color: colors.c_2B2B2B,

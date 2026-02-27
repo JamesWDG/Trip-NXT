@@ -11,7 +11,7 @@ type endpointTypes = {
     GET_USER_PROFILE: string;
     SOCIAL_LOGIN: string;
     UPDATE_USER_PROFILE: (id: number) => string;
-    RESTAURANT_GET: (page: number, limit?: number) => string;
+    RESTAURANT_GET: (page: number, limit?: number, search?: string) => string;
     RESTAURANT_FILTER: string;
     RESTAURANT_GET_MENU: (id: number) => string;
     CREATE_ORDER: string;
@@ -27,6 +27,15 @@ type endpointTypes = {
     GET_ALL_HOTEL_BOOKINGS_FOR_USER: string;
     GET_SINGLE_HOTEL_BOOKING: (id: number) => string;
     UPDATE_HOTEL_BOOKING_STATUS: (id: number) => string;
+    ADD_TO_WISHLIST: string;
+    DELETE_FROM_WISHLIST: (id: number, type: 'hotel' | 'dish') => string;
+    GET_WISHLIST: string;
+    CREATE_REVIEW: string;
+    GET_REVIEWS_BY_RESTAURANT_ID: (id: number) => string;
+    GET_REVIEWS_BY_MENU_ITEM_ID: (id: number) => string;
+    GET_FEATURED_ITEMS: (id: number) => string;
+    GET_ITEMS_BY_CATEGORY: string;
+    GET_ACCOMODATION_ITEMS_BY_CATEGORY: string;
 }
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
@@ -45,7 +54,7 @@ export const endpoint: endpointTypes = {
     GET_USER_PROFILE: '/user/get-auth-user',
     SOCIAL_LOGIN: 'user/social-login',
     UPDATE_USER_PROFILE: (id:number) => `/user/update-user/${id}`,
-    RESTAURANT_GET: (page: number, limit?: number) => limit != null ? `restaurant/get?page=${page}&limit=${limit}` : `restaurant/get?page=${page}`,
+    RESTAURANT_GET: (page: number, limit?: number, search?: string) => limit != null ? `restaurant/get?page=${page}&limit=${limit}&search=${search || ''}` : `restaurant/get?page=${page}&search=${search || ''}`,
     RESTAURANT_FILTER: 'restaurant/filter',
     RESTAURANT_GET_MENU: (id:number) => `restaurant/get-restaurant-with-menu/${id}`,
     CREATE_ORDER: 'order/create-order',
@@ -61,4 +70,13 @@ export const endpoint: endpointTypes = {
     GET_ALL_HOTEL_BOOKINGS_FOR_USER: 'booking/get-all-hotel-bookings-for-user',
     GET_SINGLE_HOTEL_BOOKING: (id: number) => `booking/get-single-hotel-booking/${id}`,
     UPDATE_HOTEL_BOOKING_STATUS: (id: number) => `booking/update-hotel-booking-status/${id}`,
+    ADD_TO_WISHLIST: 'wishlist/',
+    DELETE_FROM_WISHLIST: (id: number, type: 'hotel' | 'dish') => `wishlist/${id}/${type}`,
+    GET_WISHLIST: 'wishlist/',
+    CREATE_REVIEW: 'review/create-review',
+    GET_REVIEWS_BY_RESTAURANT_ID: (id: number) => `review/get-reviews-by-restaurant-id/${id}`,
+    GET_REVIEWS_BY_MENU_ITEM_ID: (id: number) => `review/get-reviews-by-menu-item-id/${id}`,
+    GET_FEATURED_ITEMS: (id: number) => `menu/featured/${id}`,
+    GET_ITEMS_BY_CATEGORY: "menu/category",
+    GET_ACCOMODATION_ITEMS_BY_CATEGORY: "hotel/type",
 }

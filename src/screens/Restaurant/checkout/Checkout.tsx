@@ -97,7 +97,7 @@ const Checkout = ({ navigation, route }: { navigation: NavigationProp<any>, rout
       console.log('res order create ===>', res);
       ShowToast('success', 'Order placed successfully');
       AsyncStorage.setItem('cart', JSON.stringify([]));
-      navigation.navigate('FoodOrderTracking');
+      navigation.navigate('FoodOrderTracking', {...payload, orderId: res?.data?.data?.orders?.[0]?.id});
     } catch (error) {
       console.error('Error placing order:', error);
       ShowToast('error', 'Cannot place order at the moment.');

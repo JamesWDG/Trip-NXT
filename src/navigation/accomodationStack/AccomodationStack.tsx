@@ -6,7 +6,6 @@ import DummyPage from '../../screens/dummyPage/DummyPage';
 import AccomodationHome from '../../screens/Accomodation/home/Home';
 import Recommended from '../../screens/Accomodation/recommended/Recommended';
 import MyBookings from '../../screens/Accomodation/myBookings/MyBookings';
-import Wishlists from '../../screens/Accomodation/wishlists/Wishlists';
 import ThankYouScreen from '../../screens/Accomodation/thankYouScreen/ThankYouScreen';
 import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
 import AdvancedFilter from '../../screens/Accomodation/advancedFilter/AdvancedFilter';
@@ -21,6 +20,9 @@ import HotelBookingDetail from '../../screens/Accomodation/hotelBookingDetail/Ho
 import Profile from '../../screens/profile/Profile';
 import Chat from '../../screens/messages/Chat';
 import Notifications from '../../screens/notifications/Notifications';
+import Wishlists from '../../screens/Restaurant/wishlist/WishList';
+import Category from '../../screens/Restaurant/category/Category';
+import AddReview from '../../screens/Accomodation/reviews/AddReview';
 
 const AccomodationStackNavigator = createNativeStackNavigator();
 
@@ -88,11 +90,12 @@ const AccomodationStack: FC = () => {
       />
       <AccomodationStackNavigator.Screen name="Profile" component={Profile} />
       <AccomodationStackNavigator.Screen name="Chat" component={Chat} />
+      <AccomodationStackNavigator.Screen name="AddReview" component={AddReview} />
       <AccomodationStackNavigator.Screen
         name="Notifications"
         component={Notifications}
       />
-
+      <AccomodationStackNavigator.Screen name="AccomodationCategory" component={Category} />
       <AccomodationStackNavigator.Screen name="Dummy" component={DummyPage} />
     </AccomodationStackNavigator.Navigator>
   );

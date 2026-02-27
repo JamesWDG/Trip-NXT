@@ -10,6 +10,7 @@ export interface FoodCard {
 
 export interface FoodListCardType {
     banner: string,
+    restaurantRating: { rating: number } | null,
     createdAt: string,
     deliveryRadius: string,
     description: string,
@@ -32,6 +33,9 @@ export type MenuItem = {
         price: number;
         description: string;
     }[]
+    wishlistId?: number | null;
+    reviewCount?: number | null;
+    avgRating?: number | string | null;
 }
 
 export interface Topping {
@@ -73,22 +77,22 @@ export const FoodIconListArray: FoodCard[] = [
     {
         id: "1",
         icon: images.near_me,
-        title: labels.singleRoom
+        title: labels.starters
     },
     {
         id: "2",
         icon: images.big_promo,
-        title: labels.studios
+        title: labels.mains
     },
     {
         id: "3",
         icon: images.best_seller,
-        title: labels.appartment
+        title: labels.drinks
     },
     {
         id: "4",
         icon: images.meals,
-        title: labels.condos
+        title: labels.desserts
     }
 
 ]

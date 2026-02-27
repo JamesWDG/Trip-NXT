@@ -13,6 +13,7 @@ import { IconList } from '../../constants/Accomodation';
 import fonts from '../../config/fonts';
 import colors from '../../config/colors';
 import { FoodCard } from '../../constants/Food';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
 
 const ListWithIcon = ({
   list,
@@ -25,9 +26,9 @@ const ListWithIcon = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
-
+  const navigation = useNavigation<NavigationProp<ParamListBase, string>>();
   const iconStyle = useMemo(() => iconStyles(height, width), [height, width]);
-  const handleSelect = (index: number) => {
+  const handleSelect = (index: number, title: string) => {
     setSelectedIndex(index);
 
     // Scroll to selected item
@@ -36,6 +37,7 @@ const ListWithIcon = ({
       animated: true,
       viewPosition: 0.5, // item center mein aa jayega
     });
+    navigation.navigate('FoodCategory', { category: title, type: 'food' });
   };
 
   const _renderItem = ({
@@ -55,7 +57,7 @@ const ListWithIcon = ({
           borderColor: isSelected ? colors.black : colors.transparent,
           paddingBottom: 10,
         }}
-        onPress={() => handleSelect(index)}
+        onPress={() => handleSelect(index, item.title)}
       >
         <Image
           source={item.icon as ImageSourcePropType}

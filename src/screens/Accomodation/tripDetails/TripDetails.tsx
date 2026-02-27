@@ -11,18 +11,65 @@ import React, { useState } from 'react';
 import WrapperContainer from '../../../components/wrapperContainer/WrapperContainer';
 import FastImage from 'react-native-fast-image';
 import images from '../../../config/images';
-import { width } from '../../../config/constants';
+import { ShowToast, width } from '../../../config/constants';
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
 import fonts from '../../../config/fonts';
 import { StarIcon } from 'lucide-react-native';
 import colors from '../../../config/colors';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/native';
+import StarRating from 'react-native-star-rating-widget';
+import { useCreateReviewMutation } from '../../../redux/services/review.service';
 
-const TripDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
+type routeParams = {
+  totalAmount: number,
+  subTotal: number,
+  discountId: number,
+  tax: number,
+  deliveryFee: number,
+  orderItems: { itemId: number, quantity: number, price: number }[],
+  deliveryAddress: { lat: number, lng: number, location: string },
+}
+type TripDetailsProps = {
+  navigation: NavigationProp<ParamListBase, string>;
+  route: RouteProp<{ params: routeParams }>;
+};
+
+const TripDetails = ({ navigation, route }: TripDetailsProps) => {
   const [reviewText, setReviewText] = useState('');
+  const [rating, setRating] = useState<number>(5);
+  const [createReview, { isLoading }] = useCreateReviewMutation();
+  const itemIds = route.params?.orderItems.map(item => item.itemId);
+  // const []
+
+  const postReview = async (id: number) => {
+    try {
+      const payload = {
+        referenceType: 'restaurant',
+        referenceId: id,
+        rating: rating,
+        comment: reviewText,
+      }
+      const response = await createReview(payload).unwrap();
+      console.log('response posting review', response);
+    } catch (error) {
+      console.log('error posting review', error);
+    }
+  }
+
+  const handleSubmit = async () => {
+    try {
+      const promises = itemIds.map(id => postReview(id));
+      await Promise.all(promises);
+      ShowToast('success', 'Reviews posted successfully');
+      navigation.navigate('FoodHome')
+    } catch (error) {
+      ShowToast('error', 'Failed to post reviews');
+      console.log('error posting reviews', error);
+    }
+  }
 
   return (
-    <WrapperContainer title="Trip Details" navigation={navigation}>
+    <WrapperContainer onBackPress={() => navigation.navigate('FoodHome')} title="Trip Details" navigation={navigation}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -38,13 +85,14 @@ const TripDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
             />
           </View>
           <View style={styles.starContainer}>
-            {[1, 2, 3, 4, 5].map(item => (
+            {/* {[1, 2, 3, 4, 5].map(item => (
               <StarIcon
                 key={item}
                 fill={colors.c_F59523}
                 color={colors.c_F59523}
               />
-            ))}
+            ))} */}
+            <StarRating rating={rating} onChange={setRating} />
           </View>
           <Text style={styles.description}>
             You successfully created your booking. To print your booking.
@@ -59,13 +107,13 @@ const TripDetails = ({ navigation }: { navigation: NavigationProp<any> }) => {
               value={reviewText}
               onChangeText={setReviewText}
             />
-            <Text style={styles.priceText}>$2.00</Text>
+            {/* <Text style={styles.priceText}>$2.00</Text> */}
           </View>
 
           <View style={styles.buttonContainer}>
             <GradientButtonForAccomodation
               title="Submit Now"
-              onPress={() => {}}
+              onPress={handleSubmit}
               fontSize={16}
               fontFamily={fonts.bold}
             />

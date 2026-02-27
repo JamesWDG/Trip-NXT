@@ -6402,7 +6402,7 @@ react-native-skeleton-placeholder@^5.2.4:
   resolved "https://registry.yarnpkg.com/react-native-skeleton-placeholder/-/react-native-skeleton-placeholder-5.2.4.tgz#a654fa083ff274a39c763e086f8a850c556d4c95"
   integrity sha512-OZntVq1hU1UX33FltxK2ezT2v9vHIhV8YnEbnMWUCvxT0N9OsgD1qxiHm6qb9YRJVgq2o5z3S7dNPsPnDF/jNg==
 
-react-native-star-rating-widget@^1.9.2:
+react-native-star-rating-widget@^1.10.0:
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/react-native-star-rating-widget/-/react-native-star-rating-widget-1.10.0.tgz#40e0be6e62fad4b3b9249efa472b87fa5dbe3e2b"
   integrity sha512-i9kO5Ep/7vooJfI0hItK/eUxFBd+V5TvUfYkpE8ldKQ4IzanVe6ydrOHx2Z5nvE7oYovdBeplgGMDiq/sDQRIA==

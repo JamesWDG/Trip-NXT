@@ -177,13 +177,17 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
             renderItem={({ item }) => (
               <View style={styles.menuCardWrapper}>
                 <FoodCardWithBorder
+                  cb={fetchPopularMenus}
                   image={item.image || images.foodHome}
                   title={item.name}
                   category={item.category || 'Food'}
-                  rating={0}
+                  rating={item.avgRating ? item.avgRating as number : 0}
                   price={item.price}
+                  id={item?.id}
                   hasFreeship={false}
-                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [] })}
+                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [], wishlistId: item.wishlistId || null })}
+                  isFavorite={item.wishlistId ? true : false}
+                  reviewCount={item.reviewCount}
                 />
               </View>
             )}

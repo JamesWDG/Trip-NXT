@@ -1,21 +1,79 @@
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import colors from '../../../config/colors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import PrimaryHeader from '../../../components/primaryHeader/PrimaryHeader';
-import SearchWithFilters from '../../../components/searchWithFilters/SearchWithFilters';
-import labels from '../../../config/labels';
-import { RecommendedCard } from '../../dummyPage/DummyPage';
-import images from '../../../config/images';
 import AccomodationTabButtons from '../../../components/accomodationTabButtons/AccomodationTabButtons';
 import WrapperContainer from '../../../components/wrapperContainer/WrapperContainer';
 import { useNavigation } from '@react-navigation/native';
 import FoodItemCard from '../../../components/foodItemCard/FoodItemCard';
+import { useDeleteFromWishlistMutation, useLazyGetWishlistQuery } from '../../../redux/services/wishlist.service';
+import { ShowToast } from '../../../config/constants';
+import WishlistSkeleton from '../../../components/wishlistSkeleton/WishlistSkeleton';
 
 const Wishlists = () => {
   const navigation = useNavigation<any>();
+  const [getWishlist] = useLazyGetWishlistQuery();
+  const [hotelWishlist, setHotelWishlist] = useState<any[]>([]);
+  const [foodWishlist, setFoodWishlist] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<0 | 1>(0);
+  const [loading, setLoading] = useState(true);
+  const [deleteWishlist] = useDeleteFromWishlistMutation();
+
+  const deleteFromWishlist = async (type: 'hotel' | 'dish', id: number) => {
+    let payload: { id?: number, type?: 'hotel' | 'dish' } = {}
+    if (type === 'hotel') {
+      payload.id = id;
+      payload.type = 'hotel';
+    } else {
+      payload.id = id;
+      payload.type = 'dish';
+    }
+    try {
+      const res = await deleteWishlist(payload as { id: number, type: 'hotel' | 'dish' }).unwrap();
+      await fetchWishList();
+    } catch (error) {
+      console.log('error ===>', error);
+      ShowToast('error', 'Unable to delete from wishlist');
+    }
+  }
+
+
+  const fetchWishList = async () => {
+    try {
+      if (hotelWishlist.length < 1 && foodWishlist.length < 1) {
+        setLoading(true);
+      }
+      const res = await getWishlist({}).unwrap();
+      console.log('res ===>', res);
+      if (res.success) {
+        const foodList = res.data.wishlists.filter((item: any) => item.dishId !== null);
+        const hotelList = res.data.wishlists.filter((item: any) => item.hotelId !== null);
+        setFoodWishlist(foodList);
+        setHotelWishlist(hotelList);
+      }
+    } catch (error) {
+      console.log('error ===>', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    const subscribe = navigation.addListener('focus', () => {
+      fetchWishList();
+    });
+    return subscribe;
+  }, [])
+
+  if (loading) {
+    return (
+      <WrapperContainer onBackPress={() => navigation.goBack()} title="Wishlists" navigation={navigation}>
+        <WishlistSkeleton />
+      </WrapperContainer>
+    );
+  }
+
   return (
-    <WrapperContainer title="Wishlists" navigation={navigation}>
+    <WrapperContainer onBackPress={() => navigation.goBack()} title="Wishlists" navigation={navigation}>
       <View
         style={{
           paddingTop: 30,
@@ -24,22 +82,24 @@ const Wishlists = () => {
           // backgroundColor: 'red',
         }}
       >
-        <AccomodationTabButtons data={['Hotels', 'Foods']} />
+        <AccomodationTabButtons activeIndex={activeTab} onTabChange={(index) => setActiveTab(index as 0 | 1)} data={['Hotels', 'Foods']} />
         {/* <SearchWithFilters placeholder={labels.whatareYouLookingFor} /> */}
       </View>
 
       <View>
         <FlatList
-          data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+          data={activeTab === 0 ? hotelWishlist : foodWishlist}
           renderItem={({ item }) => (
             <FoodItemCard
-              image={images.recommended_accomodation}
-              title="Book Your Place"
-              description={'Lorem Ipsum is simply dummy text'}
-              price={100}
+              image={{ uri: item.hotel?.images[0] || item.dish?.image }}
+              title={item?.hotel?.name || item?.dish?.name}
+              description={item?.hotel?.description || item?.dish?.description}
+              price={item?.hotel?.rentPerDay || item?.dish?.price}
               rating={4.5}
               reviewCount={10}
               onPress={() => navigation.navigate('HotelDetails')}
+              isFavorite={true}
+              onRemove={() => deleteFromWishlist(activeTab === 0 ? 'hotel' : 'dish', activeTab === 0 ? item.hotel?.id : item.dish?.id)}
             />
           )}
           //   keyExtractor={item => item.id}

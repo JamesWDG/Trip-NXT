@@ -20,6 +20,7 @@ import GradientButtonForAccomodation from '../../../components/gradientButtonFor
 import CheckBox from '@react-native-community/checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import images from '../../../config/images';
+import { useWishList } from '../../../hooks/useWishlist';
 
 interface ToppingOption {
   id: number;
@@ -28,9 +29,9 @@ interface ToppingOption {
   description: string;
 }
 
-const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, route: RouteProp<{ params: { id: string, category: string, name: string, price: number, image: string, description: string, toppings: ToppingOption[] } }> }) => {
+const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, route: RouteProp<{ params: { id: string, category: string, name: string, price: number, image: string, description: string, toppings: ToppingOption[], wishlistId: number | null } }> }) => {
   const { top } = useSafeAreaInsets();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { wishlist, handleAddToWishlist } = useWishList({ initialWishlist: route.params.wishlistId ? true : false, dishId: Number(route.params.id), type: 'dish' });
   const [selectedTopping, setSelectedTopping] = useState<number[]>([]);
   const [quantity, setQuantity] = useState(1);
 
@@ -95,7 +96,7 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
   };
 
   const onPressGoReviews = () => {
-    navigation.navigate('FoodReviews');
+    navigation.navigate('FoodReviews', { id: route?.params?.id });
   };
 
   const handleSelectTopping = (toppingId: number) => {
@@ -119,9 +120,9 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
     }
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchCartItems();
-  },[route.params])
+  }, [route.params])
 
   return (
     <View style={GeneralStyles.flex}>
@@ -131,8 +132,8 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
           onBackPress={() => navigation?.goBack()}
           onNotificationPress={() => { }}
           onCartPress={() => { }}
-          onFavoritePress={() => setIsFavorite(!isFavorite)}
-          isFavorite={isFavorite}
+          onFavoritePress={() => handleAddToWishlist()}
+          isFavorite={wishlist}
         />
       </View>
 

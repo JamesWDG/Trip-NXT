@@ -59,7 +59,7 @@ const DetailsCard = ({
         </View>
         <View>
           <StarRating rating={rating} onChange={() => {}} starSize={14} />
-          <Text style={styles.reviews}>{reviews} Reviews</Text>
+          <Text style={styles.reviews}>{rating}</Text>
         </View>
       </View>
 

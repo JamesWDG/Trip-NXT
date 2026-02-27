@@ -8,7 +8,8 @@ const hotelApi = baseApi.injectEndpoints({
             query: () => ({
                 url: endpoint.GET_HOTELS,
                 method: 'GET',
-                providesTags: ['Hotel']
+                providesTags: ['Hotel'],
+                invalidatesTags: ['Hotel'],
             })
         }),
         checkAvailability: builder.mutation({
@@ -97,6 +98,13 @@ const hotelApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Hotel'],
         }),
+        getAccomodationItemsByCategory: builder.query({
+            query: (params: {type: 'standard' | 'luxury' | 'budget'}) => ({
+                url: endpoint.GET_ACCOMODATION_ITEMS_BY_CATEGORY,
+                method: 'GET',
+                params
+            })
+        })
     })
 });
 
@@ -109,4 +117,5 @@ export const {
     useGetSingleHotelBookingQuery,
     useUpdateHotelBookingStatusMutation,
     useLazyGetFilteredHotelsQuery,
+    useLazyGetAccomodationItemsByCategoryQuery,
 } = hotelApi;

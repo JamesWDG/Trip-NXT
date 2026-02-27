@@ -2,7 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import React, { useMemo, useState } from 'react';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import FoodHeader from '../../../components/foodHeader/FoodHeader';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
 import { CarouselData } from '../../../constants/Accomodation';
@@ -12,11 +12,29 @@ import OrderTrackingProgress from '../../../components/orderTrackingProgress/Ord
 import GradientButtonForAccomodation from '../../../components/gradientButtonForAccomodation/GradientButtonForAccomodation';
 import FastImage from 'react-native-fast-image';
 import images from '../../../config/images';
+import { useUpdateOrderStatusMutation } from '../../../redux/services/restaurant.service';
+import { ShowToast } from '../../../config/constants';
 
-const OrderTracking = ({ navigation }: { navigation: NavigationProp<any> }) => {
+type routeParams = {
+  totalAmount: number,
+  subTotal: number,
+  discountId: number,
+  tax: number,
+  deliveryFee: number,
+  orderItems: { itemId: number, quantity: number, price: number }[],
+  deliveryAddress: { lat: number, lng: number, location: string },
+  orderId: number,
+}
+type OrderTrackingProps = {
+  navigation: NavigationProp<ParamListBase, string>;
+  route: RouteProp<{ params: routeParams }>;
+};
+
+
+const OrderTracking = ({ navigation, route }: OrderTrackingProps) => {
   const { top } = useSafeAreaInsets();
   const [isFavorite, setIsFavorite] = useState(false);
-
+  const [updateOrderStatus] = useUpdateOrderStatusMutation();
   const wishlistButtonStyles = useMemo(() => wishlistButton(top), [top]);
   const contentStyles = useMemo(() => makeContentStyles(top), [top]);
 
@@ -27,12 +45,21 @@ const OrderTracking = ({ navigation }: { navigation: NavigationProp<any> }) => {
     { label: 'On Way', completed: true },
     { label: 'Delivered', completed: false },
   ];
+  console.log('OrderTracking route.params', route.params);
 
   const onMessage = () => {
     navigation.navigate('FoodChat');
   };
-  const onPostReview = () => {
-    navigation.navigate('FoodTripDetails');
+  const onPostReview = async() => {
+    try {
+      // console.log('OrderTracking route.params', route.params);
+      await updateOrderStatus({orderId: route.params.orderId, status: 'delivered'}).unwrap();
+      ShowToast('success', 'Order completed successfully');
+      navigation.navigate('FoodTripDetails', route.params); 
+    } catch (error) {
+      console.log('error ===>', error);
+      ShowToast('error', 'Failed to complete order');
+    }
   };
   return (
     <View style={GeneralStyles.flex}>
@@ -40,8 +67,8 @@ const OrderTracking = ({ navigation }: { navigation: NavigationProp<any> }) => {
       <View style={styles.headerContainer}>
         <FoodHeader
           onBackPress={() => navigation?.navigate('FoodHome')}
-          onNotificationPress={() => {}}
-          onCartPress={() => {}}
+          onNotificationPress={() => { }}
+          onCartPress={() => { }}
           onFavoritePress={() => setIsFavorite(!isFavorite)}
           isFavorite={isFavorite}
         />
@@ -77,7 +104,7 @@ const OrderTracking = ({ navigation }: { navigation: NavigationProp<any> }) => {
             </TouchableOpacity> */}
               <GradientButtonForAccomodation
                 title="Call"
-                onPress={() => {}}
+                onPress={() => { }}
                 color={colors.black}
                 fontSize={16}
                 fontFamily={fonts.semibold}
@@ -95,7 +122,7 @@ const OrderTracking = ({ navigation }: { navigation: NavigationProp<any> }) => {
           </View>
 
           <GradientButtonForAccomodation
-            title="Post a Review"
+            title="Complete Order"
             onPress={onPostReview}
             fontSize={16}
             fontFamily={fonts.semibold}
