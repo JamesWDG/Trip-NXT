@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { NavigationProp } from '@react-navigation/native';
-import { ChevronLeft, MapPin } from 'lucide-react-native';
+import { ChevronLeft, MapPin, Minus, Plus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Geolocation from '@react-native-community/geolocation';
 import colors from '../../../config/colors';
@@ -22,6 +22,58 @@ import { RootState } from '../../../redux/store';
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
 type PlaceSuggestion = { id: string; description: string; mainText: string };
+
+type RouteInfo = {
+  distance: string;
+  duration: string;
+  distanceKm: number;
+  durationMin: number;
+};
+
+const BASE_FARE = 80;
+const PER_KM_RATE = 35;
+const PER_MIN_RATE = 3;
+const PEAK_MULTIPLIER = 1.25;
+
+/** Parse "4006.8 km" or "500 m" to distance in km */
+function parseDistanceToKm(str: string): number {
+  if (!str || typeof str !== 'string') return 0;
+  const kmMatch = str.match(/([\d.]+)\s*km/i);
+  if (kmMatch) return parseFloat(kmMatch[1]) || 0;
+  const mMatch = str.match(/([\d.]+)\s*m(?:eters?)?/i);
+  if (mMatch) return (parseFloat(mMatch[1]) || 0) / 1000;
+  return 0;
+}
+
+/** Parse "36 hr 20 min" or "6 min" to duration in minutes */
+function parseDurationToMin(str: string): number {
+  if (!str || typeof str !== 'string') return 0;
+  let min = 0;
+  const hrMatch = str.match(/(\d+)\s*hr?/i);
+  if (hrMatch) min += 60 * (parseInt(hrMatch[1], 10) || 0);
+  const minMatch = str.match(/(\d+)\s*min/i);
+  if (minMatch) min += parseInt(minMatch[1], 10) || 0;
+  return min;
+}
+
+/** Peak: 9–11 AM, 4–6 PM, 10 PM–2 AM */
+function isPeakHour(): boolean {
+  const h = new Date().getHours();
+  if (h >= 9 && h < 11) return true;   // 9–11 AM
+  if (h >= 16 && h < 18) return true; // 4–6 PM
+  if (h >= 22 || h < 2) return true;  // 10 PM–2 AM
+  return false;
+}
+
+function getFareEstimate(distanceKm: number, durationMin: number) {
+  const km = Number(distanceKm);
+  const min = Number(durationMin);
+  const safeKm = Number.isFinite(km) ? km : 0;
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const normal = Math.round(BASE_FARE + PER_KM_RATE * safeKm + PER_MIN_RATE * safeMin);
+  const peak = Math.round(normal * PEAK_MULTIPLIER);
+  return { normal, peak, isPeak: isPeakHour() };
+}
 
 const DEFAULT_REGION = {
   latitude: 37.78825,
@@ -42,8 +94,9 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activeField, setActiveField] = useState<ActiveField>(null);
-  const [routeInfo, setRouteInfo] = useState<{ distance: string; duration: string } | null>(null);
+  const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
+  const [fareAdjustment, setFareAdjustment] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mapRef = useRef<MapView>(null);
   const routeSheetRef = useRef<BottomSheetComponentRef>(null);
@@ -163,6 +216,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
         setDropoffCoords(coords);
       }
       setRouteInfo(null);
+      setFareAdjustment(0);
       const origin = activeField === 'pickup' ? coords : pickupCoords;
       const dest = activeField === 'dropoff' ? coords : dropoffCoords;
       if (!origin || !dest) {
@@ -232,14 +286,18 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
     [pickupCoords, reverseGeocode],
   );
 
-  const formatRouteInfo = useCallback((distanceKm: number, durationMin: number) => {
+  const formatRouteInfo = useCallback((distanceKm: number, durationMin: number): RouteInfo => {
+    const km = Number(distanceKm);
+    const min = Number(durationMin);
+    const safeKm = Number.isFinite(km) ? km : 0;
+    const safeMin = Number.isFinite(min) ? min : 0;
     const distanceStr =
-      distanceKm >= 1 ? `${distanceKm.toFixed(1)} km` : `${Math.round(distanceKm * 1000)} m`;
+      safeKm >= 1 ? `${safeKm.toFixed(1)} km` : `${Math.round(safeKm * 1000)} m`;
     const durationStr =
-      durationMin >= 60
-        ? `${Math.floor(durationMin / 60)} hr ${Math.round(durationMin % 60)} min`
-        : `${Math.round(durationMin)} min`;
-    return { distance: distanceStr, duration: durationStr };
+      safeMin >= 60
+        ? `${Math.floor(safeMin / 60)} hr ${Math.round(safeMin % 60)} min`
+        : `${Math.round(safeMin)} min`;
+    return { distance: distanceStr, duration: durationStr, distanceKm: safeKm, durationMin: safeMin };
   }, []);
 
   return (
@@ -334,6 +392,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
             onStart={() => setLoadingRoute(true)}
             onReady={(result) => {
               setLoadingRoute(false);
+              setFareAdjustment(0);
               setRouteInfo(formatRouteInfo(result.distance, result.duration));
               mapRef.current?.fitToCoordinates(result.coordinates, {
                 edgePadding: { top: 80, right: 40, bottom: 80, left: 40 },
@@ -349,7 +408,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
       </MapView>
       <BottomSheetComponent
         ref={routeSheetRef}
-        snapPoints={['35%']}
+        snapPoints={['70%']}
         enableDynamicSizing={false}
         showBackdrop={true}
       >
@@ -373,9 +432,70 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                   <Text style={styles.routeInfoValue}>{routeInfo.duration}</Text>
                 </View>
               </View>
+              {(() => {
+                let km = routeInfo.distanceKm ?? 0;
+                let min = routeInfo.durationMin ?? 0;
+                if (!Number.isFinite(km) || km <= 0) km = parseDistanceToKm(routeInfo.distance);
+                if (!Number.isFinite(min) || min <= 0) min = parseDurationToMin(routeInfo.duration);
+                const fare = getFareEstimate(km, min);
+                const lower = Number.isFinite(fare.normal) ? fare.normal : 0;
+                const upper = Number.isFinite(fare.peak) ? fare.peak : 0;
+                const applicableFare = fare.isPeak ? upper : lower;
+                const yourFare = Math.max(0, applicableFare + fareAdjustment);
+                return (
+                  <View style={styles.fareSection}>
+                    <Text style={styles.fareSectionTitle}>Estimated fare</Text>
+                    <View style={styles.fareRangeRow}>
+                      <Text style={styles.fareRangeText}>Rs {lower} - {upper}</Text>
+                    </View>
+                    <View style={styles.fareOptionsRow}>
+                      <View style={[styles.fareOptionChip, fare.isPeak && styles.fareOptionChipInactive]}>
+                        <Text style={styles.fareOptionLabel}>Normal hours</Text>
+                        <Text style={styles.fareOptionValue}>Rs {lower}</Text>
+                      </View>
+                      <View style={[styles.fareOptionChip, !fare.isPeak && styles.fareOptionChipInactive]}>
+                        <Text style={styles.fareOptionLabel}>Peak hours</Text>
+                        <Text style={styles.fareOptionValue}>Rs {upper}</Text>
+                      </View>
+                    </View>
+                    <View style={styles.yourFareRow}>
+                      <Text style={styles.yourFareLabel}>Your fare</Text>
+                      <View style={styles.yourFareControls}>
+                        <TouchableOpacity
+                          style={styles.fareAdjustBtn}
+                          onPress={() => setFareAdjustment((a) => a - 5)}
+                          activeOpacity={0.7}
+                        >
+                          <Minus size={18} color={colors.c_0162C0} />
+                          <Text style={styles.fareAdjustBtnText}>5</Text>
+                        </TouchableOpacity>
+                        <Text style={styles.yourFareValue}>Rs {yourFare}</Text>
+                        <TouchableOpacity
+                          style={styles.fareAdjustBtn}
+                          onPress={() => setFareAdjustment((a) => a + 5)}
+                          activeOpacity={0.7}
+                        >
+                          <Plus size={18} color={colors.c_0162C0} />
+                          <Text style={styles.fareAdjustBtnText}>5</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })()}
               <TouchableOpacity
                 style={styles.findRideButton}
-                onPress={() => navigation.navigate('FindARider')}
+                onPress={() => {
+                  routeSheetRef.current?.close();
+                  navigation.navigate('FindARider', {
+                    pickupText,
+                    dropoffText,
+                    distance: routeInfo?.distance,
+                    duration: routeInfo?.duration,
+                    pickupCoords: pickupCoords ?? undefined,
+                    dropoffCoords: dropoffCoords ?? undefined,
+                  });
+                }}
                 activeOpacity={0.8}
               >
                 <Text style={styles.findRideButtonText}>Find Ride</Text>
@@ -521,6 +641,93 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: fonts.bold,
     color: colors.black,
+  },
+  fareSection: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.c_F3F3F3,
+  },
+  fareSectionTitle: {
+    fontSize: 12,
+    fontFamily: fonts.medium,
+    color: colors.c_666666,
+    marginBottom: 6,
+  },
+  fareRangeRow: {
+    marginBottom: 10,
+  },
+  fareRangeText: {
+    fontSize: 18,
+    fontFamily: fonts.bold,
+    color: colors.c_0162C0,
+  },
+  fareOptionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  fareOptionChip: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: colors.c_F6F6F6,
+    borderWidth: 1.5,
+    borderColor: colors.c_0162C0,
+  },
+  fareOptionChipInactive: {
+    borderColor: colors.c_DDDDDD,
+    backgroundColor: colors.white,
+  },
+  fareOptionLabel: {
+    fontSize: 11,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
+    marginBottom: 2,
+  },
+  fareOptionValue: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: colors.black,
+  },
+  yourFareRow: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.c_F3F3F3,
+  },
+  yourFareLabel: {
+    fontSize: 12,
+    fontFamily: fonts.medium,
+    color: colors.c_666666,
+    marginBottom: 8,
+  },
+  yourFareControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  fareAdjustBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: colors.c_F6F6F6,
+    borderWidth: 1,
+    borderColor: colors.c_0162C0,
+  },
+  fareAdjustBtnText: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: colors.c_0162C0,
+  },
+  yourFareValue: {
+    fontSize: 18,
+    fontFamily: fonts.bold,
+    color: colors.c_0162C0,
   },
   findRideButton: {
     marginTop: 20,

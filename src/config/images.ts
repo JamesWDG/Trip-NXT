@@ -81,6 +81,7 @@ const images = Object.freeze({
     bike: require('../assets/images/bike.png'),
     allow_location: require('../assets/images/allow_location.png'),
     finding_your_ride: require('../assets/images/finding_your_ride.png'),
+    car_map: require('../assets/images/car_map.png'),
     black_car: require('../assets/images/black_car.png'),
     driver_arrived: require('../assets/images/driver_arrived.png'),
     you_arrived: require('../assets/images/you_arrived.png'),

@@ -35,11 +35,11 @@ interface stateTypes {
 
 const Signup = ({ navigation }: { navigation: any }) => {
   const [state, setState] = useState<stateTypes>({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    cPassword: '',
+    name: 'abcdtestname',
+    email: 'abcdtestemail@yopmail.com',
+    phone: '12812166971',
+    password: 'Abcd!234',
+    cPassword: 'Abcd!234',
     errors: {
       name: '',
       email: '',

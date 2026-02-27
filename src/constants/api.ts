@@ -27,6 +27,9 @@ type endpointTypes = {
     GET_ALL_HOTEL_BOOKINGS_FOR_USER: string;
     GET_SINGLE_HOTEL_BOOKING: (id: number) => string;
     UPDATE_HOTEL_BOOKING_STATUS: (id: number) => string;
+    CAB_ONLINE_VENDORS: string;
+    CAB_NEARBY_VENDORS: string;
+    NOTIFICATION_REGISTER_TOKEN: string;
 }
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
@@ -61,4 +64,7 @@ export const endpoint: endpointTypes = {
     GET_ALL_HOTEL_BOOKINGS_FOR_USER: 'booking/get-all-hotel-bookings-for-user',
     GET_SINGLE_HOTEL_BOOKING: (id: number) => `booking/get-single-hotel-booking/${id}`,
     UPDATE_HOTEL_BOOKING_STATUS: (id: number) => `booking/update-hotel-booking-status/${id}`,
+    CAB_ONLINE_VENDORS: 'cab/online-vendors',
+    CAB_NEARBY_VENDORS: 'cab/nearby-vendors',
+    NOTIFICATION_REGISTER_TOKEN: 'notification/register-token',
 }

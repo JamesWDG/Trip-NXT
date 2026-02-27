@@ -18,6 +18,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import RootNavigation from './src/navigation';
+import { NotificationSetup } from './src/components/NotificationSetup';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Provider } from 'react-redux';
@@ -66,6 +67,7 @@ function AppContent() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
+        <NotificationSetup />
         <RootNavigation />
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
