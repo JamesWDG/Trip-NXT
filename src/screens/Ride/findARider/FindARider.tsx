@@ -19,6 +19,13 @@ import fonts from '../../../config/fonts';
 import images from '../../../config/images';
 import { useLazyGetNearbyVendorsQuery } from '../../../redux/services/cab.service';
 import type { OnlineCabVendor } from '../../../redux/services/cab.service';
+import {
+  useLazyGetRideForUserQuery,
+  useAcceptOfferMutation,
+  useRejectOfferMutation,
+  useCancelRideMutation,
+} from '../../../redux/services/ride.service';
+import type { RidePayload } from '../../../redux/services/ride.service';
 
 const NEARBY_RADIUS_KM = 15;
 /** Poll interval (ms) so new drivers coming online show on the map without leaving the screen */
@@ -27,6 +34,7 @@ const NEARBY_POLL_INTERVAL_MS = 12 * 1000;
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
 
 type FindARiderParams = {
+  rideId?: number;
   pickupText?: string;
   dropoffText?: string;
   distance?: string;
@@ -48,6 +56,7 @@ const FindARider: FC = () => {
   const route = useRoute<RouteProp<{ params: FindARiderParams }, 'params'>>();
   const params = route.params ?? {};
   const {
+    rideId,
     pickupText = 'Pickup',
     dropoffText = 'Drop-off',
     distance,
@@ -55,6 +64,13 @@ const FindARider: FC = () => {
     pickupCoords,
     dropoffCoords,
   } = params;
+
+  const [getRide, { data: rideData }] = useLazyGetRideForUserQuery();
+  const [acceptOffer, { isLoading: accepting }] = useAcceptOfferMutation();
+  const [rejectOffer] = useRejectOfferMutation();
+  const [cancelRide, { isLoading: cancelling }] = useCancelRideMutation();
+  const [ride, setRide] = useState<RidePayload | null>(null);
+  const ridePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const mapRef = useRef<MapView>(null);
   const [getNearbyVendors, { data: vendorsResponse, isLoading: loadingVendors, isError: vendorsError }] = useLazyGetNearbyVendorsQuery();
@@ -136,6 +152,20 @@ const FindARider: FC = () => {
     setAvailableVendors(list);
   }, [vendorsResponse]);
 
+  // Poll ride when rideId is present (searching / counter_offered / accepted)
+  useEffect(() => {
+    if (!rideId) return;
+    const fetchRide = () => getRide(rideId);
+    fetchRide();
+    ridePollRef.current = setInterval(fetchRide, 4000);
+    return () => {
+      if (ridePollRef.current) clearInterval(ridePollRef.current);
+    };
+  }, [rideId, getRide]);
+  useEffect(() => {
+    if (rideData && typeof rideData === 'object' && 'id' in rideData) setRide(rideData as RidePayload);
+  }, [rideData]);
+
   useEffect(() => {
     const coords: { latitude: number; longitude: number }[] = [];
     if (pickupCoords) coords.push(pickupCoords);
@@ -183,8 +213,15 @@ const FindARider: FC = () => {
   }, [pulse1, pulse2, pulse3]);
 
   const handleCancel = () => {
-    navigation.goBack();
+    if (rideId) {
+      cancelRide({ rideId }).then(() => navigation.goBack()).catch(() => {});
+    } else {
+      navigation.goBack();
+    }
   };
+
+  const pendingOffers = ride?.offers?.filter((o) => o.status === 'pending') ?? [];
+  const latestOffer = pendingOffers[pendingOffers.length - 1];
 
   const hasCoords = pickupCoords && dropoffCoords;
   const initialRegion = pickupCoords
@@ -345,13 +382,45 @@ const FindARider: FC = () => {
           )}
         </View>
 
+        {ride?.status === 'counter_offered' && latestOffer && (
+          <View style={styles.counterOfferCard}>
+            <Text style={styles.counterOfferTitle}>Counter offer</Text>
+            <Text style={styles.counterOfferVendor}>
+              {latestOffer.vendor?.user?.name ?? 'Driver'} proposed Rs {latestOffer.proposedFare}
+            </Text>
+            <View style={styles.counterOfferActions}>
+              <TouchableOpacity
+                style={styles.rejectOfferBtn}
+                onPress={() => rejectOffer({ rideId: ride.id, offerId: latestOffer.id })}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.rejectOfferBtnText}>Reject</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.acceptOfferBtn}
+                onPress={() => acceptOffer({ rideId: ride.id, offerId: latestOffer.id })}
+                disabled={accepting}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.acceptOfferBtnText}>{accepting ? 'Accepting...' : 'Accept'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        {ride?.status === 'accepted' && (
+          <View style={styles.acceptedBanner}>
+            <Text style={styles.acceptedBannerText}>Ride accepted! Driver is on the way.</Text>
+          </View>
+        )}
+
         <View style={[styles.footer, { paddingBottom: safeBottom + 16 }]}>
           <TouchableOpacity
             style={styles.cancelBtn}
             onPress={handleCancel}
+            disabled={cancelling}
             activeOpacity={0.8}
           >
-            <Text style={styles.cancelBtnText}>Cancel</Text>
+            <Text style={styles.cancelBtnText}>{cancelling ? 'Cancelling...' : 'Cancel'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -508,5 +577,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.bold,
     color: colors.c_0162C0,
+  },
+  counterOfferCard: {
+    backgroundColor: colors.white,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.c_DDDDDD,
+  },
+  counterOfferTitle: {
+    fontSize: 16,
+    fontFamily: fonts.bold,
+    color: colors.black,
+    marginBottom: 4,
+  },
+  counterOfferVendor: {
+    fontSize: 14,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
+    marginBottom: 12,
+  },
+  counterOfferActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  rejectOfferBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: colors.c_F3F3F3,
+    alignItems: 'center',
+  },
+  rejectOfferBtnText: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: colors.c_666666,
+  },
+  acceptOfferBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: colors.c_0162C0,
+    alignItems: 'center',
+  },
+  acceptOfferBtnText: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    color: colors.white,
+  },
+  acceptedBanner: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 200, 0, 0.2)',
+    alignItems: 'center',
+  },
+  acceptedBannerText: {
+    fontSize: 14,
+    fontFamily: fonts.bold,
+    color: colors.black,
   },
 });

@@ -19,6 +19,7 @@ import { width } from '../../../config/constants';
 import BottomSheetComponent, { BottomSheetComponentRef } from '../../../components/bottomSheetComp/BottomSheetComp';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import { useCreateRideMutation } from '../../../redux/services/ride.service';
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
 type PlaceSuggestion = { id: string; description: string; mainText: string };
@@ -86,6 +87,7 @@ type ActiveField = 'pickup' | 'dropoff' | null;
 
 const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
   const { top: safeTop, bottom: safeBottom } = useSafeAreaInsets();
+  const [createRide, { isLoading: creatingRide }] = useCreateRideMutation();
   const [pickupText, setPickupText] = useState('');
   const [pickupCoords, setPickupCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [dropoffText, setDropoffText] = useState('');
@@ -485,20 +487,43 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
               })()}
               <TouchableOpacity
                 style={styles.findRideButton}
-                onPress={() => {
-                  routeSheetRef.current?.close();
-                  navigation.navigate('FindARider', {
-                    pickupText,
-                    dropoffText,
-                    distance: routeInfo?.distance,
-                    duration: routeInfo?.duration,
-                    pickupCoords: pickupCoords ?? undefined,
-                    dropoffCoords: dropoffCoords ?? undefined,
-                  });
+                disabled={creatingRide || !pickupCoords || !dropoffCoords}
+                onPress={async () => {
+                  if (!pickupCoords || !dropoffCoords || !routeInfo) return;
+                  let km = routeInfo.distanceKm ?? 0;
+                  let min = routeInfo.durationMin ?? 0;
+                  if (!Number.isFinite(km) || km <= 0) km = parseDistanceToKm(routeInfo.distance);
+                  if (!Number.isFinite(min) || min <= 0) min = parseDurationToMin(routeInfo.duration);
+                  const fare = getFareEstimate(km, min);
+                  const applicableFare = fare.isPeak ? fare.peak : fare.normal;
+                  const offeredFare = Math.max(50, Math.round(applicableFare + fareAdjustment));
+                  try {
+                    const result = await createRide({
+                      pickupLat: pickupCoords.latitude,
+                      pickupLng: pickupCoords.longitude,
+                      pickupAddress: pickupText || undefined,
+                      dropoffLat: dropoffCoords.latitude,
+                      dropoffLng: dropoffCoords.longitude,
+                      dropoffAddress: dropoffText || undefined,
+                      offeredFare,
+                    }).unwrap();
+                    routeSheetRef.current?.close();
+                    navigation.navigate('FindARider', {
+                      rideId: result?.id,
+                      pickupText,
+                      dropoffText,
+                      distance: routeInfo?.distance,
+                      duration: routeInfo?.duration,
+                      pickupCoords,
+                      dropoffCoords,
+                    });
+                  } catch (e: any) {
+                    console.warn('Create ride failed:', e?.data?.message || e?.message);
+                  }
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.findRideButtonText}>Find Ride</Text>
+                <Text style={styles.findRideButtonText}>{creatingRide ? 'Creating...' : 'Find Ride'}</Text>
               </TouchableOpacity>
             </>
           )}

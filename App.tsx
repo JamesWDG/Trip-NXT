@@ -64,6 +64,11 @@ function App() {
 function AppContent() {
   const safeAreaInsets = useSafeAreaInsets();
 
+  useEffect(() => {
+    const { requestLocationPermissionAndPromptSettings } = require('./src/services/locationPermission');
+    requestLocationPermissionAndPromptSettings().catch(() => {});
+  }, []);
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>

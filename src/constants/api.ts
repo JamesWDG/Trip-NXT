@@ -30,6 +30,13 @@ type endpointTypes = {
     CAB_ONLINE_VENDORS: string;
     CAB_NEARBY_VENDORS: string;
     NOTIFICATION_REGISTER_TOKEN: string;
+    RIDE_CREATE: string;
+    RIDE_MY_ACTIVE: string;
+    RIDE_MY_HISTORY: string;
+    RIDE_USER: (rideId: number) => string;
+    RIDE_ACCEPT_OFFER: (rideId: number) => string;
+    RIDE_REJECT_OFFER: (rideId: number) => string;
+    RIDE_CANCEL: (rideId: number) => string;
 }
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
@@ -67,4 +74,11 @@ export const endpoint: endpointTypes = {
     CAB_ONLINE_VENDORS: 'cab/online-vendors',
     CAB_NEARBY_VENDORS: 'cab/nearby-vendors',
     NOTIFICATION_REGISTER_TOKEN: 'notification/register-token',
+    RIDE_CREATE: 'ride',
+    RIDE_MY_ACTIVE: 'ride/my/active',
+    RIDE_MY_HISTORY: 'ride/my/history',
+    RIDE_USER: (rideId: number) => `ride/user/${rideId}`,
+    RIDE_ACCEPT_OFFER: (rideId: number) => `ride/${rideId}/accept-offer`,
+    RIDE_REJECT_OFFER: (rideId: number) => `ride/${rideId}/reject-offer`,
+    RIDE_CANCEL: (rideId: number) => `ride/${rideId}/cancel`,
 }
