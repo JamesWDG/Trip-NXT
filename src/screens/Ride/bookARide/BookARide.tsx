@@ -19,6 +19,7 @@ import { width } from '../../../config/constants';
 import BottomSheetComponent, { BottomSheetComponentRef } from '../../../components/bottomSheetComp/BottomSheetComp';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import { useCreateRideBookingLogMutation } from '../../../redux/services/ride.service';
 import { useCreateRideMutation } from '../../../redux/services/ride.service';
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
@@ -103,6 +104,8 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
   const mapRef = useRef<MapView>(null);
   const routeSheetRef = useRef<BottomSheetComponentRef>(null);
   const { latitude, longitude } = useSelector((state: RootState) => state.location);
+  const authUser = useSelector((state: RootState) => state.auth.user);
+  const [createRideBookingLog] = useCreateRideBookingLogMutation();
   const fetchSuggestions = useCallback(async (query: string): Promise<PlaceSuggestion[]> => {
     if (!query || query.length < 2) return [];
     try {
@@ -507,6 +510,17 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                       dropoffAddress: dropoffText || undefined,
                       offeredFare,
                     }).unwrap();
+                    // Also log simple booking info (userId, rideId, amount) for vendor logs / reporting
+                    if (result?.id && offeredFare > 0) {
+                      try {
+                        await createRideBookingLog({
+                          rideId: result.id,
+                          amount: offeredFare,
+                        }).unwrap();
+                      } catch (e) {
+                        console.warn('Create ride booking log failed:', (e as any)?.message || e);
+                      }
+                    }
                     routeSheetRef.current?.close();
                     navigation.navigate('FindARider', {
                       rideId: result?.id,
@@ -516,6 +530,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                       duration: routeInfo?.duration,
                       pickupCoords,
                       dropoffCoords,
+                     
                     });
                   } catch (e: any) {
                     console.warn('Create ride failed:', e?.data?.message || e?.message);

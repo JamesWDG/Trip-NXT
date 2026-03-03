@@ -95,6 +95,13 @@ const rideApi = baseApi.injectEndpoints({
       }),
       transformResponse: parseRideResponse,
     }),
+    createRideBookingLog: builder.mutation<any, { rideId: number; amount: number }>({
+      query: ({ rideId, amount }) => ({
+        url: `${endpoint.RIDE_CREATE}/booking-log`,
+        method: 'POST',
+        body: { rideId, amount },
+      }),
+    }),
   }),
 });
 
@@ -108,4 +115,5 @@ export const {
   useAcceptOfferMutation,
   useRejectOfferMutation,
   useCancelRideMutation,
+  useCreateRideBookingLogMutation,
 } = rideApi;
