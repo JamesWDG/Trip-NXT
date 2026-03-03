@@ -31,7 +31,9 @@ import { RecommendedCard } from '../../dummyPage/DummyPage';
 import DrawerModal from '../../../components/drawerModal/DrawerModal';
 import { useNavigation } from '@react-navigation/native';
 import GeneralStyles from '../../../utils/GeneralStyles';
-import { useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
+import { useHotelForYouMutation, useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
+import Geolocation from '@react-native-community/geolocation';
+import { getLocation, reverseGeocode } from '../../../utils/loaction';
 
 type HotelItem = {
   avgRating?: number;
@@ -50,7 +52,9 @@ const Home = () => {
   const style = useMemo(() => contentContainerStyle(bottom), [bottom]);
   const [getHotels] = useLazyGetHotelsQuery();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
+  const [hotelForYou, setHotelForYou] = useState<HotelItem[]>([]);
   const iconStyle = useMemo(() => iconStyles(25, 25), [height, width]);
+  const [getHotelForYou] = useHotelForYouMutation();
   const fetchHotels = async () => {
     setLoadingHotels(true);
     try {
@@ -62,10 +66,40 @@ const Home = () => {
       setLoadingHotels(false);
     }
   };
+  const fetchHotelForYou = async () => {
+    try {
+      const location = await getLocation();
+      const latitude = location?.latitude;
+      const longitude = location?.longitude;
+      console.log('latitude ===>', latitude);
+      console.log('longitude ===>', longitude);
+      if (latitude == null || longitude == null) {
+        console.log('hotel for you: skipping — invalid location', location);
+        return;
+      }
+      const payload = { latitude, longitude };
+      const response = await getHotelForYou(payload).unwrap();
+      console.log('response ===>', response);
+      setHotelForYou(response?.data ?? []);
+
+    } catch (error) {
+      console.log('hotel for you error ===>', error);
+    }
+  }
+  const fetchScreenData = async () => {
+    try {
+      setLoadingHotels(true);
+      await Promise.all([fetchHotels(), fetchHotelForYou()]);
+    } catch (error) {
+      console.log('fetch screen data error ===>', error);
+    }finally{
+      setLoadingHotels(false);
+    }
+  }
 
   useEffect(() => {
     const subscribe = navigation.addListener('focus', () => {
-      fetchHotels();
+      fetchScreenData();
     });
     return subscribe;
   }, []);
@@ -156,7 +190,7 @@ const Home = () => {
         </ScrollView>
       ) : (
         <FlatList
-          data={hotels}
+          data={hotelForYou}
           keyExtractor={(item) => String(item?.id ?? Math.random())}
           contentContainerStyle={[
             GeneralStyles.flexGrow,

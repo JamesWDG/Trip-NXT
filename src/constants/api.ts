@@ -36,6 +36,10 @@ type endpointTypes = {
     GET_FEATURED_ITEMS: (id: number) => string;
     GET_ITEMS_BY_CATEGORY: string;
     GET_ACCOMODATION_ITEMS_BY_CATEGORY: string;
+    CAB_ONLINE_VENDORS: string;
+    CAB_NEARBY_VENDORS: string;
+    NOTIFICATION_REGISTER_TOKEN: string;
+    GET_HOTEL_FOR_YOU: string;
 }
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
@@ -79,4 +83,8 @@ export const endpoint: endpointTypes = {
     GET_FEATURED_ITEMS: (id: number) => `menu/featured/${id}`,
     GET_ITEMS_BY_CATEGORY: "menu/category",
     GET_ACCOMODATION_ITEMS_BY_CATEGORY: "hotel/type",
+    CAB_ONLINE_VENDORS: 'cab/online-vendors',
+    CAB_NEARBY_VENDORS: 'cab/nearby-vendors',
+    NOTIFICATION_REGISTER_TOKEN: 'notification/register-token',
+    GET_HOTEL_FOR_YOU: 'hotel/for-you',
 }

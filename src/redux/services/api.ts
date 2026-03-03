@@ -15,6 +15,21 @@ const baseQuery = fetchBaseQuery({
     }
     return headers;
   },
+  responseHandler: async (response) => {
+    const text = await response.text();
+    const contentType = response.headers.get('content-type') || '';
+    if (text && contentType.includes('application/json')) {
+      try {
+        return JSON.parse(text);
+      } catch {
+        return response.ok ? null : { message: 'Invalid JSON response' };
+      }
+    }
+    if (!response.ok) {
+      return { message: response.status === 404 ? 'Not found' : 'Request failed', status: response.status };
+    }
+    return text || null;
+  },
 });
 
 

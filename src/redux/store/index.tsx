@@ -1,14 +1,16 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persistStore, persistReducer, PersistConfig } from 'redux-persist';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { authApi } from '../services/authService';
 import authReducer from '../slices/authSlice';
 import { baseApi } from '../services/api';
 import '../services/hotel.service';
-
+import '../services/cab.service';
+import '../services/notification.service';
+import locationReducer from '../slices/locationSlice';
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   auth: authReducer,
+  location: locationReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {
@@ -25,7 +27,7 @@ const store = configureStore({
     getDefaultMiddleware({
       immutableCheck: { warnAfter: 128 },
       serializableCheck: false,
-    }).concat(authApi.middleware),
+    }).concat(baseApi.middleware),
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

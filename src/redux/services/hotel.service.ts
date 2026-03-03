@@ -104,7 +104,20 @@ const hotelApi = baseApi.injectEndpoints({
                 method: 'GET',
                 params
             })
-        })
+        }),
+        HotelForYou: builder.mutation({
+            query: (body: { latitude: number; longitude: number; city?: string }) => {
+                const payload =
+                    body != null && typeof body === 'object'
+                        ? { latitude: body.latitude, longitude: body.longitude, ...(body.city != null && { city: body.city }) }
+                        : {};
+                return {
+                    url: endpoint.GET_HOTEL_FOR_YOU,
+                    method: 'POST',
+                    body: payload,
+                };
+            },
+        }),
     })
 });
 
@@ -118,4 +131,5 @@ export const {
     useUpdateHotelBookingStatusMutation,
     useLazyGetFilteredHotelsQuery,
     useLazyGetAccomodationItemsByCategoryQuery,
+    useHotelForYouMutation,
 } = hotelApi;
