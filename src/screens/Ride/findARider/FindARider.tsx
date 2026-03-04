@@ -13,7 +13,7 @@ import { ChevronLeft, MapPin } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Circle, Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
-import { width } from '../../../config/constants';
+import { width, height } from '../../../config/constants';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import images from '../../../config/images';
@@ -81,6 +81,10 @@ const FindARider: FC = () => {
   const pulse3 = useRef(new Animated.Value(0)).current;
   const pulseV = useRef({ v1: 0, v2: 0, v3: 0 });
   const [mapPulse, setMapPulse] = useState({ r1: 80, r2: 80, r3: 80, o1: 0.4, o2: 0.4, o3: 0.4 });
+
+  const counterCardOpacity = useRef(new Animated.Value(0)).current;
+  const counterCardTranslateY = useRef(new Animated.Value(height)).current;
+  const counterCardScale = useRef(new Animated.Value(0.75)).current;
 
 
   const updateMapPulse = useRef(() => {
@@ -213,9 +217,10 @@ const FindARider: FC = () => {
     };
   }, [pulse1, pulse2, pulse3]);
 
+
   const handleCancel = () => {
     if (rideId) {
-      cancelRide({ rideId }).then(() => navigation.goBack()).catch(() => {});
+      cancelRide({ rideId }).then(() => navigation.goBack()).catch(() => { });
     } else {
       navigation.goBack();
     }
@@ -227,11 +232,43 @@ const FindARider: FC = () => {
   const hasCoords = pickupCoords && dropoffCoords;
   const initialRegion = pickupCoords
     ? {
-        ...pickupCoords,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      }
+      ...pickupCoords,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    }
     : DEFAULT_REGION;
+
+  useEffect(() => {
+    if (!latestOffer || ride?.status !== 'counter_offered') return;
+
+    counterCardOpacity.setValue(0);
+    counterCardTranslateY.setValue(height);
+    counterCardScale.setValue(0.75);
+
+    Animated.parallel([
+      Animated.timing(counterCardOpacity, {
+        toValue: 1,
+        duration: 520,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
+      Animated.timing(counterCardTranslateY, {
+        toValue: 0,
+        duration: 650,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
+      Animated.timing(counterCardScale, {
+        toValue: 1,
+        duration: 650,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
+    ]).start();
+  }, [
+    ride?.status,
+    latestOffer,
+  ]);
 
   return (
     <View style={styles.container}>
@@ -392,7 +429,18 @@ const FindARider: FC = () => {
         </View>
 
         {ride?.status === 'counter_offered' && latestOffer && (
-          <View style={styles.counterOfferCard}>
+          <Animated.View
+            style={[
+              styles.counterOfferCard,
+              {
+                opacity: counterCardOpacity,
+                transform: [
+                  { translateY: counterCardTranslateY },
+                  { scale: counterCardScale },
+                ],
+              },
+            ]}
+          >
             <Text style={styles.counterOfferTitle}>Counter offer</Text>
             <Text style={styles.counterOfferVendor}>
               {latestOffer.vendor?.user?.name ?? 'Driver'} proposed {formatUsd(latestOffer.proposedFare)}
@@ -414,7 +462,7 @@ const FindARider: FC = () => {
                 <Text style={styles.acceptOfferBtnText}>{accepting ? 'Accepting...' : 'Accept'}</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </Animated.View>
         )}
         {ride?.status === 'accepted' && (
           <View style={styles.acceptedBanner}>
