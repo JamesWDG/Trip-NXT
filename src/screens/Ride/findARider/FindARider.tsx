@@ -26,6 +26,7 @@ import {
   useCancelRideMutation,
 } from '../../../redux/services/ride.service';
 import type { RidePayload } from '../../../redux/services/ride.service';
+import { formatUsd } from '../../../utils/currency';
 
 const NEARBY_RADIUS_KM = 15;
 /** Poll interval (ms) so new drivers coming online show on the map without leaving the screen */
@@ -386,7 +387,7 @@ const FindARider: FC = () => {
           <View style={styles.counterOfferCard}>
             <Text style={styles.counterOfferTitle}>Counter offer</Text>
             <Text style={styles.counterOfferVendor}>
-              {latestOffer.vendor?.user?.name ?? 'Driver'} proposed Rs {latestOffer.proposedFare}
+              {latestOffer.vendor?.user?.name ?? 'Driver'} proposed {formatUsd(latestOffer.proposedFare)}
             </Text>
             <View style={styles.counterOfferActions}>
               <TouchableOpacity
@@ -412,16 +413,36 @@ const FindARider: FC = () => {
             <Text style={styles.acceptedBannerText}>Ride accepted! Driver is on the way.</Text>
           </View>
         )}
+        {ride?.status === 'ongoing' && (
+          <View style={[styles.acceptedBanner, { backgroundColor: colors.c_0162C0 }]}>
+            <Text style={styles.acceptedBannerText}>Ride in progress. Sit back and relax.</Text>
+          </View>
+        )}
+        {ride?.status === 'completed' && (
+          <View style={[styles.acceptedBanner, { backgroundColor: colors.green }]}>
+            <Text style={styles.acceptedBannerText}>Ride completed. Thank you!</Text>
+          </View>
+        )}
 
         <View style={[styles.footer, { paddingBottom: safeBottom + 16 }]}>
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={handleCancel}
-            disabled={cancelling}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.cancelBtnText}>{cancelling ? 'Cancelling...' : 'Cancel'}</Text>
-          </TouchableOpacity>
+          {ride?.status === 'completed' ? (
+            <TouchableOpacity
+              style={[styles.cancelBtn, { backgroundColor: colors.green }]}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cancelBtnText}>Done</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleCancel}
+              disabled={cancelling}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cancelBtnText}>{cancelling ? 'Cancelling...' : 'Cancel'}</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>
