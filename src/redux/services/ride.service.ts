@@ -16,6 +16,8 @@ export interface RidePayload {
   user?: { id: number; name: string; phoneNumber?: string };
   vendor?: { id: number; userId: number; vehicleType: string; user?: { id: number; name: string; phoneNumber?: string } };
   offers?: Array<{ id: number; vendorId: number; proposedFare: number; status: string; vendor?: { id: number; user?: { name: string } } }>;
+  /** Driver's current location when ride is accepted/ongoing */
+  vendorLocation?: { lat: number; lng: number };
 }
 
 function parseRideResponse(raw: any): any {
