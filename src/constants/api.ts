@@ -49,7 +49,8 @@ type endpointTypes = {
     RIDE_CANCEL: (rideId: number) => string;
 }
 
-export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
+// export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
+export const BASE_URL: string = 'http://169.254.140.118:5003/api/v1/'
 //  export const BASE_URL: string = 'https://immaterial-overfrequently-audrie.ngrok-free.dev/api/v1/' // ngrok
 // export const BASE_URL: string = 'http://192.168.0.108:5003/api/v1' //live
 
