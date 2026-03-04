@@ -277,7 +277,15 @@ const FindARider: FC = () => {
             pinColor={colors.c_EE4026}
           />
         )}
-        {availableVendors.map((v) => (
+        {ride?.vendorLocation && (ride?.status === 'accepted' || ride?.status === 'ongoing') && (
+          <Marker
+            coordinate={{ latitude: ride.vendorLocation.lat, longitude: ride.vendorLocation.lng }}
+            title={ride?.vendor?.user?.name ?? 'Your driver'}
+            description={ride?.status === 'ongoing' ? 'Ride in progress' : 'On the way'}
+            image={images.car_map}
+          />
+        )}
+        {!ride?.vendorId && availableVendors.map((v) => (
           <Marker
             key={`vendor-${v.id}-${v.cabId}`}
             coordinate={{ latitude: v.latitude, longitude: v.longitude }}
@@ -410,7 +418,7 @@ const FindARider: FC = () => {
         )}
         {ride?.status === 'accepted' && (
           <View style={styles.acceptedBanner}>
-            <Text style={styles.acceptedBannerText}>Ride accepted! Driver is on the way.</Text>
+            <Text style={styles.acceptedBannerText}>Ride booked! Driver is on the way.</Text>
           </View>
         )}
         {ride?.status === 'ongoing' && (
