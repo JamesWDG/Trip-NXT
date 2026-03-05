@@ -99,10 +99,10 @@ const hotelApi = baseApi.injectEndpoints({
             invalidatesTags: ['Hotel'],
         }),
         getAccomodationItemsByCategory: builder.query({
-            query: (params: {type: 'standard' | 'luxury' | 'budget'}) => ({
+            query: (params: {type: 'standard' | 'luxury' | 'budget', lat: number, lng: number, city?: string}) => ({
                 url: endpoint.GET_ACCOMODATION_ITEMS_BY_CATEGORY,
                 method: 'GET',
-                params
+                params: params
             })
         }),
         HotelForYou: builder.mutation({

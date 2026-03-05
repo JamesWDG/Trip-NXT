@@ -21,6 +21,7 @@ import images from '../../../config/images';
 import FastImage from 'react-native-fast-image';
 import { useLazyRestaurantGetQuery } from '../../../redux/services/restaurant.service';
 import RestaurantListSkeleton from '../../../components/restaurantListSkeleton/RestaurantListSkeleton';
+import { getLocation } from '../../../utils/loaction';
 
 const getRestaurantImage = (item: any) => {
   const logo = item?.logo;
@@ -52,7 +53,8 @@ const RestaurantInfo = ({
       if (append) setLoadingMore(true);
       else setLoading(true);
       try {
-        const res = await restaurantGet({ page: pageNum, limit: PAGE_SIZE, search: pageNum === 1  && search ? search : ''}).unwrap();
+        const location = await getLocation();
+        const res = await restaurantGet({ page: pageNum, limit: PAGE_SIZE, search: pageNum === 1  && search ? search : '', lat: location?.latitude, lng: location?.longitude}).unwrap();
         const list = res.data?.restaurants ?? [];
         const total = res.data?.total ?? 0;
         setRestaurants(prev => (append ? [...prev, ...list] : list));

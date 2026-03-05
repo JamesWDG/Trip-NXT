@@ -26,6 +26,7 @@ import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import FoodCardWithBorder from '../../../components/foodCardWithBorder/FoodCardWithBorder';
 import FoodDrawerModal from '../../../components/drawerModal/FoodDrawerModal';
 import { useLazyRestaurantGetQuery, useLazyGetPopularMenusQuery } from '../../../redux/services/restaurant.service';
+import { getLocation } from '../../../utils/loaction';
 
 const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -39,7 +40,8 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const fetchData = async () => {
     setLoadingNewRestaurant(true);
     try {
-      const res = await restaurantGet(1).unwrap();
+      const location = await getLocation();
+      const res = await restaurantGet({page: 1, lat: location?.latitude, lng: location?.longitude}).unwrap();
       setNewRestaurant(res.data?.restaurants ?? []);
     } catch (error) {
       console.log('restaurant get error ===>', error);
@@ -51,7 +53,8 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const fetchPopularMenus = async () => {
     setLoadingPopularMenus(true);
     try {
-      const res = await popularMenusGet(12).unwrap();
+      const location = await getLocation();
+      const res = await popularMenusGet({limit: 12, lat: location?.latitude, lng: location?.longitude}).unwrap();
       setPopularMenus(res.data?.items ?? []);
     } catch (error) {
       console.log('popular menus error ===>', error);

@@ -5,12 +5,14 @@ import { baseApi } from "./api";
 export const restaurantApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         restaurantGet: builder.query({
-            query: (args: number | { page: number; limit?: number, search?: string }) => {
+            query: (args: number | { page: number; limit?: number, search?: string, lat?: number, lng?: number }) => {
                 const page = typeof args === 'number' ? args : args.page;
                 const limit = typeof args === 'number' ? undefined : args.limit;
                 const search = typeof args === 'number' ? undefined : args.search;
+                const lat = typeof args === 'number' ? undefined : args.lat;
+                const lng = typeof args === 'number' ? undefined : args.lng;
                 return {
-                    url: endpoint.RESTAURANT_GET(page, limit, search || ''),
+                    url: endpoint.RESTAURANT_GET(page, limit, search || '', lat, lng),
                     method: 'GET',
                 };
             },
@@ -63,10 +65,11 @@ export const restaurantApi = baseApi.injectEndpoints({
             })
         }),
         getPopularMenus: builder.query({
-            query: (limit?: number) => ({
-                url: limit != null ? `${endpoint.MENU_POPULAR}?limit=${limit}` : endpoint.MENU_POPULAR,
+            query: (params: {limit: number, lat: number, lng: number}) => ({
+                url: endpoint.MENU_POPULAR,
                 method: 'GET',
                 invalidatesTags: ['Menu'],
+                params: params,
             }),
             providesTags: ['Restaurant','Menu'],
         }),
@@ -102,7 +105,7 @@ export const restaurantApi = baseApi.injectEndpoints({
             }),
         }),
         getItemsByCategory: builder.query({
-            query: (params : {category: string, restaurant:number}) => ({
+            query: (params : {category: string, restaurant:number, lat: number, lng: number, city?: string}) => ({
                 url: endpoint.GET_ITEMS_BY_CATEGORY,
                 method: 'GET',
                 params
