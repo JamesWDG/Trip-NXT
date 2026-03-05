@@ -13,7 +13,7 @@ import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import AccomodationTabButtons from '../../../components/accomodationTabButtons/AccomodationTabButtons';
 import { useGetMyRideHistoryQuery } from '../../../redux/services/ride.service';
-import { formatPkr } from '../../../utils/currency';
+import { formatUsd } from '../../../utils/currency';
 import type { RidePayload } from '../../../redux/services/ride.service';
 
 interface BookingItem {
@@ -123,7 +123,7 @@ const RideHistoryCard = ({ item }: { item: RidePayload }) => {
       <View style={styles.separator} />
       <View style={styles.footer}>
         <Text style={styles.bookingId}>ID: {item.id}</Text>
-        <Text style={styles.dateTime}>{date}: {time} · {formatPkr(fare)}</Text>
+        <Text style={styles.dateTime}>{date}: {time} · {formatUsd(fare)}</Text>
       </View>
       <View style={{ marginTop: 4 }}>
         <Text style={[styles.dateTime, { textTransform: 'capitalize', color: colors.c_666666 }]}>{item.status}</Text>

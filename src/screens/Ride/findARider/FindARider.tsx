@@ -26,7 +26,7 @@ import {
   useCancelRideMutation,
 } from '../../../redux/services/ride.service';
 import type { RidePayload } from '../../../redux/services/ride.service';
-import { formatPkr } from '../../../utils/currency';
+import { formatUsd } from '../../../utils/currency';
 
 const NEARBY_RADIUS_KM = 15;
 /** Poll interval (ms) so new drivers coming online show on the map without leaving the screen */
@@ -443,7 +443,7 @@ const FindARider: FC = () => {
           >
             <Text style={styles.counterOfferTitle}>Counter offer</Text>
             <Text style={styles.counterOfferVendor}>
-              {latestOffer.vendor?.user?.name ?? 'Driver'} proposed {formatPkr(latestOffer.proposedFare)}
+              {latestOffer.vendor?.user?.name ?? 'Driver'} proposed {formatUsd(latestOffer.proposedFare)}
             </Text>
             <View style={styles.counterOfferActions}>
               <TouchableOpacity
