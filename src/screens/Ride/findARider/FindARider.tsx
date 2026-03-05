@@ -158,16 +158,18 @@ const FindARider: FC = () => {
     setAvailableVendors(list);
   }, [vendorsResponse]);
 
-  // Poll ride when rideId is present (searching / counter_offered / accepted)
+  // Poll ride when rideId is present; poll more often when driver is on the way so driver marker moves in real time
   useEffect(() => {
     if (!rideId) return;
     const fetchRide = () => getRide(rideId);
     fetchRide();
-    ridePollRef.current = setInterval(fetchRide, 4000);
+    const isDriverActive = ride?.status === 'accepted' || ride?.status === 'driver_arrived' || ride?.status === 'ongoing';
+    const intervalMs = isDriverActive ? 2500 : 5000;
+    ridePollRef.current = setInterval(fetchRide, intervalMs);
     return () => {
       if (ridePollRef.current) clearInterval(ridePollRef.current);
     };
-  }, [rideId, getRide]);
+  }, [rideId, getRide, ride?.status]);
   useEffect(() => {
     if (rideData && typeof rideData === 'object' && 'id' in rideData) setRide(rideData as RidePayload);
   }, [rideData]);
