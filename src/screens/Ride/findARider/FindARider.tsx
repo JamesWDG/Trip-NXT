@@ -26,7 +26,7 @@ import {
   useCancelRideMutation,
 } from '../../../redux/services/ride.service';
 import type { RidePayload } from '../../../redux/services/ride.service';
-import { formatUsd } from '../../../utils/currency';
+import { formatPkr } from '../../../utils/currency';
 
 const NEARBY_RADIUS_KM = 15;
 /** Poll interval (ms) so new drivers coming online show on the map without leaving the screen */
@@ -314,7 +314,7 @@ const FindARider: FC = () => {
             pinColor={colors.c_EE4026}
           />
         )}
-        {ride?.vendorLocation && (ride?.status === 'accepted' || ride?.status === 'ongoing') && (
+        {ride?.vendorLocation && (ride?.status === 'accepted' || ride?.status === 'driver_arrived' || ride?.status === 'ongoing') && (
           <Marker
             coordinate={{ latitude: ride.vendorLocation.lat, longitude: ride.vendorLocation.lng }}
             title={ride?.vendor?.user?.name ?? 'Your driver'}
@@ -443,7 +443,7 @@ const FindARider: FC = () => {
           >
             <Text style={styles.counterOfferTitle}>Counter offer</Text>
             <Text style={styles.counterOfferVendor}>
-              {latestOffer.vendor?.user?.name ?? 'Driver'} proposed {formatUsd(latestOffer.proposedFare)}
+              {latestOffer.vendor?.user?.name ?? 'Driver'} proposed {formatPkr(latestOffer.proposedFare)}
             </Text>
             <View style={styles.counterOfferActions}>
               <TouchableOpacity
@@ -467,6 +467,11 @@ const FindARider: FC = () => {
         {ride?.status === 'accepted' && (
           <View style={styles.acceptedBanner}>
             <Text style={styles.acceptedBannerText}>Ride booked! Driver is on the way.</Text>
+          </View>
+        )}
+        {ride?.status === 'driver_arrived' && (
+          <View style={[styles.acceptedBanner, { backgroundColor: colors.green }]}>
+            <Text style={styles.acceptedBannerText}>Driver has arrived at pickup.</Text>
           </View>
         )}
         {ride?.status === 'ongoing' && (

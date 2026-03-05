@@ -21,7 +21,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { useCreateRideBookingLogMutation } from '../../../redux/services/ride.service';
 import { useCreateRideMutation } from '../../../redux/services/ride.service';
-import { formatUsd } from '../../../utils/currency';
+import { formatPkr } from '../../../utils/currency';
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
 type PlaceSuggestion = { id: string; description: string; mainText: string };
@@ -452,16 +452,16 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                   <View style={styles.fareSection}>
                     <Text style={styles.fareSectionTitle}>Estimated fare</Text>
                     <View style={styles.fareRangeRow}>
-                      <Text style={styles.fareRangeText}>{formatUsd(lower)} - {formatUsd(upper)}</Text>
+                      <Text style={styles.fareRangeText}>{formatPkr(lower)} - {formatPkr(upper)}</Text>
                     </View>
                     <View style={styles.fareOptionsRow}>
                       <View style={[styles.fareOptionChip, fare.isPeak && styles.fareOptionChipInactive]}>
                         <Text style={styles.fareOptionLabel}>Normal hours</Text>
-                        <Text style={styles.fareOptionValue}>{formatUsd(lower)}</Text>
+                        <Text style={styles.fareOptionValue}>{formatPkr(lower)}</Text>
                       </View>
                       <View style={[styles.fareOptionChip, !fare.isPeak && styles.fareOptionChipInactive]}>
                         <Text style={styles.fareOptionLabel}>Peak hours</Text>
-                        <Text style={styles.fareOptionValue}>{formatUsd(upper)}</Text>
+                        <Text style={styles.fareOptionValue}>{formatPkr(upper)}</Text>
                       </View>
                     </View>
                     <View style={styles.yourFareRow}>
@@ -475,7 +475,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                           <Minus size={18} color={colors.c_0162C0} />
                           <Text style={styles.fareAdjustBtnText}>5</Text>
                         </TouchableOpacity>
-                        <Text style={styles.yourFareValue}>{formatUsd(yourFare)}</Text>
+                        <Text style={styles.yourFareValue}>{formatPkr(yourFare)}</Text>
                         <TouchableOpacity
                           style={styles.fareAdjustBtn}
                           onPress={() => setFareAdjustment((a) => a + 5)}
