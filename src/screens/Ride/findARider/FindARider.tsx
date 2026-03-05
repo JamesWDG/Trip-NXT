@@ -71,6 +71,7 @@ const FindARider: FC = () => {
   const [rejectOffer] = useRejectOfferMutation();
   const [cancelRide, { isLoading: cancelling }] = useCancelRideMutation();
   const [ride, setRide] = useState<RidePayload | null>(null);
+  const [driverEtaMinutes, setDriverEtaMinutes] = useState<number | null>(null);
   const ridePollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const mapRef = useRef<MapView>(null);
@@ -170,6 +171,35 @@ const FindARider: FC = () => {
   useEffect(() => {
     if (rideData && typeof rideData === 'object' && 'id' in rideData) setRide(rideData as RidePayload);
   }, [rideData]);
+
+  // ETA from driver to pickup (when driver is on the way) – fetch via Directions API, refresh periodically
+  useEffect(() => {
+    if (ride?.status !== 'accepted' || !ride?.vendorLocation) {
+      setDriverEtaMinutes(null);
+      return;
+    }
+    const origin = ride.vendorLocation;
+    const dest = pickupCoords ?? (ride.pickup ? { latitude: ride.pickup.lat, longitude: ride.pickup.lng } : null);
+    if (!dest) return;
+
+    const fetchEta = () => {
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.lat},${origin.lng}&destination=${dest.latitude},${dest.longitude}&key=${GOOGLE_PLACES_API_KEY}`;
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          const leg = data?.routes?.[0]?.legs?.[0];
+          const durationSec = leg?.duration?.value;
+          if (typeof durationSec === 'number' && durationSec > 0) {
+            setDriverEtaMinutes(Math.max(1, Math.round(durationSec / 60)));
+          }
+        })
+        .catch(() => setDriverEtaMinutes(null));
+    };
+
+    fetchEta();
+    const interval = setInterval(fetchEta, 30000);
+    return () => clearInterval(interval);
+  }, [ride?.status, ride?.vendorLocation?.lat, ride?.vendorLocation?.lng, ride?.pickup?.lat, ride?.pickup?.lng, pickupCoords?.latitude, pickupCoords?.longitude]);
 
   useEffect(() => {
     const coords: { latitude: number; longitude: number }[] = [];
@@ -467,6 +497,11 @@ const FindARider: FC = () => {
         {ride?.status === 'accepted' && (
           <View style={styles.acceptedBanner}>
             <Text style={styles.acceptedBannerText}>Ride booked! Driver is on the way.</Text>
+            {driverEtaMinutes != null && (
+              <Text style={[styles.acceptedBannerText, { marginTop: 4, opacity: 0.95 }]}>
+                Driver will reach you in ~{driverEtaMinutes} min
+              </Text>
+            )}
           </View>
         )}
         {ride?.status === 'driver_arrived' && (
