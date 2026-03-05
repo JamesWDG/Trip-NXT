@@ -332,9 +332,10 @@ const FindARider: FC = () => {
             />
             <Marker
               coordinate={pickupCoords}
-              title="Pickup"
+              title="Pickup (You)"
               description={pickupText}
-              pinColor={colors.green}
+              image={images.user}
+              anchor={{ x: 0.5, y: 1 }}
             />
           </>
         )}
