@@ -57,6 +57,8 @@ const Wishlists = () => {
     }
   }
 
+  // console.log('hotelWishlist ===>', hotelWishlist)
+
   useEffect(() => {
     const subscribe = navigation.addListener('focus', () => {
       fetchWishList();

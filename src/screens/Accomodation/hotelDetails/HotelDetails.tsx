@@ -6,14 +6,12 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import PrimaryHeader from '../../../components/primaryHeader/PrimaryHeader';
 import MainCarousel from '../../../components/mainCarousel/MainCarousel';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import colors from '../../../config/colors';
-import {
-  Heart,
-} from 'lucide-react-native';
+import { Heart } from 'lucide-react-native';
 import DetailsCard from '../../../components/detailsCard/DetailsCard';
 import images from '../../../config/images';
 import fonts from '../../../config/fonts';
@@ -23,17 +21,29 @@ import GeneralStyles from '../../../utils/GeneralStyles';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { AccomodationCard } from '../../../constants/Accomodation';
 import { useWishList } from '../../../hooks/useWishlist';
+import { ShowToast } from '../../../config/constants';
 
-const HotelDetails = ({ navigation, route }: { navigation?: any, route: RouteProp<{ params: { hotel: AccomodationCard } }> }) => {
+const HotelDetails = ({
+  navigation,
+  route,
+}: {
+  navigation?: any;
+  route: RouteProp<{ params: { hotel: AccomodationCard } }>;
+}) => {
   const { top } = useSafeAreaInsets();
-  const { wishlist, handleAddToWishlist } = useWishList({ initialWishlist: route.params?.hotel?.wishlistId ? true : false, hotelId: route.params?.hotel?.id, type: 'hotel' });
+  const { wishlist, handleAddToWishlist } = useWishList({
+    initialWishlist: route.params?.hotel?.wishlistId ? true : false,
+    hotelId: route.params?.hotel?.id,
+    type: 'hotel',
+  });
   const nav = useNavigation<any>();
 
   const wishlistButtonStyles = useMemo(() => {
     return wishlistButton(wishlist, top);
   }, [wishlist]);
 
-  
+  console.log('route.params?.hotel ===>', route.params?.hotel);
+
 
   return (
     <View style={GeneralStyles.flex as ViewStyle}>
@@ -45,7 +55,13 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
         />
       </View>
       <View style={wishlistButtonStyles.carouselContainer}>
-        <MainCarousel data={route.params?.hotel?.images.length > 0 ? route.params?.hotel?.images : [images.placeholder]} />
+        <MainCarousel
+          data={
+            route.params?.hotel?.images.length > 0
+              ? route.params?.hotel?.images
+              : [images.placeholder]
+          }
+        />
       </View>
 
       <View style={styles.lowerContainer}>
@@ -60,7 +76,13 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
             rating={route.params?.hotel?.avgRating || 0}
             rentPerDay={route.params?.hotel?.rentPerDay}
             rentPerHour={route.params?.hotel?.rentPerHour}
-            location={(route.params?.hotel?.location?.city || '') + ', ' + (route.params?.hotel?.location?.state || '') + ', ' + (route.params?.hotel?.location?.country || '')}
+            location={
+              (route.params?.hotel?.location?.city || '') +
+              ', ' +
+              (route.params?.hotel?.location?.state || '') +
+              ', ' +
+              (route.params?.hotel?.location?.country || '')
+            }
             description={route.params?.hotel?.description}
             numberOfBeds={route.params?.hotel?.numberOfBeds}
             numberOfBathrooms={route.params?.hotel?.numberOfBathrooms}
@@ -73,7 +95,23 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
             style={[styles.locationContainer, styles.paddingHorizontalStyle]}
           >
             <Text style={styles.locationTitle}>Location/Map</Text>
-            <Text style={styles.locationText}>View on Google MAP</Text>
+            <TouchableOpacity
+              onPress={() => {
+                const location = route.params?.hotel?.location;
+                if (location?.latitude != null && location?.longitude != null) {
+                  (navigation || nav).navigate('HotelLocationMap', {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    hotelName: route.params?.hotel?.name,
+                    location,
+                  });
+                } else {
+                  ShowToast('error', 'Location not available');
+                }
+              }}
+            >
+              <Text style={styles.locationText}>View on Google MAP</Text>
+            </TouchableOpacity>
           </View>
 
           <View
@@ -105,7 +143,10 @@ const HotelDetails = ({ navigation, route }: { navigation?: any, route: RoutePro
                 title="Book Now"
                 onPress={() => {
                   console.log('route.params?.hotel', route.params?.hotel?.id);
-                  (navigation || nav).navigate('CalenderBooking', { hotelId: route.params?.hotel?.id, ownerId: route.params?.hotel?.ownerId })
+                  (navigation || nav).navigate('CalenderBooking', {
+                    hotelId: route.params?.hotel?.id,
+                    ownerId: route.params?.hotel?.ownerId,
+                  });
                 }}
                 fontSize={18}
                 fontFamily={fonts.semibold}

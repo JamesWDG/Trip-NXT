@@ -66,10 +66,13 @@ const TabBars = (props: BottomTabBarProps) => {
               style={styles.tab}
               onPress={() => {
                 console.log('tab.navigation', tab.navigation);
-                if(tab.navigation === 'Food'){
-                  props.navigation.navigate(tab.navigation,{screen: 'FoodHome'});
+                if(tab.navigation === 'Accomodation'){
+                  props.navigation.navigate(tab.navigation,{screen: 'AccomodationHome'});
                   return;
-                }
+                } else if (tab.navigation === 'Food'){
+                  props.navigation.navigate(tab.navigation,{screen: 'FoodHome'});
+                  return
+                }  
                 props.navigation.navigate(tab.navigation)
               }}
             >

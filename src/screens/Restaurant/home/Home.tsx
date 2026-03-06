@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationProp } from '@react-navigation/native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import HomeHeader from '../../../components/homeHeader/HomeHeader';
@@ -39,8 +39,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchRestaurants] = useSearchRestaurantsMutation();
   const [searchMenus] = useSearchMenusMutation();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const SEARCH_DEBOUNCE_MS = 400;
+
 
   const fetchData = async () => {
     setLoadingNewRestaurant(true);
@@ -79,7 +78,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
     return subscribe;
   }, []);
 
-  const handleSearch = useCallback(async () => {
+  const handleSearch = async () => {
     if (searchQuery.trim() === '') {
       await handleFetchData();
       return;
@@ -98,37 +97,18 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
       console.log('search error ===>', error);
       ShowToast('error', 'cannot fetch search results');
       await handleFetchData();
-    } finally {
+    }finally {
       setLoadingNewRestaurant(false);
       setLoadingPopularMenus(false);
     }
-  }, [searchQuery, searchRestaurants, searchMenus]);
-
-  const runSearchNow = useCallback(() => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-      debounceRef.current = null;
-    }
-    handleSearch();
-  }, [handleSearch]);
-
-  const handleSearchInputChange = useCallback(
-    (text: string) => {
-      setSearchQuery(text);
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        debounceRef.current = null;
-        handleSearch();
-      }, SEARCH_DEBOUNCE_MS);
-    },
-    [handleSearch]
-  );
+  };
 
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
+    const debounce = setTimeout(() => {
+      handleSearch();
+    }, 1000);
+    return () => clearTimeout(debounce);
+  }, [searchQuery]);
 
   return (
     <View style={[GeneralStyles.flex, { backgroundColor: 'white' }]}>
@@ -155,9 +135,9 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
           navigation={navigation}
           onFilterPress={() => navigation.navigate('FoodRestaurantFilter')}
           value={searchQuery}
-          onChangeText={handleSearchInputChange}
+          onChangeText={setSearchQuery}
           returnKeyType="search"
-          onSubmitEditing={runSearchNow}
+          onSubmitEditing={handleSearch}
         />
       </ImageBackground>
 
@@ -177,7 +157,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
         <View style={[styles.gap]}>
           <View style={GeneralStyles.paddingHorizontal}>
             <SectionHeader
-              title={searchQuery.trim() === '' ? "Newly Opened" : "Restaurants Search Results"}
+              title={searchQuery.trim() === '' ? "Newly Opened" : "Search Results"}
               onSeeAllPress={() => navigation.navigate('FoodRestaurantInfo')}
             />
           </View>
@@ -210,7 +190,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
         {/* <HomeCarousel data={CarouselData as CarouselData[]} /> */}
 
         <View style={GeneralStyles.paddingHorizontal}>
-          <SectionHeader title={searchQuery.trim() === '' ? "Popular Food" : "Food Search Results"} onSeeAllPress={() => navigation.navigate('PopularFoodList')} />
+          <SectionHeader title={searchQuery.trim() === "" ? "Popular Food" : "Search Results"} onSeeAllPress={() => navigation.navigate('PopularFoodList')} />
         </View>
 
         {loadingPopularMenus && popularMenus.length === 0 ? (
@@ -251,7 +231,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
                   price={item.price}
                   id={item?.id}
                   hasFreeship={false}
-                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [], wishlistId: item.wishlistId || null, restaurant: item.restaurant })}
+                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [], wishlistId: item.wishlistId || null })}
                   isFavorite={item.wishlistId ? true : false}
                   reviewCount={item.reviewCount}
                 />

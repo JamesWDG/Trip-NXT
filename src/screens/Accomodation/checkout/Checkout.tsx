@@ -57,7 +57,8 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
   const [roomType, setRoomType] = useState<string>(
     hotel?.hotelType ? String(hotel.hotelType).charAt(0).toUpperCase() + String(hotel.hotelType).slice(1) : 'Standard',
   );
-  const maxRooms = hotel?.numberOfRooms ?? 10;
+  const maxRooms = Math.max(1, hotel?.numberOfRooms ?? 10);
+  const maxGuests = Math.max(1, hotel?.numberOfGuests ?? 10);
   const [numberOfRooms, setNumberOfRooms] = useState(1);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
@@ -93,6 +94,15 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
   const [createBooking, { isLoading: isBookingLoading }] = hotelApi.useCreateHotelBookingMutation();
 
   const handleCompleteBooking = async () => {
+    if (numberOfRooms > maxRooms) {
+      ShowToast('error', `Number of rooms cannot exceed ${maxRooms} (hotel limit)`);
+      return;
+    }
+    const totalGuests = adults + children;
+    if (totalGuests > maxGuests) {
+      ShowToast('error', `Total guests cannot exceed ${maxGuests} (hotel limit)`);
+      return;
+    }
     if (!guestName.trim()) {
       ShowToast('error', 'Please enter guest name');
       return;
@@ -236,17 +246,17 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
             label="Adult (Age 18+)"
             value={adults}
             onDecrease={() => setAdults(Math.max(1, adults - 1))}
-            onIncrease={() => setAdults(Math.min(10, adults + 1))}
+            onIncrease={() => setAdults(Math.min(maxGuests - children, adults + 1))}
             min={1}
-            max={10}
+            max={maxGuests - children}
           />
           <Counter
             label="Children (0-17)"
             value={children}
             onDecrease={() => setChildren(Math.max(0, children - 1))}
-            onIncrease={() => setChildren(Math.min(10, children + 1))}
+            onIncrease={() => setChildren(Math.min(maxGuests - adults, children + 1))}
             min={0}
-            max={10}
+            max={maxGuests - adults}
           />
         </View>
 
@@ -256,7 +266,7 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
           <PriceDetailsCard
             items={priceItems}
             total={totalAmount}
-            onAddMore={() => {}}
+            // onAddMore={() => {}}
           />
         </View>
 
@@ -296,7 +306,7 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
           </View>
 
           {/* Add More Guest Details Button */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.addMoreButton}
             onPress={() => {
               // Handle add more guest details
@@ -307,7 +317,7 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
               <Plus size={16} color={colors.white} />
             </View>
             <Text style={styles.addMoreText}>Add More Guest Details</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Payment Options */}
