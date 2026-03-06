@@ -87,6 +87,8 @@ const FindARider: FC = () => {
   const counterCardTranslateY = useRef(new Animated.Value(height)).current;
   const counterCardScale = useRef(new Animated.Value(0.75)).current;
 
+  const bannerTranslateY = useRef(new Animated.Value(-120)).current;
+  const bannerOpacity = useRef(new Animated.Value(0)).current;
 
   const updateMapPulse = useRef(() => {
     const { v1, v2, v3 } = pulseV.current;
@@ -173,6 +175,27 @@ const FindARider: FC = () => {
   useEffect(() => {
     if (rideData && typeof rideData === 'object' && 'id' in rideData) setRide(rideData as RidePayload);
   }, [rideData]);
+
+  // Notification-style slide-from-top animation for acceptedBanner
+  const bannerStatuses = ['accepted', 'driver_arrived', 'ongoing', 'completed'];
+  useEffect(() => {
+    if (!ride?.status || !bannerStatuses.includes(ride.status)) return;
+    bannerTranslateY.setValue(-120);
+    bannerOpacity.setValue(0);
+    Animated.parallel([
+      Animated.spring(bannerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        friction: 10,
+        tension: 100,
+      }),
+      Animated.timing(bannerOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [ride?.status, bannerTranslateY, bannerOpacity]);
 
   // ETA from driver to pickup (when driver is on the way) – fetch via Directions API, refresh periodically
   useEffect(() => {
@@ -386,8 +409,10 @@ const FindARider: FC = () => {
             >
               <ChevronLeft color={colors.white} size={24} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Find a ride</Text>
-            <View style={styles.backBtn} />
+            <View style={styles.headerTitleWrap} pointerEvents="box-none">
+              <Text style={styles.headerTitle}>Find a ride</Text>
+            </View>
+            <View style={styles.headerSpacer} />
           </View>
 
           <View style={styles.tripCard}>
@@ -497,31 +522,42 @@ const FindARider: FC = () => {
             </View>
           </Animated.View>
         )}
-        {ride?.status === 'accepted' && (
-          <View style={styles.acceptedBanner}>
-            <Text style={styles.acceptedBannerText}>Ride booked! Driver is on the way.</Text>
-            {driverEtaMinutes != null && (
-              <Text style={[styles.acceptedBannerText, { marginTop: 4, opacity: 0.95 }]}>
-                Driver will reach you in ~{driverEtaMinutes} min
-              </Text>
+        {(ride?.status === 'accepted' || ride?.status === 'driver_arrived' || ride?.status === 'ongoing' || ride?.status === 'completed') && (
+          <Animated.View
+            pointerEvents="box-none"
+            style={[
+              styles.bannerContainer,
+              { top: safeTop + 8 },
+              { opacity: bannerOpacity, transform: [{ translateY: bannerTranslateY }] },
+            ]}
+          >
+            {ride?.status === 'accepted' && (
+              <View style={styles.acceptedBanner}>
+                <Text style={styles.acceptedBannerText}>Ride booked! Driver is on the way.</Text>
+                {driverEtaMinutes != null && (
+                  <Text style={[styles.acceptedBannerText, { marginTop: 4, opacity: 0.95 }]}>
+                    Driver will reach you in ~{driverEtaMinutes} min
+                  </Text>
+                )}
+              </View>
+             )}
+            {ride?.status === 'driver_arrived' && (
+              <View style={styles.acceptedBanner}>
+                <Text style={styles.acceptedBannerText}>Driver has arrived at pickup.</Text>
+              </View>
+             )} 
+            {ride?.status === 'ongoing' && (
+              <View style={styles.acceptedBanner}>
+                <Text style={styles.acceptedBannerText}>Ride in progress. Sit back and relax.</Text>
+              </View>
+            )} 
+            {ride?.status === 'completed' && (
+              <View style={styles.acceptedBanner}>
+                <Text style={styles.acceptedBannerText}>Ride completed. Thank you!</Text>
+              </View>
             )}
-          </View>
-        )}
-        {ride?.status === 'driver_arrived' && (
-          <View style={[styles.acceptedBanner, { backgroundColor: colors.green }]}>
-            <Text style={styles.acceptedBannerText}>Driver has arrived at pickup.</Text>
-          </View>
-        )}
-        {ride?.status === 'ongoing' && (
-          <View style={[styles.acceptedBanner, { backgroundColor: colors.c_0162C0 }]}>
-            <Text style={styles.acceptedBannerText}>Ride in progress. Sit back and relax.</Text>
-          </View>
-        )}
-        {ride?.status === 'completed' && (
-          <View style={[styles.acceptedBanner, { backgroundColor: colors.green }]}>
-            <Text style={styles.acceptedBannerText}>Ride completed. Thank you!</Text>
-          </View>
-        )}
+          </Animated.View>
+       )}
 
         <View style={[styles.footer, { paddingBottom: safeBottom + 16 }]}>
           {ride?.status === 'completed' ? (
@@ -566,10 +602,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   header: {
+    width: '100%',
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingBottom: 12,
+  },
+  headerTitleWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backBtn: {
     width: 40,
@@ -579,8 +625,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerSpacer: {
+    width: 40,
+    height: 40,
+  },
   headerTitle: {
     fontSize: 18,
+    textAlign: 'center',
     fontFamily: fonts.bold,
     color: colors.white,
     textShadowColor: 'rgba(0,0,0,0.8)',
@@ -747,17 +798,24 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
     color: colors.white,
   },
+  bannerContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    zIndex: 10,
+  },
   acceptedBanner: {
-    marginHorizontal: 20,
     marginBottom: 12,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 200, 0, 0.2)',
+    // backgroundColor: 'rgba(0, 200, 0, 0.2)',
+    backgroundColor: colors.c_0162C0,
     alignItems: 'center',
   },
   acceptedBannerText: {
     fontSize: 14,
     fontFamily: fonts.bold,
-    color: colors.black,
+    color: colors.white,
   },
 });

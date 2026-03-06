@@ -21,7 +21,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { useCreateRideBookingLogMutation } from '../../../redux/services/ride.service';
 import { useCreateRideMutation } from '../../../redux/services/ride.service';
-import { formatUsd } from '../../../utils/currency';
+import { formatUsd, RS_PER_USD } from '../../../utils/currency';
 
 const GOOGLE_PLACES_API_KEY = 'AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE';
 type PlaceSuggestion = { id: string; description: string; mainText: string };
@@ -447,7 +447,16 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                 const lower = Number.isFinite(fare.normal) ? fare.normal : 0;
                 const upper = Number.isFinite(fare.peak) ? fare.peak : 0;
                 const applicableFare = fare.isPeak ? upper : lower;
-                const yourFare = Math.max(0, applicableFare + fareAdjustment);
+                const yourFareRaw = applicableFare + fareAdjustment;
+                const estimatedFormatted = formatUsd(applicableFare);
+                const centsFromEstimated =
+                  parseInt(estimatedFormatted.split('.')[1] || '0', 10) / 100;
+                const wholeDollars = Math.floor(yourFareRaw / RS_PER_USD);
+                const yourFareUsd = Math.max(
+                  applicableFare / RS_PER_USD,
+                  wholeDollars + centsFromEstimated,
+                );
+                const yourFare = yourFareUsd * RS_PER_USD;
                 return (
                   <View style={styles.fareSection}>
                     <Text style={styles.fareSectionTitle}>Estimated fare</Text>
@@ -469,7 +478,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                       <View style={styles.yourFareControls}>
                         <TouchableOpacity
                           style={styles.fareAdjustBtn}
-                          onPress={() => setFareAdjustment((a) => a - 5)}
+                          onPress={() => setFareAdjustment((a) => Math.max(0, a - 5 * RS_PER_USD))}
                           activeOpacity={0.7}
                         >
                           <Minus size={18} color={colors.c_0162C0} />
@@ -478,7 +487,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                         <Text style={styles.yourFareValue}>{formatUsd(yourFare)}</Text>
                         <TouchableOpacity
                           style={styles.fareAdjustBtn}
-                          onPress={() => setFareAdjustment((a) => a + 5)}
+                          onPress={() => setFareAdjustment((a) => a + 5 * RS_PER_USD)}
                           activeOpacity={0.7}
                         >
                           <Plus size={18} color={colors.c_0162C0} />
@@ -500,7 +509,17 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                   if (!Number.isFinite(min) || min <= 0) min = parseDurationToMin(routeInfo.duration);
                   const fare = getFareEstimate(km, min);
                   const applicableFare = fare.isPeak ? fare.peak : fare.normal;
-                  const offeredFare = Math.max(50, Math.round(applicableFare + fareAdjustment));
+                const yourFareRaw = applicableFare + fareAdjustment;
+                const estimatedStr = formatUsd(applicableFare);
+                const centsFromEstimated =
+                  parseFloat('0.' + (estimatedStr.split('.')[1] || '00')) || 0;
+                const wholeDollars = Math.floor(yourFareRaw / RS_PER_USD);
+                  const yourFareUsd = Math.max(
+                    applicableFare / RS_PER_USD,
+                    wholeDollars + centsFromEstimated,
+                  );
+                  const yourFare = yourFareUsd * RS_PER_USD;
+                  const offeredFare = Math.max(50, Math.round(yourFare));
                   try {
                     const result = await createRide({
                       pickupLat: pickupCoords.latitude,
