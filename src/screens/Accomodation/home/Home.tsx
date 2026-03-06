@@ -32,7 +32,6 @@ import DrawerModal from '../../../components/drawerModal/DrawerModal';
 import { useNavigation } from '@react-navigation/native';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import { useHotelForYouMutation, useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
-import Geolocation from '@react-native-community/geolocation';
 import { getLocation, reverseGeocode } from '../../../utils/loaction';
 
 type HotelItem = {
@@ -44,6 +43,17 @@ type HotelItem = {
   location?: { city?: string; state?: string; country?: string };
 };
 
+function matchHotelToQuery(hotel: HotelItem, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const name = (hotel?.name ?? '').toLowerCase();
+  const city = (hotel?.location?.city ?? '').toLowerCase();
+  const state = (hotel?.location?.state ?? '').toLowerCase();
+  const country = (hotel?.location?.country ?? '').toLowerCase();
+  const locationStr = [city, state, country].filter(Boolean).join(' ');
+  return name.includes(q) || city.includes(q) || state.includes(q) || country.includes(q) || locationStr.includes(q);
+}
+
 const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loadingHotels, setLoadingHotels] = useState(true);
@@ -53,7 +63,17 @@ const Home = () => {
   const [getHotels] = useLazyGetHotelsQuery();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
   const [hotelForYou, setHotelForYou] = useState<HotelItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const iconStyle = useMemo(() => iconStyles(25, 25), [height, width]);
+
+  const displayHotels = useMemo(
+    () => (searchQuery.trim() ? hotels.filter((h) => matchHotelToQuery(h, searchQuery)) : hotels),
+    [hotels, searchQuery]
+  );
+  const displayHotelForYou = useMemo(
+    () => (searchQuery.trim() ? hotelForYou.filter((h) => matchHotelToQuery(h, searchQuery)) : hotelForYou),
+    [hotelForYou, searchQuery]
+  );
   const [getHotelForYou] = useHotelForYouMutation();
   const fetchHotels = async () => {
     setLoadingHotels(true);
@@ -126,6 +146,8 @@ const Home = () => {
         <SearchWithFilters
           placeholder={labels.whatareYouLookingFor}
           navigation={navigation}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
       </ImageBackground>
 
@@ -190,7 +212,7 @@ const Home = () => {
         </ScrollView>
       ) : (
         <FlatList
-          data={hotelForYou}
+          data={displayHotelForYou}
           keyExtractor={(item) => String(item?.id ?? Math.random())}
           contentContainerStyle={[
             GeneralStyles.flexGrow,
@@ -230,7 +252,7 @@ const Home = () => {
                   </Text>
                 </View>
                 <AccomodationCard
-                  list={hotels as any}
+                  list={displayHotels as any}
                   navigation={navigation}
                 />
               </View>

@@ -110,6 +110,20 @@ export const restaurantApi = baseApi.injectEndpoints({
                 method: 'GET',
                 params
             })
+        }),
+        searchRestaurants: builder.mutation({
+            query: (params: {search: string, lat: number, lng: number, city?: string}) => ({
+                url: endpoint.SEARCH_RESTAURANTS,
+                method: 'POST',
+                body: params
+            })
+        }),
+        searchMenus: builder.mutation({
+            query: (params: {search: string, lat: number, lng: number, city?: string}) => ({
+                url: endpoint.SEARCH_MENUS,
+                method: 'POST',
+                body: params
+            })
         })
     })
 });
@@ -126,4 +140,6 @@ export const {
     useLazyGetPopularMenusQuery,
     useLazyGetFeaturedItemsQuery,
     useLazyGetItemsByCategoryQuery,
+    useSearchRestaurantsMutation,
+    useSearchMenusMutation,
 } = restaurantApi;

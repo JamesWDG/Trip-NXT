@@ -6,7 +6,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { NavigationProp } from '@react-navigation/native';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import HomeHeader from '../../../components/homeHeader/HomeHeader';
@@ -14,7 +14,7 @@ import images from '../../../config/images';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import SearchWithFilters from '../../../components/searchWithFilters/SearchWithFilters';
 import labels from '../../../config/labels';
-import { height, width } from '../../../config/constants';
+import { height, ShowToast, width } from '../../../config/constants';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import ListWithIcon from '../../../components/listWithIcon/ListWithIcon';
@@ -25,7 +25,7 @@ import FoodCard from '../../../components/foodCard/FoodCard';
 import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import FoodCardWithBorder from '../../../components/foodCardWithBorder/FoodCardWithBorder';
 import FoodDrawerModal from '../../../components/drawerModal/FoodDrawerModal';
-import { useLazyRestaurantGetQuery, useLazyGetPopularMenusQuery } from '../../../redux/services/restaurant.service';
+import { useLazyRestaurantGetQuery, useLazyGetPopularMenusQuery, useSearchRestaurantsMutation, useSearchMenusMutation } from '../../../redux/services/restaurant.service';
 import { getLocation } from '../../../utils/loaction';
 
 const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
@@ -36,6 +36,11 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [loadingPopularMenus, setLoadingPopularMenus] = useState(true);
   const [restaurantGet] = useLazyRestaurantGetQuery();
   const [popularMenusGet] = useLazyGetPopularMenusQuery();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchRestaurants] = useSearchRestaurantsMutation();
+  const [searchMenus] = useSearchMenusMutation();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const SEARCH_DEBOUNCE_MS = 400;
 
   const fetchData = async () => {
     setLoadingNewRestaurant(true);
@@ -63,12 +68,66 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
     }
   };
 
+  const handleFetchData = async () => {
+    await Promise.all([fetchData(), fetchPopularMenus()]);
+  }
+
   useEffect(() => {
     const subscribe = navigation.addListener('focus', () => {
-      fetchData();
-      fetchPopularMenus();
+      handleFetchData();
     });
     return subscribe;
+  }, []);
+
+  const handleSearch = useCallback(async () => {
+    if (searchQuery.trim() === '') {
+      await handleFetchData();
+      return;
+    }
+    try {
+      setLoadingNewRestaurant(true);
+      setLoadingPopularMenus(true);
+      const location = await getLocation();
+      const response = await Promise.all([
+        searchRestaurants({search: searchQuery, lat: location?.latitude, lng: location?.longitude}).unwrap(),
+        searchMenus({search: searchQuery, lat: location?.latitude, lng: location?.longitude}).unwrap(),
+      ]);
+      setNewRestaurant(response[0].data?.restaurants ?? []);
+      setPopularMenus(response[1].data?.items ?? []);
+    } catch (error) {
+      console.log('search error ===>', error);
+      ShowToast('error', 'cannot fetch search results');
+      await handleFetchData();
+    } finally {
+      setLoadingNewRestaurant(false);
+      setLoadingPopularMenus(false);
+    }
+  }, [searchQuery, searchRestaurants, searchMenus]);
+
+  const runSearchNow = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    handleSearch();
+  }, [handleSearch]);
+
+  const handleSearchInputChange = useCallback(
+    (text: string) => {
+      setSearchQuery(text);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        debounceRef.current = null;
+        handleSearch();
+      }, SEARCH_DEBOUNCE_MS);
+    },
+    [handleSearch]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
   }, []);
 
   return (
@@ -95,6 +154,10 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
           placeholder={labels.whatDoYouWantToEat}
           navigation={navigation}
           onFilterPress={() => navigation.navigate('FoodRestaurantFilter')}
+          value={searchQuery}
+          onChangeText={handleSearchInputChange}
+          returnKeyType="search"
+          onSubmitEditing={runSearchNow}
         />
       </ImageBackground>
 
@@ -114,7 +177,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
         <View style={[styles.gap]}>
           <View style={GeneralStyles.paddingHorizontal}>
             <SectionHeader
-              title="Newly Opened"
+              title={searchQuery.trim() === '' ? "Newly Opened" : "Restaurants Search Results"}
               onSeeAllPress={() => navigation.navigate('FoodRestaurantInfo')}
             />
           </View>
@@ -147,7 +210,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
         {/* <HomeCarousel data={CarouselData as CarouselData[]} /> */}
 
         <View style={GeneralStyles.paddingHorizontal}>
-          <SectionHeader title="Popular Food" onSeeAllPress={() => navigation.navigate('PopularFoodList')} />
+          <SectionHeader title={searchQuery.trim() === '' ? "Popular Food" : "Food Search Results"} onSeeAllPress={() => navigation.navigate('PopularFoodList')} />
         </View>
 
         {loadingPopularMenus && popularMenus.length === 0 ? (
@@ -188,7 +251,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
                   price={item.price}
                   id={item?.id}
                   hasFreeship={false}
-                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [], wishlistId: item.wishlistId || null })}
+                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [], wishlistId: item.wishlistId || null, restaurant: item.restaurant })}
                   isFavorite={item.wishlistId ? true : false}
                   reviewCount={item.reviewCount}
                 />

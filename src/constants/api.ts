@@ -46,10 +46,13 @@ type endpointTypes = {
   RIDE_ACCEPT_OFFER: (rideId: number) => string;
   RIDE_REJECT_OFFER: (rideId: number) => string;
   RIDE_CANCEL: (rideId: number) => string;
+  SEARCH_RESTAURANTS: string;
+  SEARCH_MENUS: string;
+  GET_NOTIFICATIONS: string;
 };
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
-// export const BASE_URL: string = 'http://172.168.2.134:5003/api/v1/';
+// export const BASE_URL: string = 'http://169.254.206.40:5003/api/v1/';
 //  export const BASE_URL: string = 'https://immaterial-overfrequently-audrie.ngrok-free.dev/api/v1/' // ngrok
 // export const BASE_URL: string = 'http://192.168.0.108:5003/api/v1' //live
 
@@ -110,4 +113,7 @@ export const endpoint: endpointTypes = {
   RIDE_ACCEPT_OFFER: (rideId: number) => `ride/${rideId}/accept-offer`,
   RIDE_REJECT_OFFER: (rideId: number) => `ride/${rideId}/reject-offer`,
   RIDE_CANCEL: (rideId: number) => `ride/${rideId}/cancel`,
+  SEARCH_RESTAURANTS: 'restaurant/search',
+  SEARCH_MENUS: 'menu/search',
+  GET_NOTIFICATIONS: 'notification/list',
 };

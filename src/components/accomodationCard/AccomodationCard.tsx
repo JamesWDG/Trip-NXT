@@ -64,9 +64,9 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 10,
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 10,
     fontFamily: fonts.normal,
     color: colors.black,
-    letterSpacing: 1.1,
+    // letterSpacing: 1.1,
   },
 });

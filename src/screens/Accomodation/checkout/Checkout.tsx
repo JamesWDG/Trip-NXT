@@ -215,13 +215,13 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
 
         {/* Room Type Section */}
         <View style={styles.roomTypeCard}>
-          <Text style={styles.sectionTitle}>Room Type</Text>
+          {/* <Text style={styles.sectionTitle}>Room Type</Text>
           <DropdownSelect
             placeholder="Room Type"
             value={roomType}
             onSelect={value => setRoomType(value)}
             otherStyles={styles.dropdown}
-          />
+          /> */}
 
           {/* Number of Rooms, Adults, Children */}
           <Counter

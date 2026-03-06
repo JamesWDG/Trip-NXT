@@ -97,7 +97,7 @@ const Wishlists = () => {
               price={item?.hotel?.rentPerDay || item?.dish?.price}
               rating={4.5}
               reviewCount={10}
-              onPress={() => navigation.navigate('HotelDetails')}
+              onPress={() => item.hotel ? navigation.navigate('HotelDetails', { hotel: item.hotel }) : navigation.navigate('Food', {screen: 'FoodDetails', params: { id: String(item.dish?.id), name: item.dish?.name, price: item.dish?.price, image: item.dish?.image || '', description: item.dish?.description || '', category: item.dish?.category || '', toppings: [], wishlistId: item.wishlistId || null, restaurant: item.dish?.restaurant }})}
               isFavorite={true}
               onRemove={() => deleteFromWishlist(activeTab === 0 ? 'hotel' : 'dish', activeTab === 0 ? item.hotel?.id : item.dish?.id)}
             />
