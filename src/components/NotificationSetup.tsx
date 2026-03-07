@@ -9,7 +9,7 @@ import {
   onForegroundMessage,
   onNotificationOpenedApp,
   getInitialNotification,
-} from '../services/notificationSetup';
+} from '../redux/services/notificationSetup';
 
 let backgroundHandlerSet = false;
 

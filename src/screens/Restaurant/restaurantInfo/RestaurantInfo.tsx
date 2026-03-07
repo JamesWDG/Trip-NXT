@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,6 +21,7 @@ import images from '../../../config/images';
 import FastImage from 'react-native-fast-image';
 import { useLazyRestaurantGetQuery } from '../../../redux/services/restaurant.service';
 import RestaurantListSkeleton from '../../../components/restaurantListSkeleton/RestaurantListSkeleton';
+import { getLocation } from '../../../utils/loaction';
 
 const getRestaurantImage = (item: any) => {
   const logo = item?.logo;
@@ -42,15 +44,17 @@ const RestaurantInfo = ({
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [restaurantGet] = useLazyRestaurantGetQuery();
 
   const loadRestaurants = useCallback(
-    async (pageNum: number, append: boolean) => {
+    async (pageNum: number, append: boolean, search?: string) => {
       if (pageNum > totalPages && append) return;
       if (append) setLoadingMore(true);
       else setLoading(true);
       try {
-        const res = await restaurantGet({ page: pageNum, limit: PAGE_SIZE }).unwrap();
+        const location = await getLocation();
+        const res = await restaurantGet({ page: pageNum, limit: PAGE_SIZE, search: pageNum === 1  && search ? search : '', lat: location?.latitude, lng: location?.longitude}).unwrap();
         const list = res.data?.restaurants ?? [];
         const total = res.data?.total ?? 0;
         setRestaurants(prev => (append ? [...prev, ...list] : list));
@@ -66,8 +70,13 @@ const RestaurantInfo = ({
   );
 
   React.useEffect(() => {
-    loadRestaurants(1, false);
-  }, []);
+    if (searchQuery.trim() === '') {
+      loadRestaurants(1, false);
+      return;
+    }
+    console.log('searchQuery ===>', searchQuery);
+    loadRestaurants(1, false, searchQuery.trim());
+  }, [searchQuery]);
 
   const handleEndReached = useCallback(() => {
     if (loading || loadingMore || page >= totalPages) return;
@@ -75,6 +84,7 @@ const RestaurantInfo = ({
   }, [loading, loadingMore, page, totalPages, loadRestaurants]);
 
   const wishlistButtonStyles = useMemo(() => wishlistButton(false, top), [top]);
+
 
   return (
     <View style={GeneralStyles.flex}>
@@ -95,6 +105,8 @@ const RestaurantInfo = ({
             placeholder={labels.whatareYouLookingFor}
             navigation={navigation}
             filter={false}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
           />
           {loading && restaurants.length === 0 ? (
             <RestaurantListSkeleton />
@@ -138,6 +150,7 @@ const RestaurantInfo = ({
               ListFooterComponent={loadingMore ? <ActivityIndicator size="small" color={colors.c_0162C0} style={styles.footerLoader} /> : null}
               onEndReached={handleEndReached}
               onEndReachedThreshold={0.3}
+              refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadRestaurants(1, false)} />}
               showsVerticalScrollIndicator={false}
             />
           )}

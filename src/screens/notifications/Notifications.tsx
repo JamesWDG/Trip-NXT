@@ -7,79 +7,100 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BellIcon, ChevronLeftIcon } from 'lucide-react-native';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import images from '../../config/images';
+import { useLazyGetNotificationsQuery } from '../../redux/services/notification.service';
+import NotificationsSkeleton from '../../components/notificationsSkeleton/NotificationsSkeleton';
 
 interface NotificationItem {
   id: number;
-  text: string;
+  userId: number;
+  type: string;
+  title: string;
+  body: string;
+  data: {
+    rideId: string;
+  };
+  read: boolean;
+  entityType: string;
+  entityId: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const newNotifications: NotificationItem[] = [
-  {
-    id: 1,
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-  },
-  {
-    id: 2,
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-  },
-  {
-    id: 3,
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-  },
-  {
-    id: 4,
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-  },
-  {
-    id: 5,
-    text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-  },
-];
+function formatNotificationTime(isoDate: string): string {
+  if (!isoDate) return '';
+  const date = new Date(isoDate);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
 
-// const yesterdayNotifications: NotificationItem[] = [
-//   {
-//     id: 1,
-//     text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-//   },
-//   {
-//     id: 2,
-//     text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-//   },
-//   {
-//     id: 3,
-//     text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-//   },
-//   {
-//     id: 4,
-//     text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-//   },
-//   {
-//     id: 5,
-//     text: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry.',
-//   },
-// ];
-
-const NotificationItemComponent = ({ text }: { text: string }) => {
+const NotificationItemComponent = ({ item }: { item: NotificationItem }) => {
+  const isUnread = !item.read;
   return (
-    <View style={styles.notificationItem}>
-      <View style={styles.bellIconContainer}>
-        <BellIcon color={colors.c_0162C0} size={24} />
-        <View style={styles.redDot} />
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={[styles.notificationCard, isUnread && styles.notificationCardUnread]}
+    >
+      <View style={[styles.iconWrap, isUnread && styles.iconWrapUnread]}>
+        <BellIcon
+          color={isUnread ? colors.c_0162C0 : colors.c_666666}
+          size={22}
+        />
+        {isUnread && <View style={styles.unreadDot} />}
       </View>
-      <Text style={styles.notificationText}>{text}</Text>
-    </View>
+      <View style={styles.notificationContent}>
+        {item.title ? (
+          <Text style={styles.notificationTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+        ) : null}
+        <Text style={styles.notificationBody} numberOfLines={3}>
+          {item.body}
+        </Text>
+        <Text style={styles.notificationTime}>
+          {formatNotificationTime(item.createdAt)}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 };
 
 const Notifications = ({ navigation }: { navigation?: any }) => {
   const { top } = useSafeAreaInsets();
   const headerStyles = useMemo(() => makeHeaderStyles(top), [top]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [getNotifications] = useLazyGetNotificationsQuery();
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    try {
+      const res = await getNotifications({}).unwrap();
+      setNotifications((res.data?.list ?? []) as NotificationItem[]);
+    } catch (error) {
+      console.log('notifications error ===>', error);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -109,33 +130,28 @@ const Notifications = ({ navigation }: { navigation?: any }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* New Section */}
-          {/* <View style={styles.section}> */}
-          {/* <Text style={styles.sectionTitle}>New</Text> */}
-          <FlatList
-            data={newNotifications}
-            renderItem={({ item }) => (
-              <NotificationItemComponent text={item.text} />
-            )}
-            keyExtractor={item => item.id.toString()}
-            scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-          />
-          {/* </View> */}
-
-          {/* Yesterday Section */}
-          {/* <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Yesterday</Text>
+          {loading && notifications.length === 0 ? (
+            <NotificationsSkeleton />
+          ) : (
             <FlatList
-              data={yesterdayNotifications}
+              data={notifications}
               renderItem={({ item }) => (
-                <NotificationItemComponent text={item.text} />
+                <NotificationItemComponent item={item} />
               )}
-              keyExtractor={item => item.id.toString()}
+              keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}
+              ListEmptyComponent={
+                <View style={styles.emptyWrap}>
+                  <BellIcon color={colors.c_CFD1D3} size={48} />
+                  <Text style={styles.emptyTitle}>No notifications yet</Text>
+                  <Text style={styles.emptySubtext}>
+                    We'll notify you when something new arrives.
+                  </Text>
+                </View>
+              }
               ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
-          </View> */}
+          )}
         </ScrollView>
       </View>
     </View>
@@ -227,41 +243,87 @@ const styles = StyleSheet.create({
     color: colors.black,
     marginBottom: 16,
   },
-  notificationItem: {
+  notificationCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: 14,
     backgroundColor: colors.white,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.c_F3F3F3,
   },
-  bellIconContainer: {
-    position: 'relative',
-    width: 24,
-    height: 24,
+  notificationCardUnread: {
+    backgroundColor: colors.c_F6F6F6,
+    borderColor: 'rgba(1, 98, 192, 0.12)',
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.c_F3F3F3,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
-  redDot: {
+  iconWrapUnread: {
+    backgroundColor: 'rgba(1, 98, 192, 0.1)',
+  },
+  unreadDot: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    top: 4,
+    right: 4,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.red,
-    borderWidth: 1,
+    backgroundColor: colors.c_EE4026,
+    borderWidth: 2,
     borderColor: colors.white,
   },
-  notificationText: {
+  notificationContent: {
     flex: 1,
+    minWidth: 0,
+  },
+  notificationTitle: {
+    fontSize: 15,
+    fontFamily: fonts.semibold,
+    color: colors.black,
+    marginBottom: 4,
+  },
+  notificationBody: {
     fontSize: 14,
     fontFamily: fonts.normal,
     color: colors.c_505050,
     lineHeight: 20,
   },
+  notificationTime: {
+    fontSize: 12,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
+    marginTop: 8,
+  },
   separator: {
-    height: 1,
-    backgroundColor: colors.c_F3F3F3,
-    marginVertical: 8,
+    height: 0,
+  },
+  emptyWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontFamily: fonts.semibold,
+    color: colors.c_2B2B2B,
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    fontFamily: fonts.normal,
+    color: colors.c_666666,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

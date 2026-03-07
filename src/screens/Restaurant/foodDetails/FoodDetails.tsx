@@ -20,6 +20,7 @@ import GradientButtonForAccomodation from '../../../components/gradientButtonFor
 import CheckBox from '@react-native-community/checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import images from '../../../config/images';
+import { useWishList } from '../../../hooks/useWishlist';
 
 interface ToppingOption {
   id: number;
@@ -28,16 +29,37 @@ interface ToppingOption {
   description: string;
 }
 
-const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, route: RouteProp<{ params: { id: string, category: string, name: string, price: number, image: string, description: string, toppings: ToppingOption[] } }> }) => {
+const FoodDetails = ({
+  navigation,
+  route,
+}: {
+  navigation: NavigationProp<any>;
+  route: RouteProp<{
+    params: {
+      id: string;
+      category: string;
+      name: string;
+      price: number;
+      image: string;
+      description: string;
+      toppings: ToppingOption[];
+      wishlistId: number | null;
+      restaurant: { name: string };
+    };
+  }>;
+}) => {
   const { top } = useSafeAreaInsets();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { wishlist, handleAddToWishlist } = useWishList({
+    initialWishlist: route.params.wishlistId ? true : false,
+    dishId: Number(route.params.id),
+    type: 'dish',
+  });
   const [selectedTopping, setSelectedTopping] = useState<number[]>([]);
   const [quantity, setQuantity] = useState(1);
 
   const wishlistButtonStyles = useMemo(() => {
     return wishlistButton(top);
   }, []);
-
 
   const contentStyles = useMemo(() => makeContentStyles(top), [top]);
 
@@ -55,24 +77,35 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
     const cartItems = await AsyncStorage.getItem('cart');
     console.log('cartItems ===>', cartItems);
     if (!cartItems) {
-      await AsyncStorage.setItem('cart', JSON.stringify([{
-        name: route?.params?.name,
-        quantity,
-        topping: route?.params?.toppings?.filter(topping => selectedTopping.includes(topping.id)),
-        price: route?.params?.price,
-        id: route?.params?.id,
-        image: route.params.image,
-        description: route?.params?.description,
-        category: route?.params?.category,
-      }]));
+      await AsyncStorage.setItem(
+        'cart',
+        JSON.stringify([
+          {
+            name: route?.params?.name,
+            quantity,
+            topping: route?.params?.toppings?.filter(topping =>
+              selectedTopping.includes(topping.id),
+            ),
+            price: route?.params?.price,
+            id: route?.params?.id,
+            image: route.params.image,
+            description: route?.params?.description,
+            category: route?.params?.category,
+          },
+        ]),
+      );
       navigation.navigate('FoodCart');
       return;
     }
     const cartItemsArray = JSON.parse(cartItems);
-    let found = cartItemsArray.find((item: any) => item.id === route?.params?.id);
+    let found = cartItemsArray.find(
+      (item: any) => item.id === route?.params?.id,
+    );
     if (found) {
       found.quantity = quantity;
-      found.topping = route?.params?.toppings?.filter(topping => selectedTopping.includes(topping.id));
+      found.topping = route?.params?.toppings?.filter(topping =>
+        selectedTopping.includes(topping.id),
+      );
       found.price = route?.params?.price;
       found.image = route.params.image;
       found.description = route?.params?.description;
@@ -81,7 +114,9 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
       cartItemsArray.push({
         name: route?.params?.name,
         quantity,
-        topping: route?.params?.toppings?.filter(topping => selectedTopping.includes(topping.id)),
+        topping: route?.params?.toppings?.filter(topping =>
+          selectedTopping.includes(topping.id),
+        ),
         price: route?.params?.price,
         id: route?.params?.id,
         image: route.params.image,
@@ -95,7 +130,7 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
   };
 
   const onPressGoReviews = () => {
-    navigation.navigate('FoodReviews');
+    navigation.navigate('FoodReviews', { id: route?.params?.id });
   };
 
   const handleSelectTopping = (toppingId: number) => {
@@ -104,24 +139,26 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
     } else {
       setSelectedTopping([...selectedTopping, toppingId]);
     }
-  }
+  };
 
   const fetchCartItems = async () => {
     const cartItems = await AsyncStorage.getItem('cart');
     if (cartItems) {
       const cartItemsArray = JSON.parse(cartItems);
       console.log('cartItemsArray ===>', cartItemsArray);
-      const found = cartItemsArray.find((item: any) => item.id === route?.params?.id);
+      const found = cartItemsArray.find(
+        (item: any) => item.id === route?.params?.id,
+      );
       if (found) {
         setSelectedTopping(found.topping.map((topping: any) => topping.id));
         setQuantity(found.quantity);
       }
     }
-  }
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     fetchCartItems();
-  },[route.params])
+  }, [route.params]);
 
   return (
     <View style={GeneralStyles.flex}>
@@ -129,10 +166,10 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
       <View style={styles.headerContainer}>
         <FoodHeader
           onBackPress={() => navigation?.goBack()}
-          onNotificationPress={() => { }}
-          onCartPress={() => { }}
-          onFavoritePress={() => setIsFavorite(!isFavorite)}
-          isFavorite={isFavorite}
+          onNotificationPress={() => {}}
+          onCartPress={() => {}}
+          onFavoritePress={() => handleAddToWishlist()}
+          isFavorite={wishlist}
         />
       </View>
 
@@ -219,31 +256,41 @@ const FoodDetails = ({ navigation, route }: { navigation: NavigationProp<any>, r
             </View>
           </View> */}
           {/* Food Detail Section */}
+          {route?.params?.restaurant && (
+            <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <Text style={styles.sectionTitle}>Restaurant Name:</Text>
+              <Text style={{ fontSize: 16, fontFamily: fonts.normal, color: colors.black }}>
+                {route?.params?.restaurant?.name}
+              </Text>
+            </View>
+          )}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Food Detail</Text>
             <Text style={styles.description}>{route?.params?.description}</Text>
           </View>
 
           {/* Add Topping Section */}
-          {route?.params?.toppings?.length > 0 && <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Add Topping</Text>
-            {route?.params?.toppings?.map(topping => (
-              <View key={topping.id} style={styles.toppingOption}>
-                <Text style={styles.toppingText}>
-                  {topping.name} +${topping.price.toFixed(2)}
-                </Text>
-                <CheckBox
-                  value={selectedTopping.includes(topping.id)}
-                  onValueChange={() => handleSelectTopping(topping.id)}
-                  tintColor={colors.c_F47E20}
-                  onCheckColor={colors.white}
-                  onTintColor={colors.c_F47E20}
-                  onFillColor={colors.c_F47E20}
-                  style={styles.checkbox}
-                />
-              </View>
-            ))}
-          </View>}
+          {route?.params?.toppings?.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Add Topping</Text>
+              {route?.params?.toppings?.map(topping => (
+                <View key={topping.id} style={styles.toppingOption}>
+                  <Text style={styles.toppingText}>
+                    {topping.name} +${topping.price.toFixed(2)}
+                  </Text>
+                  <CheckBox
+                    value={selectedTopping.includes(topping.id)}
+                    onValueChange={() => handleSelectTopping(topping.id)}
+                    tintColor={colors.c_F47E20}
+                    onCheckColor={colors.white}
+                    onTintColor={colors.c_F47E20}
+                    onFillColor={colors.c_F47E20}
+                    style={styles.checkbox}
+                  />
+                </View>
+              ))}
+            </View>
+          )}
 
           {/* Quantity and Add to Cart */}
           <View style={styles.quantityCartContainer}>
@@ -446,13 +493,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: fonts.semibold,
     color: colors.black,
-    marginBottom: 12,
+    // marginBottom: 12,
   },
   description: {
     fontSize: 14,
     fontFamily: fonts.normal,
     color: colors.c_666666,
-    lineHeight: 20,
+    // lineHeight: 20,
   },
   toppingOption: {
     flexDirection: 'row',

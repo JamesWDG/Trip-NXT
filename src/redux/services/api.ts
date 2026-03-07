@@ -37,11 +37,8 @@ const baseQuery = fetchBaseQuery({
 export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   let result = await baseQuery(args, api, extraOptions);
   if (result.error && result.error.status === 401) {
-    await api.dispatch(setLogout());
-    
+    await api.dispatch(setLogout()); 
   }
-
-
   console.log(result , "resultresultresultresult")
   return result;
 };
@@ -49,6 +46,6 @@ export const baseQueryWithReauth = async (args: any, api: any, extraOptions: any
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Restaurant', 'Hotel'],
+  tagTypes: ['Restaurant', 'Hotel', 'Menu'],
   endpoints: () => ({}),
 });

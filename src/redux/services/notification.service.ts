@@ -10,7 +10,13 @@ export const notificationApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    getNotifications: builder.query({
+      query: () => ({
+        url: endpoint.GET_NOTIFICATIONS,
+        method: 'GET'
+      })
+    })
   }),
 });
 
-export const { useRegisterFcmTokenMutation } = notificationApi;
+export const { useRegisterFcmTokenMutation, useLazyGetNotificationsQuery } = notificationApi;

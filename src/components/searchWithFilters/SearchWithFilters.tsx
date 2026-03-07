@@ -21,6 +21,10 @@ interface Params {
   filter?: boolean;
   onFocus?: () => void;
   onFilterPress?: () => void;
+  value?: string;
+  onChangeText?: (text: string) => void;
+  returnKeyType?: 'search' | 'done' | 'next' | 'go' | 'previous' | 'default';
+  onSubmitEditing?: () => void;
 }
 const SearchWithFilters = ({
   placeholder,
@@ -30,6 +34,10 @@ const SearchWithFilters = ({
   filter = true,
   onFocus,
   onFilterPress,
+  value = "",
+  onChangeText = () => {},
+  returnKeyType = 'default',
+  onSubmitEditing = () => {},
 }: Params) => {
   const handleFilterPress = () => {
     if (onFilterPress) {
@@ -49,6 +57,10 @@ const SearchWithFilters = ({
           placeholderTextColor={colors.c_666666}
           onFocus={onFocus}
           editable={true}
+          value={value}
+          onChangeText={onChangeText}
+          returnKeyType={returnKeyType}
+          onSubmitEditing={onSubmitEditing}
         />
       </View>
 

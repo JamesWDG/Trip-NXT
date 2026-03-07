@@ -35,6 +35,7 @@ const FoodCard = ({ list = [], navigation }: Params) => {
           banner: item?.banner,
           createdAt: item?.createdAt,
           deliveryRadius: item?.deliveryRadius,
+          rating: item?.restaurantRating ? item?.restaurantRating?.rating : 0
         })}
         activeOpacity={0.8}
       >

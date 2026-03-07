@@ -12,7 +12,7 @@ import BottomSheetComponent, {
   BottomSheetComponentRef,
 } from '../../../components/bottomSheetComp/BottomSheetComp';
 import RideWrapper from '../../../components/rideWrapper/RideWrapper';
-import { NavigationProp, CommonActions } from '@react-navigation/native';
+import { NavigationProp, CommonActions, RouteProp, ParamListBase } from '@react-navigation/native';
 import { Star } from 'lucide-react-native';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
@@ -21,11 +21,24 @@ import GradientButtonForAccomodation from '../../../components/gradientButtonFor
 import PrimaryHeader from '../../../components/primaryHeader/PrimaryHeader';
 import { navigationRef } from '../../../config/constants';
 
+type routeParams = {
+  totalAmount: number,
+  subTotal: number,
+  discountId: number,
+  tax: number,
+  deliveryFee: number,
+  orderItems: { itemId: number, quantity: number, price: number }[],
+  deliveryAddress: { lat: number, lng: number, location: string },
+}
+type TripDetailsProps = {
+  navigation: NavigationProp<ParamListBase, string>;
+  route: RouteProp<{ params: routeParams }>;
+};
+
 const TripDetailsForRide = ({
   navigation,
-}: {
-  navigation: NavigationProp<any>;
-}) => {
+  route,
+}: TripDetailsProps) => {
   const openRefModal = useRef<BottomSheetComponentRef>(null);
   const [rating, setRating] = useState<number>(5);
   const [selectedTip, setSelectedTip] = useState<string | null>(null);
@@ -35,6 +48,7 @@ const TripDetailsForRide = ({
     const timer = setTimeout(() => {
       openRefModal.current?.open();
     }, 300);
+    console.log('route.params', route.params);
     return () => clearTimeout(timer);
   }, []);
 
@@ -77,7 +91,7 @@ const TripDetailsForRide = ({
     <RideWrapper navigation={navigation}>
       <PrimaryHeader
         title={'Rate Your Trip'}
-        onBackPress={() => navigation?.goBack()}
+        onBackPress={() => navigation.goBack()}
       />
 
       <BottomSheetComponent ref={openRefModal}>

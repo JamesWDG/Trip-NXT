@@ -12,6 +12,7 @@ interface FoodHeaderProps {
   onFavoritePress?: () => void;
   isFavorite?: boolean;
   notificationCount?: number;
+  showFavorite?: boolean;
 }
 
 const FoodHeader = ({
@@ -21,6 +22,7 @@ const FoodHeader = ({
   onFavoritePress,
   isFavorite = false,
   notificationCount = 0,
+  showFavorite = true,
 }: FoodHeaderProps) => {
   const { top } = useSafeAreaInsets();
   const headerStyles = useMemo(() => makeHeaderStyles(top), [top]);
@@ -67,7 +69,7 @@ const FoodHeader = ({
         </TouchableOpacity>
 
         {/* Heart/Favorite */}
-        <TouchableOpacity
+        {showFavorite && <TouchableOpacity
           style={styles.iconButton}
           onPress={onFavoritePress}
           activeOpacity={0.7}
@@ -79,7 +81,7 @@ const FoodHeader = ({
               fill={isFavorite ? colors.c_F47E20 : 'none'}
             />
           </View>
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
     </View>
   );

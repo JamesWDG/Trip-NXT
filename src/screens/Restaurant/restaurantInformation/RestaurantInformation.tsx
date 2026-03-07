@@ -1,10 +1,9 @@
 import { FlatList, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import GeneralStyles from '../../../utils/GeneralStyles';
 import FoodHeader from '../../../components/foodHeader/FoodHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationProp, ParamListBase, RouteProp } from '@react-navigation/native';
-import MainCarousel from '../../../components/mainCarousel/MainCarousel';
 import colors from '../../../config/colors';
 import FastImage from 'react-native-fast-image';
 import images from '../../../config/images';
@@ -18,9 +17,9 @@ import fonts from '../../../config/fonts';
 import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import FoodCardWithFavorite from '../../../components/foodCardWithFavorite/FoodCardWithFavorite';
 import FoodCardWithBorder from '../../../components/foodCardWithBorder/FoodCardWithBorder';
-import { useLazyRestaurantGetMenuQuery } from '../../../redux/services/restaurant.service';
+import { useLazyGetFeaturedItemsQuery, useLazyRestaurantGetMenuQuery } from '../../../redux/services/restaurant.service';
 import { height, ShowToast, width } from '../../../config/constants';
-import { RestaurantMenu } from '../../../constants/Food';
+import { MenuItem, RestaurantMenu } from '../../../constants/Food';
 import RestaurantInformationSkeleton from '../../../components/restaurantInformationSkeleton/RestaurantInformationSkeleton';
 
 const getLocationDisplay = (loc: string | object | null | undefined): string => {
@@ -42,6 +41,7 @@ const RestaurantInformation: FC<{
       name: string;
       logo: string;
       banner: string;
+      rating: number | null;
     }
   }>
 }> = ({
@@ -55,6 +55,7 @@ const RestaurantInformation: FC<{
     }, []);
     const contentStyles = useMemo(() => makeContentStyles(top), [top]);
     const [getRestaurantMenu] = useLazyRestaurantGetMenuQuery();
+    const [getFeaturedItems] = useLazyGetFeaturedItemsQuery();
     const [restaurantMenu, setRestaurantMenu] = useState<RestaurantMenu | null>({
       banner: route.params?.banner,
       cheapestItem: {
@@ -79,10 +80,13 @@ const RestaurantInformation: FC<{
       phoneNumber: '',
       timings: []
     });
+    const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const fetchRestaurantMenu = async () => {
       try {
-        setIsLoading(true);
+        if (!restaurantMenu?.isActive) {
+          setIsLoading(true);
+        }
         const res = await getRestaurantMenu(parseInt(route.params.id)).unwrap();
         console.log('restaurant menu response ===>', res);
         setRestaurantMenu(res.data);
@@ -94,9 +98,20 @@ const RestaurantInformation: FC<{
       }
     }
 
+    const fetchFeaturedItems = async () => {
+      try {
+        const res = await getFeaturedItems(parseInt(route.params.id)).unwrap();
+        console.log('featured items response ===>', res);
+        setFeaturedItems(res?.data?.menuItems ?? []);
+      } catch (error) {
+        console.log('featured items error ===>', error, route.params.id);
+      }
+    }
+
     useEffect(() => {
       const subscribe = navigation.addListener('focus', () => {
         fetchRestaurantMenu();
+        fetchFeaturedItems();
       })
       return () => {
         subscribe();
@@ -114,6 +129,7 @@ const RestaurantInformation: FC<{
               onCartPress={() => { }}
               onFavoritePress={() => setIsFavorite(!isFavorite)}
               isFavorite={isFavorite}
+              showFavorite={false}
             />
           </View>
           <RestaurantInformationSkeleton />
@@ -131,6 +147,7 @@ const RestaurantInformation: FC<{
             onCartPress={() => { }}
             onFavoritePress={() => setIsFavorite(!isFavorite)}
             isFavorite={isFavorite}
+            showFavorite={false}
           />
         </View>
 
@@ -174,7 +191,7 @@ const RestaurantInformation: FC<{
                   <Star size={20} color={colors.white} fill={colors.white} />
                 </View>
                 <View style={styles.infoTextContainer}>
-                  <Text style={styles.infoValue}>4.7</Text>
+                  <Text style={styles.infoValue}>{route.params?.rating || 0}</Text>
                   <Text style={styles.infoLabel}>Rating</Text>
                 </View>
               </View>
@@ -204,28 +221,30 @@ const RestaurantInformation: FC<{
               </View>
             </View>
 
-            <SectionHeader title="Featured Foods" onSeeAllPress={() => { }} />
-
-            <View>
-              <FlatList
-                data={[1, 2, 3, 4]}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.featuredContainer}
-                renderItem={({ item, index }) => (
-                  <FoodCardWithFavorite
-                    image={images.foodHome}
-                    title="Food Name"
-                    rating={4.7}
-                    reviewCount={150}
-                    price={10}
-                    onPress={() => navigation.navigate('FoodDetails')}
+            {featuredItems?.length > 0 && (
+              <>
+                <SectionHeader title="Featured Foods"  />
+                <View>
+                  <FlatList
+                    data={featuredItems}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.featuredContainer}
+                    renderItem={({ item, index }) => (
+                      <FoodCardWithFavorite
+                        image={item?.image || images.foodHome}
+                        title={item?.name}
+                        rating={parseFloat(item?.avgRating as string).toFixed(1) || 0}
+                        reviewCount={item?.reviewCount || 0}
+                        price={item?.price || 0}
+                        onPress={() => navigation.navigate('FoodDetails', { id: item.id, category: item.category, name: item.name, price: item.price, image: item.image, description: item.description, toppings: item.toppings || [], wishlistId: item.wishlistId || null })}
+                        showFavorite={false}
+                      />
+                    )}
                   />
-                )}
-              />
-            </View>
-            <SectionHeader title="Menu" onSeeAllPress={() => { }} />
-
+                </View>
+              </>
+            )}
             {restaurantMenu?.menues?.map((section, sectionIndex) => (
               <View key={sectionIndex} style={styles.menuSection}>
                 <Text style={styles.sectionHeaderText}>{section.title}</Text>
@@ -239,13 +258,16 @@ const RestaurantInformation: FC<{
                   renderItem={({ item }) => (
                     <View style={styles.menuCardWrapper}>
                       <FoodCardWithBorder
+                        id={item.id}
                         image={item.image || images.foodHome}
                         title={item.name}
                         category={item.category}
-                        rating={4.7}
+                        rating={item.avgRating ? item.avgRating as number : 0}
                         price={item.price}
-                        hasFreeship={true}
-                        onPress={() => navigation.navigate('FoodDetails', { id: item.id, category: item.category, name: item.name, price: item.price, image: item.image, description: item.description, toppings: item.toppings || [] })}
+                        hasFreeship={false}
+                        isFavorite={item.wishlistId ? true : false}
+                        cb={fetchRestaurantMenu}
+                        onPress={() => navigation.navigate('FoodDetails', { id: item.id, category: item.category, name: item.name, price: item.price, image: item.image, description: item.description, toppings: item.toppings || [], wishlistId: item.wishlistId || null })}
                       />
                     </View>
                   )}

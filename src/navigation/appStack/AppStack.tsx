@@ -6,7 +6,6 @@ import DummyPage from '../../screens/dummyPage/DummyPage';
 import AccomodationHome from '../../screens/Accomodation/home/Home';
 import Recommended from '../../screens/Accomodation/recommended/Recommended';
 import MyBookings from '../../screens/Accomodation/myBookings/MyBookings';
-import Wishlists from '../../screens/Accomodation/wishlists/Wishlists';
 import ThankYouScreen from '../../screens/Accomodation/thankYouScreen/ThankYouScreen';
 import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
 import AdvancedFilter from '../../screens/Accomodation/advancedFilter/AdvancedFilter';
@@ -16,6 +15,7 @@ import Notifications from '../../screens/notifications/Notifications';
 import Checkout from '../../screens/Accomodation/checkout/Checkout';
 import Profile from '../../screens/profile/Profile';
 import Chat from '../../screens/messages/Chat';
+import Wishlists from '../../screens/Restaurant/wishlist/WishList';
 
 const AppStackNavigator = createNativeStackNavigator();
 

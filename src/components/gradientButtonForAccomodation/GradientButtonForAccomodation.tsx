@@ -4,6 +4,7 @@ import {
   View,
   TouchableOpacity,
   ViewStyle,
+  ActivityIndicator,
 } from 'react-native';
 import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
@@ -30,16 +31,11 @@ const GradientButtonForAccomodation = ({
   const textStyles = textStyle(color, fontSize, fontFamily);
   return (
     <TouchableOpacity
-      style={[{backgroundColor: disabled ? colors.lightGray : colors.c_0162C0,},styles.button, styles.gradient, otherStyles, otherStyles]}
+      style={[{ backgroundColor: disabled ? colors.lightGray : colors.c_0162C0, }, styles.button, styles.gradient, otherStyles, otherStyles]}
       disabled={disabled}
       onPress={onPress}
     >
-      {/* <LinearGradient
-        colors={['#F47E20', '#EE4026']}
-        style={[styles.gradient, otherStyles]}
-      > */}
-      <Text style={textStyles.text}>{title}</Text>
-      {/* </LinearGradient> */}
+      {disabled ? <ActivityIndicator size="small" color={colors.white} /> : <Text style={textStyles.text}>{title}</Text>}
     </TouchableOpacity>
   );
 };

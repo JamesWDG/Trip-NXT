@@ -10,6 +10,7 @@ import React from 'react';
 import { Star, ThumbsUp } from 'lucide-react-native';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
+import { StarRatingDisplay } from 'react-native-star-rating-widget';
 
 interface DishItem {
   image: ImageSourcePropType;
@@ -24,8 +25,8 @@ interface FoodReviewCardProps {
   reviewComment: string;
   likedDishCount: number;
   dish?: DishItem;
-  helpfulCount: number;
-  onHelpfulPress?: () => void;
+  // helpfulCount: number;
+  // onHelpfulPress?: () => void;
 }
 
 const FoodReviewCard = ({
@@ -35,38 +36,9 @@ const FoodReviewCard = ({
   reviewComment,
   likedDishCount,
   dish,
-  helpfulCount,
-  onHelpfulPress,
+  // helpfulCount,
+  // onHelpfulPress,
 }: FoodReviewCardProps) => {
-  // Render stars based on rating (supporting half stars)
-  const renderStars = () => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
-        // Fully filled star
-        stars.push(<Star key={i} size={16} color="#FFD700" fill="#FFD700" />);
-      } else if (i === fullStars && hasHalfStar) {
-        // Half-filled star - using a View with overflow to clip half
-        stars.push(
-          <View key={i} style={styles.halfStarContainer}>
-            <Star size={16} color="#FFD700" fill="transparent" />
-            <View style={styles.halfStarFilled}>
-              <Star size={16} color="#FFD700" fill="#FFD700" />
-            </View>
-          </View>,
-        );
-      } else {
-        // Empty star
-        stars.push(
-          <Star key={i} size={16} color="#FFD700" fill="transparent" />,
-        );
-      }
-    }
-    return stars;
-  };
 
   return (
     <View style={styles.container}>
@@ -74,8 +46,10 @@ const FoodReviewCard = ({
       <View style={styles.reviewerHeader}>
         <Text style={styles.reviewerName}>{reviewerName}</Text>
         <View style={styles.ratingTimeContainer}>
-          <View style={styles.starsContainer}>{renderStars()}</View>
-          <Text style={styles.timeAgo}>{timeAgo}</Text>
+          <View style={styles.starsContainer}>
+            <StarRatingDisplay rating={rating} starSize={16} />
+          </View>
+          <Text style={styles.timeAgo}>{new Date(timeAgo).toLocaleDateString()}</Text>
         </View>
       </View>
 
@@ -83,9 +57,9 @@ const FoodReviewCard = ({
       <Text style={styles.reviewComment}>{reviewComment}</Text>
 
       {/* Liked Dish Summary */}
-      <Text style={styles.likedDishText}>
+      {/* <Text style={styles.likedDishText}>
         liked {likedDishCount} {likedDishCount === 1 ? 'Dish' : 'Dishes'}
-      </Text>
+      </Text> */}
 
       {/* Dish Card */}
       {dish && (
@@ -103,14 +77,14 @@ const FoodReviewCard = ({
       )}
 
       {/* Helpful Count */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.helpfulContainer}
         onPress={onHelpfulPress}
         activeOpacity={0.7}
       >
         <ThumbsUp size={14} color={colors.black} fill={colors.black} />
         <Text style={styles.helpfulText}>Helpful {helpfulCount}</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

@@ -1,7 +1,7 @@
 import messaging from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
-import { store } from '../redux/store';
-import { notificationApi } from '../redux/services/notification.service';
+import { store } from '../store';
+import { notificationApi } from './notification.service';
 
 /** Call once at app startup, outside React (e.g. in index.js or before App render). */
 export function setBackgroundMessageHandler(): void {

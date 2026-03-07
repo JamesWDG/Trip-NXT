@@ -15,6 +15,7 @@ import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import { useLazyGetPopularMenusQuery } from '../../../redux/services/restaurant.service';
 import { width } from '../../../config/constants';
+import { getLocation } from '../../../utils/loaction';
 
 const PopularFoodList = ({
   navigation,
@@ -29,7 +30,8 @@ const PopularFoodList = ({
   const fetchMenus = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await popularMenusGet(50).unwrap();
+      const location = await getLocation();
+      const res = await popularMenusGet({limit: 50, lat: location?.latitude, lng: location?.longitude}).unwrap();
       setItems(res.data?.items ?? []);
     } catch (_) {}
     finally {
@@ -117,6 +119,7 @@ const PopularFoodList = ({
           renderItem={({ item }) => (
             <View style={styles.cardWrapper}>
               <FoodCardWithBorder
+                id={item.id}
                 image={item.image || images.foodHome}
                 title={item.name}
                 category={item.category || 'Food'}

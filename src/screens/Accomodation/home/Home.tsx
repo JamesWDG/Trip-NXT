@@ -1,9 +1,12 @@
 import {
   FlatList,
+  Image,
   ImageBackground,
+  ImageSourcePropType,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { useEffect, useMemo, useState } from 'react';
@@ -28,15 +31,28 @@ import { RecommendedCard } from '../../dummyPage/DummyPage';
 import DrawerModal from '../../../components/drawerModal/DrawerModal';
 import { useNavigation } from '@react-navigation/native';
 import GeneralStyles from '../../../utils/GeneralStyles';
-import { useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
+import { useHotelForYouMutation, useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
+import { getLocation, reverseGeocode } from '../../../utils/loaction';
 
 type HotelItem = {
+  avgRating?: number;
   id?: number;
   name?: string;
   images?: string[];
   rentPerDay?: number;
   location?: { city?: string; state?: string; country?: string };
 };
+
+function matchHotelToQuery(hotel: HotelItem, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const name = (hotel?.name ?? '').toLowerCase();
+  const city = (hotel?.location?.city ?? '').toLowerCase();
+  const state = (hotel?.location?.state ?? '').toLowerCase();
+  const country = (hotel?.location?.country ?? '').toLowerCase();
+  const locationStr = [city, state, country].filter(Boolean).join(' ');
+  return name.includes(q) || city.includes(q) || state.includes(q) || country.includes(q) || locationStr.includes(q);
+}
 
 const Home = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -46,6 +62,19 @@ const Home = () => {
   const style = useMemo(() => contentContainerStyle(bottom), [bottom]);
   const [getHotels] = useLazyGetHotelsQuery();
   const [hotels, setHotels] = useState<HotelItem[]>([]);
+  const [hotelForYou, setHotelForYou] = useState<HotelItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const iconStyle = useMemo(() => iconStyles(25, 25), [height, width]);
+
+  const displayHotels = useMemo(
+    () => (searchQuery.trim() ? hotels.filter((h) => matchHotelToQuery(h, searchQuery)) : hotels),
+    [hotels, searchQuery]
+  );
+  const displayHotelForYou = useMemo(
+    () => (searchQuery.trim() ? hotelForYou.filter((h) => matchHotelToQuery(h, searchQuery)) : hotelForYou),
+    [hotelForYou, searchQuery]
+  );
+  const [getHotelForYou] = useHotelForYouMutation();
   const fetchHotels = async () => {
     setLoadingHotels(true);
     try {
@@ -57,10 +86,40 @@ const Home = () => {
       setLoadingHotels(false);
     }
   };
+  const fetchHotelForYou = async () => {
+    try {
+      const location = await getLocation();
+      const latitude = location?.latitude;
+      const longitude = location?.longitude;
+      console.log('latitude ===>', latitude);
+      console.log('longitude ===>', longitude);
+      if (latitude == null || longitude == null) {
+        console.log('hotel for you: skipping — invalid location', location);
+        return;
+      }
+      const payload = { latitude, longitude };
+      const response = await getHotelForYou(payload).unwrap();
+      console.log('response ===>', response);
+      setHotelForYou(response?.data ?? []);
+
+    } catch (error) {
+      console.log('hotel for you error ===>', error);
+    }
+  }
+  const fetchScreenData = async () => {
+    try {
+      setLoadingHotels(true);
+      await Promise.all([fetchHotels(), fetchHotelForYou()]);
+    } catch (error) {
+      console.log('fetch screen data error ===>', error);
+    }finally{
+      setLoadingHotels(false);
+    }
+  }
 
   useEffect(() => {
     const subscribe = navigation.addListener('focus', () => {
-      fetchHotels();
+      fetchScreenData();
     });
     return subscribe;
   }, []);
@@ -87,6 +146,8 @@ const Home = () => {
         <SearchWithFilters
           placeholder={labels.whatareYouLookingFor}
           navigation={navigation}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
       </ImageBackground>
 
@@ -151,7 +212,7 @@ const Home = () => {
         </ScrollView>
       ) : (
         <FlatList
-          data={hotels}
+          data={displayHotelForYou}
           keyExtractor={(item) => String(item?.id ?? Math.random())}
           contentContainerStyle={[
             GeneralStyles.flexGrow,
@@ -162,7 +223,26 @@ const Home = () => {
           ListHeaderComponent={
             <View>
               <View style={styles.listContainer}>
-                <ListWithIcon list={IconListArray} />
+                {/* <ListWithIcon list={IconListArray} /> */}
+                {
+                  IconListArray.map((item, index) => (
+                    <TouchableOpacity
+                    style={{
+                      alignItems: 'center',
+                      width: 100,
+                      paddingBottom: 10,
+                    }}
+                    onPress={() => navigation.navigate('AccomodationCategory', { category: item.title, type: 'accomodation' })}
+                  >
+                    <Image
+                      source={item.icon as ImageSourcePropType}
+                      style={iconStyle.iconStyle}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.title}>{item.title}</Text>
+                  </TouchableOpacity>
+                  ))
+                }
               </View>
 
               <View style={styles.gap}>
@@ -172,7 +252,7 @@ const Home = () => {
                   </Text>
                 </View>
                 <AccomodationCard
-                  list={hotels as any}
+                  list={displayHotels as any}
                   navigation={navigation}
                 />
               </View>
@@ -201,7 +281,7 @@ const Home = () => {
                   title={hotel?.name ?? 'Hotel'}
                   description={`$${Number(hotel?.rentPerDay ?? 0).toFixed(0)}/night`}
                   price={Number(hotel?.rentPerDay) ?? 0}
-                  rating={4.5}
+                  rating={item?.avgRating ?? 0}
                   location={locationStr}
                   onPress={() => navigation.navigate('HotelDetails', { hotel })}
                 />
@@ -225,6 +305,10 @@ const contentContainerStyle = (bottom: number) =>
       paddingBottom: bottom + 60,
     },
   });
+  const iconStyles = (height: number, width: number) =>
+    StyleSheet.create({
+      iconStyle: { height: height, width: height },
+    });
 export default Home;
 
 const styles = StyleSheet.create({
@@ -265,6 +349,9 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     marginTop: 30,
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-around'
   },
   accomodationText: {
     fontSize: 20,
@@ -364,5 +451,11 @@ const styles = StyleSheet.create({
     width: '40%',
     height: 12,
     borderRadius: 4,
+  },
+  title: {
+    fontSize: 12,
+    fontFamily: fonts.normal,
+    color: colors.black,
+    marginTop: 10,
   },
 });

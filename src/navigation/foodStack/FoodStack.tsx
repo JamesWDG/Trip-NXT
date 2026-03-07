@@ -22,6 +22,7 @@ import OrderDetail from '../../screens/Accomodation/orderDetail/OrderDetail';
 import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
 import Notifications from '../../screens/notifications/Notifications';
 import Profile from '../../screens/profile/Profile';
+import Category from '../../screens/Restaurant/category/Category';
 const FoodStackNavigator = createNativeStackNavigator();
 
 const FoodStack: FC = () => {
@@ -62,6 +63,7 @@ const FoodStack: FC = () => {
       <FoodStackNavigator.Screen name="FoodMyOrders" component={MyOrders} />
       <FoodStackNavigator.Screen name="FoodOrderDetail" component={OrderDetail} />
       <FoodStackNavigator.Screen name="FoodWishlists" component={Wishlists} />
+      <FoodStackNavigator.Screen name="FoodCategory" component={Category} />
       <FoodStackNavigator.Screen name="Dummy" component={DummyPage} />
     </FoodStackNavigator.Navigator>
   );

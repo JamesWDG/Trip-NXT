@@ -73,8 +73,9 @@ const AllHotels = () => {
 
   useEffect(() => {
     setPage(1);
+    fetchingRef.current = false;
     fetchPage(1, false);
-  }, [searchQuery]);
+  }, [searchQuery, fetchPage]);
 
   const handleSearchSubmit = useCallback(() => {
     setSearchQuery(searchInput.trim());

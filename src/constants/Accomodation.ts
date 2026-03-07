@@ -33,6 +33,7 @@ export interface owner {
 }
 
 export interface AccomodationCard {
+    avgRating?: number;
     checkInTime: string;
     checkOutTime: string;
     createdAt: string;
@@ -71,29 +72,31 @@ export interface AccomodationCard {
 export const IconListArray: IconList[] = [
     {
         id: "1",
-        icon: images.single_room,
-        title: labels.singleRoom
+        // icon: images.single_room,
+        icon: images.appartment,
+        title: 'Standard'
     },
     {
         id: "2",
-        icon: images.studios,
-        title: labels.studios
+        // icon: images.studios,
+        icon: images.single_room,
+        title: 'Budget'
     },
     {
         id: "3",
-        icon: images.appartment,
-        title: labels.appartment
+        icon: images.studios,
+        title: 'Luxury'
     },
-    {
-        id: "4",
-        icon: images.condos,
-        title: labels.condos
-    },
-    {
-        id: "5",
-        icon: images.hotel_room,
-        title: labels.hotelRoom,
-    },
+    // {
+    //     id: "4",
+    //     icon: images.condos,
+    //     title: labels.condos
+    // },
+    // {
+    //     id: "5",
+    //     icon: images.hotel_room,
+    //     title: labels.hotelRoom,
+    // },
 
 ]
 

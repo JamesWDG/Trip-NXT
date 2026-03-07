@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
   contentContainerStyle: {
     gap: 15,
     paddingLeft: 20,
+    paddingBottom: 20,
   },
   image: {
     height: 120,
@@ -64,9 +65,9 @@ const styles = StyleSheet.create({
   title: {
     marginTop: 10,
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: fonts.normal,
     color: colors.black,
-    letterSpacing: 1.1,
+    // letterSpacing: 1.1,
   },
 });

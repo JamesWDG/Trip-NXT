@@ -28,6 +28,7 @@ import Toast from 'react-native-toast-message';
 import ToastConfig from './src/config/Toast';
 import NetInfo from '@react-native-community/netinfo';
 import { useEffect, useState } from 'react';
+import { requestLocationPermissionAndPromptSettings } from './src/redux/services/locationPermission';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [isConnected, setIsConnected] = useState(true);
@@ -65,7 +66,6 @@ function AppContent() {
   const safeAreaInsets = useSafeAreaInsets();
 
   useEffect(() => {
-    const { requestLocationPermissionAndPromptSettings } = require('./src/services/locationPermission');
     requestLocationPermissionAndPromptSettings().catch(() => {});
   }, []);
 

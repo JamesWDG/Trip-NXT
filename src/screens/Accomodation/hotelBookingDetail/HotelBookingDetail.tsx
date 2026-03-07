@@ -124,8 +124,8 @@ const HotelBookingDetail = ({
     : '—';
   const locationStr = hotel.location
     ? [hotel.location.city, hotel.location.state, hotel.location.country]
-        .filter(Boolean)
-        .join(', ')
+      .filter(Boolean)
+      .join(', ')
     : '—';
   const imageSrc = hotel.images?.[0] ? { uri: hotel.images[0] } : (images.placeholder as any);
 
@@ -192,6 +192,19 @@ const HotelBookingDetail = ({
             <Text style={styles.guestSub}>{booking.guestInfo.phoneNumber ?? ''}</Text>
           </View>
         )}
+
+        {(booking.status || '').toLowerCase() !== 'cancelled' && <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.reviewButton}
+            onPress={() => {
+              console.log('hotel', hotel);
+              navigation.navigate('AddReview', { id: (hotel as any).id })
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.cancelButtonText}>Post a Review</Text>
+          </TouchableOpacity>
+        </View>}
 
         {canCancel && (
           <View style={styles.section}>
@@ -309,6 +322,13 @@ const styles = StyleSheet.create({
   guestSub: { fontFamily: fonts.normal, fontSize: 13, color: colors.c_666666, marginTop: 2 },
   cancelButton: {
     backgroundColor: colors.red ?? '#dc2626',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewButton: {
+    backgroundColor: colors.c_0162C0,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
