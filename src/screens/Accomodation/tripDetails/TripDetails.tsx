@@ -36,7 +36,7 @@ type TripDetailsProps = {
 
 const TripDetails = ({ navigation, route }: TripDetailsProps) => {
   const [reviewText, setReviewText] = useState('');
-  const [rating, setRating] = useState<number>(5);
+  const [rating, setRating] = useState<number>(0);
   const [createReview, { isLoading }] = useCreateReviewMutation();
   const itemIds = route.params?.orderItems.map(item => item.itemId);
   // const []

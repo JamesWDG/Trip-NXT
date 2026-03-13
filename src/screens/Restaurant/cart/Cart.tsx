@@ -106,6 +106,9 @@ const Cart = ({ navigation }: { navigation: NavigationProp<any> }) => {
     // Navigate to checkout screen
     console.log('Checkout pressed');
 
+    // Navigate to checkout screen
+    console.log('Checkout pressed');
+
     navigation.navigate('FoodCheckout', {
       total: paymentSummaryItems.reduce((sum, item) => sum + item.amount, 0),
       subTotal: paymentSummaryItems[0].amount,
@@ -178,8 +181,8 @@ const Cart = ({ navigation }: { navigation: NavigationProp<any> }) => {
         <View style={styles.headerContainer}>
           <FoodHeader
             onBackPress={() => navigation?.goBack()}
-            onNotificationPress={() => {}}
-            onCartPress={() => {}}
+            onNotificationPress={() => { }}
+            onCartPress={() => { }}
             onFavoritePress={() => setIsFavorite(!isFavorite)}
             isFavorite={isFavorite}
           />
@@ -195,8 +198,8 @@ const Cart = ({ navigation }: { navigation: NavigationProp<any> }) => {
       <View style={styles.headerContainer}>
         <FoodHeader
           onBackPress={() => navigation?.goBack()}
-          onNotificationPress={() => {}}
-          onCartPress={() => {}}
+          onNotificationPress={() => { }}
+          onCartPress={() => { }}
           onFavoritePress={() => setIsFavorite(!isFavorite)}
           isFavorite={isFavorite}
         />

@@ -23,6 +23,8 @@ import TripDetails from '../../screens/Accomodation/tripDetails/TripDetails';
 import Notifications from '../../screens/notifications/Notifications';
 import Profile from '../../screens/profile/Profile';
 import Category from '../../screens/Restaurant/category/Category';
+import AddNewCard from '../../screens/AddCard/AddNewCard';
+
 const FoodStackNavigator = createNativeStackNavigator();
 
 const FoodStack: FC = () => {
@@ -65,6 +67,7 @@ const FoodStack: FC = () => {
       <FoodStackNavigator.Screen name="FoodWishlists" component={Wishlists} />
       <FoodStackNavigator.Screen name="FoodCategory" component={Category} />
       <FoodStackNavigator.Screen name="Dummy" component={DummyPage} />
+      <FoodStackNavigator.Screen name="AddNewCard" component={AddNewCard} />
     </FoodStackNavigator.Navigator>
   );
 };

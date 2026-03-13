@@ -7,9 +7,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState, useMemo } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeftIcon, MapPin, Plus } from 'lucide-react-native';
+import type { SavedCardDetails } from '../../AddCard/AddNewCard';
 
 import fonts from '../../../config/fonts';
 import images from '../../../config/images';
@@ -63,6 +66,28 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
+  const [savedCard, setSavedCard] = useState<SavedCardDetails | null>(null);
+  const SELECT_CARD_ON_RETURN_KEY = 'checkoutSelectCardOnReturn';
+
+  const fetchSavedCard = useCallback(async () => {
+    try {
+      const json = await AsyncStorage.getItem('savedCardWithToken');
+      if (json) setSavedCard(JSON.parse(json));
+      else setSavedCard(null);
+    } catch {
+      setSavedCard(null);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => {
+    fetchSavedCard();
+  }, [fetchSavedCard]));
+
+
+  const handleCreditCardPress = () => {
+    navigation?.navigate('AddNewCard');
+  };
+
   const [bookingEmail, setBookingEmail] = useState('');
   const [sendEmails, setSendEmails] = useState(false);
   const [guestName, setGuestName] = useState('');
@@ -90,6 +115,8 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
     ? { uri: hotel.images[0] }
     : images.hotel_details;
   const hotelLocation = getLocationString(hotel?.location ?? null);
+
+  // console.log('saved', savedCard)
 
   const [createBooking, { isLoading: isBookingLoading }] = hotelApi.useCreateHotelBookingMutation();
 
@@ -147,8 +174,8 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
         },
       }).unwrap();
 
-      console.log(response,"responseresponseresponse");
-      
+      console.log(response, "responseresponseresponse");
+
       ShowToast('success', 'Booking created successfully!');
       navigation?.navigate('ThankYouScreen');
     } catch (err: any) {
@@ -186,13 +213,13 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
           <DateInput
             placeholder="Check In"
             value={checkInDate}
-            onPress={() => {}}
+            onPress={() => { }}
             otherStyles={styles.dateInputHalf}
           />
           <DateInput
             placeholder="Check Out"
             value={checkOutDate}
-            onPress={() => {}}
+            onPress={() => { }}
             otherStyles={styles.dateInputHalf}
           />
         </View>
@@ -266,7 +293,7 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
           <PriceDetailsCard
             items={priceItems}
             total={totalAmount}
-            // onAddMore={() => {}}
+          // onAddMore={() => {}}
           />
         </View>
 
@@ -336,32 +363,28 @@ const Checkout = ({ navigation, route }: { navigation?: any; route?: any }) => {
             />
             {paymentMethod === 'card' && (
               <View style={styles.savedCardContainer}>
-                <CreditCardDisplay
-                  cardNumber="**** 4321"
-                  expiryDate="02/27"
-                  cardType="VISA"
-                />
+                {savedCard && (
+                  <CreditCardDisplay
+                    cardNumber={`•••• ${savedCard.last4}`}
+                    expiryDate={`${savedCard.expiryMonth}/${savedCard.expiryYear}`}
+                    cardType={savedCard.brand}
+                  />
+                )}
+
               </View>
+
             )}
-          </View>
-          <View
-            style={{
-              marginTop: 20,
-            }}
-          >
-            {paymentMethod === 'card' && (
-              <CreditCardDisplay
-                cardNumber=""
-                expiryDate=""
-                cardType=""
-                onAddNew={() => {
-                  console.log('Add new card');
-                }}
-              />
-            )}
+
           </View>
         </View>
-
+        {paymentMethod === 'card' && (
+          <CreditCardDisplay
+            cardNumber=""
+            expiryDate=""
+            cardType=""
+            onAddNew={handleCreditCardPress}
+          />
+        )}
         {/* Manage Your Booking */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Manage Your Booking</Text>

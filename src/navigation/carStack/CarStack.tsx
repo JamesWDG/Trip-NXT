@@ -20,7 +20,9 @@ import MyBookings from '../../screens/Ride/myBookings/MyBookings';
 import Notifications from '../../screens/notifications/Notifications';
 import BookARide from '../../screens/Ride/bookARide/BookARide';
 import FindARider from '../../screens/Ride/findARider/FindARider';
+import AddNewCard from '../../screens/AddCard/AddNewCard';
 // import MyBookings from '../../screens/Ride/myBookings/MyBookings';
+
 const CarStackNavigator = createNativeStackNavigator();
 
 const CarStack: FC = () => {
@@ -78,6 +80,7 @@ const CarStack: FC = () => {
       />
       <CarStackNavigator.Screen name="SaveAddress" component={SaveAddress} />
       <CarStackNavigator.Screen name="Dummy" component={DummyPage} />
+      <CarStackNavigator.Screen name="AddNewCard" component={AddNewCard} />
     </CarStackNavigator.Navigator>
   );
 };
