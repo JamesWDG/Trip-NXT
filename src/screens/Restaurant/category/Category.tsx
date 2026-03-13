@@ -171,7 +171,8 @@ const Category = ({ navigation, route }: { navigation: any; route?: any }) => {
                     image={menuItem.image || images.foodHome}
                     title={menuItem.name}
                     category={menuItem.category || 'Food'}
-                    rating={0}
+                    rating={menuItem.avgRating as number || 0}
+                    reviewCount={menuItem.reviewCount || 0}
                     price={menuItem.price}
                     id={menuItem?.id}
                     hasFreeship={false}
@@ -183,7 +184,7 @@ const Category = ({ navigation, route }: { navigation: any; route?: any }) => {
                         image: menuItem.image || '',
                         description: menuItem.description || '',
                         category: menuItem.category || '',
-                        toppings: [],
+                        toppings: menuItem.toppings || [],
                         wishlistId: menuItem.wishlistId ?? null,
                       })
                     }

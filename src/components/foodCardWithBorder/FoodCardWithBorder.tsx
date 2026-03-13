@@ -11,6 +11,8 @@ import FastImage from 'react-native-fast-image';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import { useWishList } from '../../hooks/useWishlist';
+import { RootState } from '../../redux/store';
+import { useSelector } from 'react-redux';
 
 interface FoodCardWithBorderProps {
   id: number;
@@ -41,8 +43,9 @@ const FoodCardWithBorder = ({
   cb,
   reviewCount,
 }: FoodCardWithBorderProps) => {
-  
+  const currency = useSelector((state: RootState) => state.settings?.currency) ?? 'USD';
   const { wishlist, handleAddToWishlist } = useWishList({ initialWishlist: initialFavorite, dishId: id, type: 'dish', cb });
+
   // const favorite = useMemo(()=>{
   //   return isFavorite || initialFavorite;
   // },[isFavorite, initialFavorite])
@@ -93,11 +96,13 @@ const FoodCardWithBorder = ({
           <View style={styles.ratingContainer}>
             <Star size={14} color={colors.c_F47E20} fill={colors.c_F47E20} />
             <Text style={styles.rating}>{rating}</Text>
-            {reviewCount && <Text style={styles.reviewCount}>({reviewCount})</Text>}
+            {reviewCount != null && reviewCount > 0 ? (
+              <Text style={styles.reviewCount}>({reviewCount})</Text>
+            ) : null}
           </View>
         </View>
         <View style={styles.priceContainer}>
-          <Text style={styles.price}>${price}</Text>
+          <Text style={styles.price}>{currency === 'USD' ? '$' : '₦'}{price}</Text>
           {hasFreeship && (
             <View style={styles.freeshipTag}>
               <Text style={styles.freeshipText}>Freeship</Text>

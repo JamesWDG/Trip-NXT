@@ -14,6 +14,8 @@ import images from '../../../config/images';
 import { RecommendedCard } from '../../dummyPage/DummyPage';
 import { useLazyGetFilteredHotelsQuery } from '../../../redux/services/hotel.service';
 import type { AccomodationCard } from '../../../constants/Accomodation';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 export type HotelFilterParams = {
   city?: string;
@@ -32,8 +34,10 @@ const HotelSearchResults = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const filters = route?.params?.filters as HotelFilterParams | undefined;
+  const { currency } = useSelector((state: RootState) => state.settings);
 
-  const [trigger, { data, isLoading, isError }] = useLazyGetFilteredHotelsQuery();
+  const [trigger, { data, isLoading, isError }] =
+    useLazyGetFilteredHotelsQuery();
 
   useEffect(() => {
     if (filters) {
@@ -51,7 +55,7 @@ const HotelSearchResults = () => {
     (hotel: AccomodationCard) => {
       navigation.navigate('HotelDetails', { hotel });
     },
-    [navigation]
+    [navigation],
   );
 
   const renderItem = useCallback(
@@ -68,42 +72,58 @@ const HotelSearchResults = () => {
         <RecommendedCard
           image={imageSrc}
           title={item.name ?? 'Hotel'}
-          description={`$${Number(item.rentPerDay ?? 0).toFixed(0)}/night`}
-          price={Number(item.rentPerDay ?? 0)}
-          rating={4.5}
+          description={`${currency === 'USD' ? '$' : '₦'} ${
+            currency === 'USD'
+              ? Number(item.rentPerDay ?? 0).toFixed(4)
+              : Number(item.rentPerDay ?? 0).toFixed(2)
+          }/night`}
+          price={currency === 'USD' ? Number(item.rentPerDay ?? 0).toFixed(4) : Number(item.rentPerDay ?? 0).toFixed(2)}
+          rating={item.avgRating ?? 0}
           location={locationStr}
           onPress={() => handleHotelPress(item as AccomodationCard)}
         />
       );
     },
-    [handleHotelPress]
+    [handleHotelPress],
   );
 
   const keyExtractor = useCallback((item: any) => String(item.id), []);
 
   if (!filters) {
     return (
-      <WrapperContainer title="Search Results" onBackPress={() => navigation?.goBack()}>
+      <WrapperContainer
+        title="Search Results"
+        onBackPress={() => navigation?.goBack()}
+      >
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>No filters applied. Go back and search.</Text>
+          <Text style={styles.emptyText}>
+            No filters applied. Go back and search.
+          </Text>
         </View>
       </WrapperContainer>
     );
   }
 
   return (
-    <WrapperContainer title="Search Results" onBackPress={() => navigation?.goBack()}>
+    <WrapperContainer
+      title="Search Results"
+      onBackPress={() => navigation?.goBack()}
+    >
       {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.c_0162C0} />
         </View>
       ) : isError ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>Unable to load results. Try again.</Text>
+          <Text style={styles.emptyText}>
+            Unable to load results. Try again.
+          </Text>
         </View>
       ) : hotelList.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>No hotels found for your filters.</Text>
+          <Text style={styles.emptyText}>
+            No hotels found for your filters.
+          </Text>
         </View>
       ) : (
         <FlatList

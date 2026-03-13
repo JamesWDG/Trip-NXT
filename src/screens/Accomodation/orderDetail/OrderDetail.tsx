@@ -18,6 +18,8 @@ import {
   useGetSingleOrderQuery,
   useUpdateOrderStatusMutation,
 } from '../../../redux/services/restaurant.service';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 export type OrderItemType = {
   id: number;
@@ -59,18 +61,29 @@ export type OrderType = {
   };
 };
 
-const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) => {
-  const orderId = (route?.params?.orderId ?? route?.params?.order?.id) as number | undefined;
+const OrderDetail = ({
+  navigation,
+  route,
+}: {
+  navigation?: any;
+  route?: any;
+}) => {
+  const orderId = (route?.params?.orderId ?? route?.params?.order?.id) as
+    | number
+    | undefined;
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successPopupStatus, setSuccessPopupStatus] = useState('');
-
-  const { data: orderResponse, isLoading, isError, refetch: refetchOrder } = useGetSingleOrderQuery(
-    orderId ?? 0,
-    { skip: !orderId }
-  );
+  const { currency } = useSelector((state: RootState) => state.settings);
+  const {
+    data: orderResponse,
+    isLoading,
+    isError,
+    refetch: refetchOrder,
+  } = useGetSingleOrderQuery(orderId ?? 0, { skip: !orderId });
   const order = (orderResponse?.data ?? orderResponse) as OrderType | undefined;
 
-  const [updateOrderStatus, { isLoading: isUpdating }] = useUpdateOrderStatusMutation();
+  const [updateOrderStatus, { isLoading: isUpdating }] =
+    useUpdateOrderStatusMutation();
   const { refetch: refetchOrders } = useGetOrdersByUserIdQuery({});
 
   const handleUpdateStatus = useCallback(
@@ -91,7 +104,13 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
         ShowToast('error', e?.data?.message ?? 'Failed to update status');
       }
     },
-    [orderId, order?.restaurantId, updateOrderStatus, refetchOrder, refetchOrders]
+    [
+      orderId,
+      order?.restaurantId,
+      updateOrderStatus,
+      refetchOrder,
+      refetchOrders,
+    ],
   );
 
   const handleCancelOrder = useCallback(async () => {
@@ -101,7 +120,10 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
 
   if (!orderId) {
     return (
-      <WrapperContainer title="Order Detail" onBackPress={() => navigation?.goBack()}>
+      <WrapperContainer
+        title="Order Detail"
+        onBackPress={() => navigation?.goBack()}
+      >
         <View style={styles.centered}>
           <Text style={styles.emptyText}>Order not found</Text>
         </View>
@@ -111,7 +133,10 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
 
   if (isLoading && !order) {
     return (
-      <WrapperContainer title="Order Detail" onBackPress={() => navigation?.goBack()}>
+      <WrapperContainer
+        title="Order Detail"
+        onBackPress={() => navigation?.goBack()}
+      >
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.c_0162C0} />
         </View>
@@ -121,7 +146,10 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
 
   if (isError || !order) {
     return (
-      <WrapperContainer title="Order Detail" onBackPress={() => navigation?.goBack()}>
+      <WrapperContainer
+        title="Order Detail"
+        onBackPress={() => navigation?.goBack()}
+      >
         <View style={styles.centered}>
           <Text style={styles.emptyText}>Order not found</Text>
         </View>
@@ -132,11 +160,16 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
   const restaurant = order.restaurant ?? {};
   const deliveryLocation = order.deliveryAddress?.location ?? '—';
   const orderDate = order.createdAt
-    ? new Date(order.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })
+    ? new Date(order.createdAt).toLocaleDateString(undefined, {
+        dateStyle: 'medium',
+      })
     : '—';
 
   return (
-    <WrapperContainer title="Order Details" onBackPress={() => navigation?.goBack()}>
+    <WrapperContainer
+      title="Order Details"
+      onBackPress={() => navigation?.goBack()}
+    >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -145,13 +178,17 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
         <View style={styles.restaurantCard}>
           <Image
             source={
-              restaurant.logo ? { uri: restaurant.logo } : (images.placeholder as any)
+              restaurant.logo
+                ? { uri: restaurant.logo }
+                : (images.placeholder as any)
             }
             style={styles.restaurantLogo}
             resizeMode="cover"
           />
           <View style={styles.restaurantInfo}>
-            <Text style={styles.restaurantName}>{restaurant.name ?? 'Restaurant'}</Text>
+            <Text style={styles.restaurantName}>
+              {restaurant.name ?? 'Restaurant'}
+            </Text>
             <Text style={styles.orderIdText}>Order #{order.id}</Text>
             <Text style={styles.statusText}>{order.status}</Text>
             <Text style={styles.dateText}>{orderDate}</Text>
@@ -165,7 +202,7 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Items</Text>
-          {(order.items ?? []).map((row) => (
+          {(order.items ?? []).map(row => (
             <View key={row.id} style={styles.itemRow}>
               <Image
                 source={
@@ -179,7 +216,11 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
               <View style={styles.itemDetails}>
                 <Text style={styles.itemName}>{row.item?.name ?? 'Item'}</Text>
                 <Text style={styles.itemMeta}>
-                  {row.quantity} × ${Number(row.item?.price ?? 0).toFixed(2)} = $
+                  {row.quantity} × {currency === 'USD' ? '$' : '₦'}{' '}
+                  {currency === 'USD'
+                    ? Number(row.item?.price ?? 0).toFixed(4)
+                    : Number(row.item?.price ?? 0).toFixed(2)}{' '}
+                  = {currency === 'USD' ? '$' : '₦'}
                   {(row.quantity * Number(row.item?.price ?? 0)).toFixed(2)}
                 </Text>
               </View>
@@ -191,23 +232,43 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
           <Text style={styles.sectionTitle}>Price Summary</Text>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>${Number(order.subTotal).toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>
+              {currency === 'USD' ? '$' : '₦'}{' '}
+              {currency === 'USD'
+                ? Number(order.subTotal).toFixed(4)
+                : Number(order.subTotal).toFixed(2)}
+            </Text>
           </View>
           {order.tax != null && Number(order.tax) > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tax</Text>
-              <Text style={styles.summaryValue}>${Number(order.tax).toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>
+                {currency === 'USD' ? '$' : '₦'}{' '}
+                {currency === 'USD'
+                  ? Number(order.tax).toFixed(4)
+                  : Number(order.tax).toFixed(2)}
+              </Text>
             </View>
           )}
           {order.deliveryFee != null && Number(order.deliveryFee) > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery Fee</Text>
-              <Text style={styles.summaryValue}>${Number(order.deliveryFee).toFixed(2)}</Text>
+              <Text style={styles.summaryValue}>
+                {currency === 'USD' ? '$' : '₦'}{' '}
+                {currency === 'USD'
+                  ? Number(order.deliveryFee).toFixed(4)
+                  : Number(order.deliveryFee).toFixed(2)}
+              </Text>
             </View>
           )}
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>${Number(order.totalAmount).toFixed(2)}</Text>
+            <Text style={styles.totalValue}>
+              {currency === 'USD' ? '$' : '₦'}{' '}
+              {currency === 'USD'
+                ? Number(order.totalAmount).toFixed(4)
+                : Number(order.totalAmount).toFixed(2)}
+            </Text>
           </View>
         </View>
 
@@ -225,7 +286,12 @@ const OrderDetail = ({ navigation, route }: { navigation?: any; route?: any }) =
                   <Text style={styles.statusButtonText}>Cancelling...</Text>
                 </View>
               ) : (
-                <Text style={[styles.statusButtonText, styles.statusButtonTextDanger]}>
+                <Text
+                  style={[
+                    styles.statusButtonText,
+                    styles.statusButtonTextDanger,
+                  ]}
+                >
                   Cancel Order
                 </Text>
               )}

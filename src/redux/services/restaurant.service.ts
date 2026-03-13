@@ -5,14 +5,15 @@ import { baseApi } from "./api";
 export const restaurantApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         restaurantGet: builder.query({
-            query: (args: number | { page: number; limit?: number, search?: string, lat?: number, lng?: number }) => {
+            query: (args: number | { page: number; limit?: number, search?: string, lat?: number, lng?: number, city?: string }) => {
                 const page = typeof args === 'number' ? args : args.page;
                 const limit = typeof args === 'number' ? undefined : args.limit;
                 const search = typeof args === 'number' ? undefined : args.search;
                 const lat = typeof args === 'number' ? undefined : args.lat;
                 const lng = typeof args === 'number' ? undefined : args.lng;
+                const city = typeof args === 'number' ? undefined : args.city;
                 return {
-                    url: endpoint.RESTAURANT_GET(page, limit, search || '', lat, lng),
+                    url: endpoint.RESTAURANT_GET(page, limit, search || '', lat, lng, city),
                     method: 'GET',
                 };
             },
@@ -65,7 +66,7 @@ export const restaurantApi = baseApi.injectEndpoints({
             })
         }),
         getPopularMenus: builder.query({
-            query: (params: {limit: number, lat: number, lng: number}) => ({
+            query: (params: {limit: number, lat: number, lng: number,city?: string}) => ({
                 url: endpoint.MENU_POPULAR,
                 method: 'GET',
                 invalidatesTags: ['Menu'],

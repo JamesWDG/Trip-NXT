@@ -12,6 +12,8 @@ import { Minus, Plus, PlusIcon, Star, Trash } from 'lucide-react-native';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import FastImage from 'react-native-fast-image';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 interface CartItemCardProps {
   image: ImageSourcePropType | string;
@@ -45,6 +47,7 @@ const CartItemCard = ({
   onDelete,
   topping,
 }: CartItemCardProps) => {
+  const {currency} = useSelector((state: RootState) => state.settings);
   const handleDecrease = () => {
     if (quantity > 1) {
       onQuantityChange(quantity - 1);
@@ -79,18 +82,18 @@ const CartItemCard = ({
             topping.length > 0 && topping.map((item) => (
               <View key={item.id} style={styles.toppingContainer}>
                 <Text style={styles.toppingText}>{item.name}</Text>
-                <Text style={styles.toppingPrice}>+${item.price.toFixed(1)}</Text>
+                <Text style={styles.toppingPrice}>+{currency === 'USD' ? '$' : '₦'} {currency === 'USD' ? item.price.toFixed(4) : item.price.toFixed(2)}</Text>
               </View>
 
             ))
           }
         </View>
-        <Text style={styles.price}>${price.toFixed(1)}</Text>
+        <Text style={styles.price}>{currency === 'USD' ? '$' : '₦'} {currency === 'USD' ? price.toFixed(4) : price.toFixed(2)}</Text>
         <View style={styles.ratingAndQuantityContainer}>
           <View style={styles.ratingContainer}>
-            <Star size={14} color="#FFD700" fill="#FFD700" />
+            {/* <Star size={14} color="#FFD700" fill="#FFD700" />
             <Text style={styles.rating}>{rating}</Text>
-            <Text style={styles.reviewCount}>({reviewCount} reviews)</Text>
+            <Text style={styles.reviewCount}>({reviewCount} reviews)</Text> */}
           </View>
           <View style={styles.quantityContainer}>
             <TouchableOpacity

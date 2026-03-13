@@ -7,10 +7,12 @@ import '../services/hotel.service';
 import '../services/cab.service';
 import '../services/notification.service';
 import locationReducer from '../slices/locationSlice';
+import settingsReducer from '../slices/settingsSlice';
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   auth: authReducer,
   location: locationReducer,
+  settings: settingsReducer,
 });
 
 const persistConfig: PersistConfig<RootState> = {

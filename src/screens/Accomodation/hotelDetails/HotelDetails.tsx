@@ -22,6 +22,8 @@ import { RouteProp, useNavigation } from '@react-navigation/native';
 import { AccomodationCard } from '../../../constants/Accomodation';
 import { useWishList } from '../../../hooks/useWishlist';
 import { ShowToast } from '../../../config/constants';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const HotelDetails = ({
   navigation,
@@ -36,6 +38,7 @@ const HotelDetails = ({
     hotelId: route.params?.hotel?.id,
     type: 'hotel',
   });
+  const {currency} = useSelector((state: RootState) => state.settings);
   const nav = useNavigation<any>();
 
   const wishlistButtonStyles = useMemo(() => {
@@ -119,7 +122,7 @@ const HotelDetails = ({
           >
             <IntroCard
               name={route.params?.hotel?.owner?.name}
-              rating={route.params?.hotel?.rating || 10}
+              rating={route.params?.hotel?.avgRating || 10}
               reviews={11}
               yearsHosting={10}
               image={route.params?.hotel?.owner?.profilePicture}

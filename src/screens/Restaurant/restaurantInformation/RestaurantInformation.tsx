@@ -21,6 +21,8 @@ import { useLazyGetFeaturedItemsQuery, useLazyRestaurantGetMenuQuery } from '../
 import { height, ShowToast, width } from '../../../config/constants';
 import { MenuItem, RestaurantMenu } from '../../../constants/Food';
 import RestaurantInformationSkeleton from '../../../components/restaurantInformationSkeleton/RestaurantInformationSkeleton';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const getLocationDisplay = (loc: string | object | null | undefined): string => {
   if (loc == null) return '';
@@ -56,6 +58,7 @@ const RestaurantInformation: FC<{
     const contentStyles = useMemo(() => makeContentStyles(top), [top]);
     const [getRestaurantMenu] = useLazyRestaurantGetMenuQuery();
     const [getFeaturedItems] = useLazyGetFeaturedItemsQuery();
+    const {currency} = useSelector((state: RootState) => state.settings);
     const [restaurantMenu, setRestaurantMenu] = useState<RestaurantMenu | null>({
       banner: route.params?.banner,
       cheapestItem: {
@@ -214,7 +217,7 @@ const RestaurantInformation: FC<{
                 </View>
                 <View style={styles.infoTextContainer}>
                   <View style={styles.priceContainer}>
-                    <Text style={styles.infoValue}>${restaurantMenu?.cheapestItem?.price || 0}</Text>
+                    <Text style={styles.infoValue}>{currency === 'USD' ? '$' : '₦'} {restaurantMenu?.cheapestItem?.price || 0}</Text>
                   </View>
                   <Text style={styles.infoLabel}>From just</Text>
                 </View>

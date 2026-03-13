@@ -19,7 +19,6 @@ import {
   CarFront,
   Star as StarIcon,
 } from 'lucide-react-native';
-import ImageWithCard from '../../components/imageWithCard/ImageWithCard';
 
 const DummyPage = () => {
   return (
@@ -54,6 +53,7 @@ export const RecommendedCard = ({
   description,
   price,
   rating,
+  showRating = true,
   location,
   onPress,
   otherStyles,
@@ -61,8 +61,9 @@ export const RecommendedCard = ({
   image: string;
   title: string;
   description: string;
-  price: number;
-  rating: number;
+  price: number | string;
+  rating?: number;
+  showRating?: boolean;
   location: string;
   onPress: () => void;
   otherStyles?: StyleProp<ViewStyle>;
@@ -88,10 +89,12 @@ export const RecommendedCard = ({
           <Text style={styles.description} numberOfLines={1}>
             {description}
           </Text>
-          <View style={styles.ratingContainer}>
-            <Image source={images.star} style={{ width: 10, height: 10 }} />
-            <Text style={styles.rating}>{rating}</Text>
-          </View>
+          {showRating && (
+            <View style={styles.ratingContainer}>
+              <Image source={images.star} style={{ width: 10, height: 10 }} />
+              <Text style={styles.rating}>{rating}</Text>
+            </View>
+          )}
         </View>
         <View style={styles.featuresContainer}>
           <View style={styles.featureItem}>

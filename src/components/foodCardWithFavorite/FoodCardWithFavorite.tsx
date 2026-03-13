@@ -11,6 +11,8 @@ import FastImage from 'react-native-fast-image';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import { width } from '../../config/constants';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 interface FoodCardWithFavoriteProps {
   image: ImageSourcePropType | string;
@@ -36,6 +38,7 @@ const FoodCardWithFavorite = ({
   showFavorite = true,
 }: FoodCardWithFavoriteProps) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
+  const {currency} = useSelector((state: RootState) => state.settings);
 
   const handleHeartPress = () => {
     const newFavoriteState = !isFavorite;
@@ -90,7 +93,7 @@ const FoodCardWithFavorite = ({
             <Text style={styles.reviewCount}>({reviewCount} reviews)</Text>
           </View>
         </View>
-        <Text style={styles.price}>${price.toFixed(1)}</Text>
+        <Text style={styles.price}>{currency === 'USD' ? '$' : '₦'} {price.toFixed(1)}</Text>
       </View>
     </TouchableOpacity>
   );

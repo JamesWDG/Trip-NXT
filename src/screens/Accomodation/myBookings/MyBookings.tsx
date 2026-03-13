@@ -1,9 +1,4 @@
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import colors from '../../../config/colors';
@@ -16,6 +11,8 @@ import FoodItemCard from '../../../components/foodItemCard/FoodItemCard';
 import { useGetOrdersByUserIdQuery } from '../../../redux/services/restaurant.service';
 import { useGetHotelBookingsForUserQuery } from '../../../redux/services/hotel.service';
 import fonts from '../../../config/fonts';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const TAB_INDEX_HOTELS = 0;
 const TAB_INDEX_FOODS = 1;
@@ -87,15 +84,19 @@ type Order = {
 const MyBookings = () => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState(TAB_INDEX_HOTELS);
-
-  const { data: orderResponse, isLoading: isLoadingOrders, refetch: refetchOrders } = useGetOrdersByUserIdQuery(
-    {},
-    { skip: activeTab !== TAB_INDEX_FOODS }
-  );
-  const { data: hotelBookingsData, isLoading: isLoadingHotels, refetch: refetchHotelBookings } = useGetHotelBookingsForUserQuery(
-    undefined,
-    { skip: activeTab !== TAB_INDEX_HOTELS }
-  );
+  const { currency } = useSelector((state: RootState) => state.settings);
+  const {
+    data: orderResponse,
+    isLoading: isLoadingOrders,
+    refetch: refetchOrders,
+  } = useGetOrdersByUserIdQuery({}, { skip: activeTab !== TAB_INDEX_FOODS });
+  const {
+    data: hotelBookingsData,
+    isLoading: isLoadingHotels,
+    refetch: refetchHotelBookings,
+  } = useGetHotelBookingsForUserQuery(undefined, {
+    skip: activeTab !== TAB_INDEX_HOTELS,
+  });
 
   const ordersGrouped = useMemo((): Order[] => {
     const raw = orderResponse?.data ?? orderResponse;
@@ -124,58 +125,69 @@ const MyBookings = () => {
     (booking: HotelBookingItem) => {
       navigation.navigate('HotelBookingDetail', { bookingId: booking.id });
     },
-    [navigation]
+    [navigation],
   );
 
   const renderHotelItem = useCallback(
     ({ item }: { item: HotelBookingItem }) => {
       const hotel = item.hotel;
-      const imageSrc =
-        hotel?.images?.[0] ? { uri: hotel.images[0] } : (images.recommended_accomodation as any);
+      const imageSrc = hotel?.images?.[0]
+        ? { uri: hotel.images[0] }
+        : (images.recommended_accomodation as any);
       const locationStr = hotel?.location
-        ? [hotel.location.city, hotel.location.state, hotel.location.country].filter(Boolean).join(', ')
+        ? [hotel.location.city, hotel.location.state, hotel.location.country]
+            .filter(Boolean)
+            .join(', ')
         : '—';
       return (
         <RecommendedCard
+          showRating={false}
           image={imageSrc}
           title={hotel?.name ?? 'Hotel'}
-          description={`$${Number(hotel?.rentPerDay ?? 0).toFixed(0)}/night`}
-          price={Number(item.totalAmount) ?? 0}
-          rating={4.5}
+          description={`${currency === 'USD' ? '$' : '₦'} ${
+            currency === 'USD'
+              ? Number(hotel?.rentPerDay ?? 0).toFixed(6)
+              : Number(hotel?.rentPerDay ?? 0).toFixed(2)
+          }/night`}
+          price={currency === 'USD' ? Number(item.totalAmount ?? 0).toFixed(6) : Number(item.totalAmount ?? 0).toFixed(2)}
+          // rating={4.5}
           location={locationStr || '—'}
           onPress={() => handleHotelBookingPress(item)}
         />
       );
     },
-    [handleHotelBookingPress]
+    [handleHotelBookingPress],
   );
 
   const handleOrderPress = useCallback(
     (order: Order) => {
       navigation.navigate('OrderDetail', { orderId: order.id });
     },
-    [navigation]
+    [navigation],
   );
 
   const renderOrderItem = useCallback(
     ({ item }: { item: Order }) => {
       const firstItem = item.items?.[0]?.item;
-      const imageSrc =
-        firstItem?.image
-          ? { uri: firstItem.image }
-          : item.restaurant?.logo
-            ? { uri: item.restaurant.logo }
-            : (images.newly_opened ?? images.placeholder);
+      const imageSrc = firstItem?.image
+        ? { uri: firstItem.image }
+        : item.restaurant?.logo
+        ? { uri: item.restaurant.logo }
+        : images.newly_opened ?? images.placeholder;
       const itemSummary =
         item.items?.length > 1
           ? `${item.items[0].item?.name} +${item.items.length - 1} more`
           : firstItem?.name ?? 'Order';
-      const deliveryLocation = item.deliveryAddress?.location ?? item.restaurant?.name ?? '';
+      const deliveryLocation =
+        item.deliveryAddress?.location ?? item.restaurant?.name ?? '';
       return (
         <FoodItemCard
+          showRating={false}
           image={imageSrc as any}
           title={item.restaurant?.name ?? `Order #${item.id}`}
-          description={`${item.status} · ${itemSummary}${deliveryLocation ? ` · ${deliveryLocation}` : ''}`}
+          description={`${item.status} · ${itemSummary}${
+            deliveryLocation ? ` · ${deliveryLocation}` : ''
+          }`}
           price={Number(item.totalAmount) ?? 0}
           rating={0}
           reviewCount={0}
@@ -183,24 +195,20 @@ const MyBookings = () => {
         />
       );
     },
-    [handleOrderPress]
+    [handleOrderPress],
   );
 
   const keyExtractorHotels = useCallback(
     (item: HotelBookingItem) => String(item.id),
-    []
+    [],
   );
-  const keyExtractorOrders = useCallback(
-    (item: Order) => String(item.id),
-    []
-  );
-
-
+  const keyExtractorOrders = useCallback((item: Order) => String(item.id), []);
 
   return (
-    <WrapperContainer title="My Bookings" navigation={navigation}
- 
-    onBackPress={()=> navigation.goBack()}
+    <WrapperContainer
+      title="My Bookings"
+      navigation={navigation}
+      onBackPress={() => navigation.goBack()}
     >
       <View style={styles.mainContainer}>
         <AccomodationTabButtons
@@ -219,7 +227,7 @@ const MyBookings = () => {
                 backgroundColor={colors.c_F3F3F3}
                 highlightColor={colors.c_DDDDDD}
               >
-                {[1, 2, 3, 4].map((i) => (
+                {[1, 2, 3, 4].map(i => (
                   <View key={i} style={styles.skeletonHotelCard}>
                     <View style={styles.skeletonHotelImage} />
                     <View style={styles.skeletonHotelBody}>
@@ -257,7 +265,7 @@ const MyBookings = () => {
                 backgroundColor={colors.c_F3F3F3}
                 highlightColor={colors.c_DDDDDD}
               >
-                {[1, 2, 3, 4].map((i) => (
+                {[1, 2, 3, 4].map(i => (
                   <View key={i} style={styles.skeletonOrderCard}>
                     <View style={styles.skeletonOrderImage} />
                     <View style={styles.skeletonOrderBody}>

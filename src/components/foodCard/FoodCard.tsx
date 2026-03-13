@@ -1,17 +1,15 @@
 import {
   FlatList,
-  ImageSourcePropType,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
-import { AccomodationCard as AccomodationCardType } from '../../constants/Accomodation';
 import FastImage from 'react-native-fast-image';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import { FoodListCardType } from '../../constants/Food';
+
 interface Params {
   list: FoodListCardType[];
   navigation?: any;

@@ -10,8 +10,12 @@ const baseQuery = fetchBaseQuery({
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as RootState;
     const token = state.auth?.token;
+    const region = state.settings?.currency;
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
+    }
+    if (region) {
+      headers.set('region', region);
     }
     return headers;
   },

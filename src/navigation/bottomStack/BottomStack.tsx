@@ -8,6 +8,7 @@ import CarStack from '../carStack/CarStack';
 import FoodStack from '../foodStack/FoodStack';
 import ProfileStack from '../profileStack/ProfileStack';
 import EditProfile from '../../screens/editProfile/EditProfile';
+import ChooseCurrency from '../../screens/settings/ChooseCurrency';
 import { useLazyGetUserQuery } from '../../redux/services/authService';
 import { useDispatch } from 'react-redux';
 import { saveCredentials } from '../../redux/slices/authSlice';
@@ -60,6 +61,11 @@ const BottomStack: FC = () => {
       <Tab.Screen name="Food" component={FoodStack} />
       <Tab.Screen name="Profile" component={ProfileStack} />
       <Tab.Screen name="EditProfile" component={EditProfile} />
+      <Tab.Screen
+        name="ChooseCurrency"
+        component={ChooseCurrency}
+        options={{ tabBarButton: () => null }}
+      />
       <Tab.Screen name="Main" component={AppStack} />
     </Tab.Navigator>
   );

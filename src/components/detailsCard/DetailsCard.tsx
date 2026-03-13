@@ -4,7 +4,9 @@ import StarRating from 'react-native-star-rating-widget';
 import fonts from '../../config/fonts';
 import colors from '../../config/colors';
 import IconCard from '../iconCard/IconCard';
-import { HotelFeature} from '../../constants/Accomodation';
+import { HotelFeature } from '../../constants/Accomodation';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 interface Params {
   reviews: number;
@@ -35,8 +37,10 @@ const DetailsCard = ({
   roomType,
 }: Params) => {
   const roomTypeLabel = roomType
-    ? String(roomType).charAt(0).toUpperCase() + String(roomType).slice(1).toLowerCase()
+    ? String(roomType).charAt(0).toUpperCase() +
+      String(roomType).slice(1).toLowerCase()
     : null;
+  const { currency } = useSelector((state: RootState) => state.settings);
 
   return (
     <View style={styles.container}>
@@ -50,8 +54,8 @@ const DetailsCard = ({
       </View>
       <View style={styles.priceContainer}>
         <View>
-          <Text style={styles.price}> Rent per day: ${rentPerDay}</Text>
-          <Text style={styles.price}> Rent per hour: ${rentPerHour}</Text>
+          <Text style={styles.price}> Rent per day: {currency === 'USD' ? '$' : '₦'} {rentPerDay.toFixed(2)}</Text>
+          <Text style={styles.price}> Rent per hour: {currency === 'USD' ? '$' : '₦'} {rentPerHour.toFixed(2)}</Text>
           <View style={styles.locationContainer}>
             <MapPin size={12} />
             <Text style={styles.location}>{location}</Text>
