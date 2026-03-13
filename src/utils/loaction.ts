@@ -28,7 +28,7 @@ export const getLocation = async (): Promise<{
 export const reverseGeocode = async (latitude: number, longitude: number) => {
   try {
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=YOUR_API_KEY`,
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyD28UEoebX1hKscL3odt2TiTRVfe5SSpwE`,
     );
 
     const data = await response.json();
@@ -38,6 +38,7 @@ export const reverseGeocode = async (latitude: number, longitude: number) => {
     }
 
     const result = data.results[0];
+    console.log('result ===>', result);
 
     const city =
       result.address_components.find((component: any) =>

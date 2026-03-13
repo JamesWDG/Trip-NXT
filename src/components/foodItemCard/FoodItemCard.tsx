@@ -10,6 +10,8 @@ import React from 'react';
 import { Heart, Star } from 'lucide-react-native';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 interface FoodItemCardProps {
   image: ImageSourcePropType;
@@ -21,6 +23,7 @@ interface FoodItemCardProps {
   onPress?: () => void;
   onRemove?: () => void;
   isFavorite?: boolean;
+  showRating?: boolean;
 }
 
 const FoodItemCard = ({
@@ -33,7 +36,9 @@ const FoodItemCard = ({
   onPress,
   onRemove,
   isFavorite = false,
+  showRating = true,
 }: FoodItemCardProps) => {
+  const { currency } = useSelector((state: RootState) => state.settings);
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -49,12 +54,17 @@ const FoodItemCard = ({
           <Text style={styles.description} numberOfLines={2}>
             {description}
           </Text>
-          <Text style={styles.price}>${price.toFixed(1)}</Text>
-          <View style={styles.ratingContainer}>
-            <Star size={16} color={colors.c_F47E20} fill={colors.c_F47E20} />
-            <Text style={styles.rating}>{rating}</Text>
-            <Text style={styles.reviewCount}>({reviewCount} reviews)</Text>
-          </View>
+          <Text style={styles.price}>
+            {currency === 'USD' ? '$' : '₦'}{' '}
+            {currency === 'USD' ? price.toFixed(4) : price.toFixed(2)}
+          </Text>
+          {showRating && (
+            <View style={styles.ratingContainer}>
+              <Star size={16} color={colors.c_F47E20} fill={colors.c_F47E20} />
+              <Text style={styles.rating}>{rating}</Text>
+              <Text style={styles.reviewCount}>({reviewCount} reviews)</Text>
+            </View>
+          )}
         </View>
       </TouchableOpacity>
       {onRemove && (

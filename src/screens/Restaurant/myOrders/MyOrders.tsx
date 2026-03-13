@@ -98,6 +98,7 @@ const MyOrders = () => {
           title={item.restaurant?.name ?? `Order #${item.id}`}
           description={`${item.status} · ${itemSummary}${deliveryLocation ? ` · ${deliveryLocation}` : ''}`}
           price={Number(item.totalAmount) ?? 0}
+          showRating={false}
           rating={0}
           reviewCount={0}
           onPress={() => handleOrderPress(item)}

@@ -115,8 +115,8 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
       )}&key=${GOOGLE_PLACES_API_KEY}&language=en`;
       const res = await fetch(url);
       const data = await res.json();
-     
-     
+
+
       if (data.status === 'OK' && Array.isArray(data.predictions)) {
         return data.predictions.map((p: any, i: number) => ({
           id: p.place_id || `place-${i}`,
@@ -550,7 +550,7 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                       duration: routeInfo?.duration,
                       pickupCoords,
                       dropoffCoords,
-                     
+
                     });
                   } catch (e: any) {
                     console.warn('Create ride failed:', e?.data?.message || e?.message);

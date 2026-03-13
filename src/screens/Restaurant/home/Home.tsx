@@ -18,15 +18,18 @@ import { height, ShowToast, width } from '../../../config/constants';
 import colors from '../../../config/colors';
 import fonts from '../../../config/fonts';
 import ListWithIcon from '../../../components/listWithIcon/ListWithIcon';
-import {
-  FoodIconListArray,
-} from '../../../constants/Food';
+import { FoodIconListArray } from '../../../constants/Food';
 import FoodCard from '../../../components/foodCard/FoodCard';
 import SectionHeader from '../../../components/sectionHeader/SectionHeader';
 import FoodCardWithBorder from '../../../components/foodCardWithBorder/FoodCardWithBorder';
 import FoodDrawerModal from '../../../components/drawerModal/FoodDrawerModal';
-import { useLazyRestaurantGetQuery, useLazyGetPopularMenusQuery, useSearchRestaurantsMutation, useSearchMenusMutation } from '../../../redux/services/restaurant.service';
-import { getLocation } from '../../../utils/loaction';
+import {
+  useLazyRestaurantGetQuery,
+  useLazyGetPopularMenusQuery,
+  useSearchRestaurantsMutation,
+  useSearchMenusMutation,
+} from '../../../redux/services/restaurant.service';
+import { getLocation, reverseGeocode } from '../../../utils/loaction';
 
 const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -40,12 +43,20 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const [searchRestaurants] = useSearchRestaurantsMutation();
   const [searchMenus] = useSearchMenusMutation();
 
-
   const fetchData = async () => {
     setLoadingNewRestaurant(true);
     try {
       const location = await getLocation();
-      const res = await restaurantGet({page: 1, lat: location?.latitude, lng: location?.longitude}).unwrap();
+      const city = await reverseGeocode(
+        location?.latitude,
+        location?.longitude,
+      );
+      const res = await restaurantGet({
+        page: 1,
+        lat: location?.latitude,
+        lng: location?.longitude,
+        city: city?.city as string,
+      }).unwrap();
       setNewRestaurant(res.data?.restaurants ?? []);
     } catch (error) {
       console.log('restaurant get error ===>', error);
@@ -58,7 +69,16 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
     setLoadingPopularMenus(true);
     try {
       const location = await getLocation();
-      const res = await popularMenusGet({limit: 12, lat: location?.latitude, lng: location?.longitude}).unwrap();
+      const city = await reverseGeocode(
+        location?.latitude,
+        location?.longitude,
+      );
+      const res = await popularMenusGet({
+        limit: 12,
+        lat: location?.latitude,
+        lng: location?.longitude,
+        city: city?.city as string,
+      }).unwrap();
       setPopularMenus(res.data?.items ?? []);
     } catch (error) {
       console.log('popular menus error ===>', error);
@@ -69,7 +89,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
 
   const handleFetchData = async () => {
     await Promise.all([fetchData(), fetchPopularMenus()]);
-  }
+  };
 
   useEffect(() => {
     const subscribe = navigation.addListener('focus', () => {
@@ -87,9 +107,23 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
       setLoadingNewRestaurant(true);
       setLoadingPopularMenus(true);
       const location = await getLocation();
+      const city = await reverseGeocode(
+        location?.latitude,
+        location?.longitude,
+      );
       const response = await Promise.all([
-        searchRestaurants({search: searchQuery, lat: location?.latitude, lng: location?.longitude}).unwrap(),
-        searchMenus({search: searchQuery, lat: location?.latitude, lng: location?.longitude}).unwrap(),
+        searchRestaurants({
+          search: searchQuery,
+          lat: location?.latitude,
+          lng: location?.longitude,
+          city: city?.city,
+        }).unwrap(),
+        searchMenus({
+          search: searchQuery,
+          lat: location?.latitude,
+          lng: location?.longitude,
+          city: city?.city,
+        }).unwrap(),
       ]);
       setNewRestaurant(response[0].data?.restaurants ?? []);
       setPopularMenus(response[1].data?.items ?? []);
@@ -97,7 +131,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
       console.log('search error ===>', error);
       ShowToast('error', 'cannot fetch search results');
       await handleFetchData();
-    }finally {
+    } finally {
       setLoadingNewRestaurant(false);
       setLoadingPopularMenus(false);
     }
@@ -157,7 +191,9 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
         <View style={[styles.gap]}>
           <View style={GeneralStyles.paddingHorizontal}>
             <SectionHeader
-              title={searchQuery.trim() === '' ? "Newly Opened" : "Search Results"}
+              title={
+                searchQuery.trim() === '' ? 'Newly Opened' : 'Search Results'
+              }
               onSeeAllPress={() => navigation.navigate('FoodRestaurantInfo')}
             />
           </View>
@@ -169,7 +205,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
                 highlightColor={colors.c_DDDDDD}
               >
                 <View style={styles.newlyOpenedSkeletonRow}>
-                  {[1, 2, 3, 4].map((i) => (
+                  {[1, 2, 3, 4].map(i => (
                     <View key={i} style={styles.newlyOpenedSkeletonCard}>
                       <View style={styles.newlyOpenedSkeletonImage} />
                       <View style={styles.newlyOpenedSkeletonTitle} />
@@ -180,17 +216,19 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
               </SkeletonPlaceholder>
             </View>
           ) : (
-            <FoodCard
-              list={newRestaurant}
-              navigation={navigation}
-            />
+            <FoodCard list={newRestaurant} navigation={navigation} />
           )}
         </View>
 
         {/* <HomeCarousel data={CarouselData as CarouselData[]} /> */}
 
         <View style={GeneralStyles.paddingHorizontal}>
-          <SectionHeader title={searchQuery.trim() === "" ? "Popular Food" : "Search Results"} onSeeAllPress={() => navigation.navigate('PopularFoodList')} />
+          <SectionHeader
+            title={
+              searchQuery.trim() === '' ? 'Popular Food' : 'Search Results'
+            }
+            onSeeAllPress={() => navigation.navigate('PopularFoodList')}
+          />
         </View>
 
         {loadingPopularMenus && popularMenus.length === 0 ? (
@@ -201,7 +239,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
               highlightColor={colors.c_DDDDDD}
             >
               <View style={styles.popularFoodSkeletonGrid}>
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+                {[1, 2, 3, 4, 5, 6].map(i => (
                   <View key={i} style={styles.popularFoodSkeletonCard}>
                     <View style={styles.popularFoodSkeletonImage} />
                     <View style={styles.popularFoodSkeletonTitle} />
@@ -219,7 +257,7 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
             scrollEnabled={false}
             contentContainerStyle={styles.menuGridContainer}
             columnWrapperStyle={styles.menuRow}
-            keyExtractor={(item) => String(item.id)}
+            keyExtractor={item => String(item.id)}
             renderItem={({ item }) => (
               <View style={styles.menuCardWrapper}>
                 <FoodCardWithBorder
@@ -227,11 +265,22 @@ const Home = ({ navigation }: { navigation: NavigationProp<any> }) => {
                   image={item.image || images.foodHome}
                   title={item.name}
                   category={item.category || 'Food'}
-                  rating={item.avgRating ? item.avgRating as number : 0}
+                  rating={item.avgRating ? (item.avgRating as number) : 0}
                   price={item.price}
                   id={item?.id}
                   hasFreeship={false}
-                  onPress={() => navigation.navigate('FoodDetails', { id: String(item.id), name: item.name, price: item.price, image: item.image || '', description: item.description || '', category: item.category || '', toppings: [], wishlistId: item.wishlistId || null })}
+                  onPress={() =>
+                    navigation.navigate('FoodDetails', {
+                      id: String(item.id),
+                      name: item.name,
+                      price: item.price,
+                      image: item.image || '',
+                      description: item.description || '',
+                      category: item.category || '',
+                      toppings: item.toppings || [],
+                      wishlistId: item.wishlistId || null,
+                    })
+                  }
                   isFavorite={item.wishlistId ? true : false}
                   reviewCount={item.reviewCount}
                 />

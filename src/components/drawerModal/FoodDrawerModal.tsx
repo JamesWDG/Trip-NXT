@@ -93,6 +93,7 @@ const generalData = [
     id: 3,
     name: 'Settings',
     image: images.settings,
+    navigation: 'ChooseCurrency',
   },
 ];
 interface IDrawerModal {
@@ -172,9 +173,14 @@ const FoodDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
         divider={true}
         dividerColor={colors.c_111111}
         onPress={() => {
-          if ('navigation' in item && item.navigation) {
+          const itemWithNav = item as typeof item & { navigation?: string };
+          if (itemWithNav?.navigation) {
             setIsModalVisible(false);
-            (navigation as any).navigate(item.navigation);
+            if (navigationRef.isReady()) {
+              navigationRef.dispatch(
+                CommonActions.navigate(itemWithNav.navigation as never),
+              );
+            }
           }
         }}
       />

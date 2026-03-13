@@ -21,6 +21,8 @@ import CheckBox from '@react-native-community/checkbox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import images from '../../../config/images';
 import { useWishList } from '../../../hooks/useWishlist';
+import { RootState } from '../../../redux/store';
+import { useSelector } from 'react-redux';
 
 interface ToppingOption {
   id: number;
@@ -56,6 +58,7 @@ const FoodDetails = ({
   });
   const [selectedTopping, setSelectedTopping] = useState<number[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const {currency} = useSelector((state: RootState) => state.settings);
 
   const wishlistButtonStyles = useMemo(() => {
     return wishlistButton(top);
@@ -99,10 +102,11 @@ const FoodDetails = ({
     }
     const cartItemsArray = JSON.parse(cartItems);
     let found = cartItemsArray.find(
-      (item: any) => item.id === route?.params?.id,
+      (item: any) => item.id == route?.params?.id,
     );
+    console.log('found,quantity ===>', found,quantity, route?.params?.id);
     if (found) {
-      found.quantity = quantity;
+      found.quantity = (quantity == 1) ? quantity + 1 : quantity;
       found.topping = route?.params?.toppings?.filter(topping =>
         selectedTopping.includes(topping.id),
       );
@@ -145,13 +149,19 @@ const FoodDetails = ({
     const cartItems = await AsyncStorage.getItem('cart');
     if (cartItems) {
       const cartItemsArray = JSON.parse(cartItems);
+      console.log('route params id', route?.params?.id);
       console.log('cartItemsArray ===>', cartItemsArray);
       const found = cartItemsArray.find(
-        (item: any) => item.id === route?.params?.id,
+        (item: any) => {
+          console.log('item id', item.id);
+          return item.id == route?.params?.id;
+        }
+          ,
       );
+      console.log('found ===>', found);
       if (found) {
         setSelectedTopping(found.topping.map((topping: any) => topping.id));
-        setQuantity(found.quantity);
+        setQuantity(found.quantity || 1);
       }
     }
   };
@@ -209,7 +219,7 @@ const FoodDetails = ({
                 <Text style={styles.location}>{location}</Text>
               </View> */}
             </View>
-            <Text style={styles.price}>${route?.params?.price}</Text>
+            <Text style={styles.price}>{currency === 'USD' ? '$' : '₦'} {route?.params?.price}</Text>
           </View>
 
           {/* Rating and Photo Count */}
@@ -276,7 +286,7 @@ const FoodDetails = ({
               {route?.params?.toppings?.map(topping => (
                 <View key={topping.id} style={styles.toppingOption}>
                   <Text style={styles.toppingText}>
-                    {topping.name} +${topping.price.toFixed(2)}
+                    {topping.name} +{currency === 'USD' ? '$' : '₦'} {currency === 'USD' ? topping.price.toFixed(4) : topping.price.toFixed(2)}
                   </Text>
                   <CheckBox
                     value={selectedTopping.includes(topping.id)}

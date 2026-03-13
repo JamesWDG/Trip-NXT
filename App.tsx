@@ -29,6 +29,7 @@ import ToastConfig from './src/config/Toast';
 import NetInfo from '@react-native-community/netinfo';
 import { useEffect, useState } from 'react';
 import { requestLocationPermissionAndPromptSettings } from './src/redux/services/locationPermission';
+import { StripeProvider } from '@stripe/stripe-react-native';
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [isConnected, setIsConnected] = useState(true);
@@ -54,7 +55,9 @@ function App() {
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaProvider>
           <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-          <AppContent />
+          <StripeProvider publishableKey={'pk_test_51RYtYNRT7PBrdzjovfRyXABozKiNkaAX0nJVTgfiiNpbDN719eYC4T88avnf0CtcWx7INMq51sUjPrFgUI7DL91x004gPiKy9u'}>
+            <AppContent />
+          </StripeProvider>
           <Toast config={ToastConfig} position="top" bottomOffset={40} />
         </SafeAreaProvider>
       </PersistGate>
@@ -66,7 +69,7 @@ function AppContent() {
   const safeAreaInsets = useSafeAreaInsets();
 
   useEffect(() => {
-    requestLocationPermissionAndPromptSettings().catch(() => {});
+    requestLocationPermissionAndPromptSettings().catch(() => { });
   }, []);
 
   return (

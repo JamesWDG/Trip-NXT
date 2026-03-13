@@ -24,6 +24,7 @@ import Wishlists from '../../screens/Restaurant/wishlist/WishList';
 import Category from '../../screens/Restaurant/category/Category';
 import AddReview from '../../screens/Accomodation/reviews/AddReview';
 import HotelLocationMap from '../../screens/Accomodation/HotelLocationMap/HotelLocationMap';
+import AddNewCard from '../../screens/AddCard/AddNewCard';
 
 const AccomodationStackNavigator = createNativeStackNavigator();
 
@@ -99,6 +100,7 @@ const AccomodationStack: FC = () => {
       <AccomodationStackNavigator.Screen name="AccomodationCategory" component={Category} />
       <AccomodationStackNavigator.Screen name="HotelLocationMap" component={HotelLocationMap} />
       <AccomodationStackNavigator.Screen name="Dummy" component={DummyPage} />
+      <AccomodationStackNavigator.Screen name="AddNewCard" component={AddNewCard} />
     </AccomodationStackNavigator.Navigator>
   );
 };

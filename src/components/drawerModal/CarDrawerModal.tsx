@@ -85,6 +85,7 @@ const generalData = [
     id: 3,
     name: 'Settings',
     image: images.settings,
+    navigation: 'ChooseCurrency',
   },
 ];
 interface IDrawerModal {
@@ -157,12 +158,12 @@ const CarDrawerModal = ({ visible, setIsModalVisible }: IDrawerModal) => {
         divider={true}
         dividerColor={colors.c_111111}
         onPress={() => {
-          const navRoute = (item as any)?.navigation;
-          if (navRoute) {
+          const itemWithNav = item as { navigation?: string };
+          if (itemWithNav?.navigation) {
             setIsModalVisible(false);
             if (navigationRef.isReady()) {
               navigationRef.dispatch(
-                CommonActions.navigate(navRoute as never),
+                CommonActions.navigate(itemWithNav.navigation as never),
               );
             }
           }

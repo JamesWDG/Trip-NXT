@@ -10,7 +10,7 @@ type endpointTypes = {
   GET_USER_PROFILE: string;
   SOCIAL_LOGIN: string;
   UPDATE_USER_PROFILE: (id: number) => string;
-  RESTAURANT_GET: (page: number, limit?: number, search?: string, lat?: number, lng?: number) => string;
+  RESTAURANT_GET: (page: number, limit?: number, search?: string, lat?: number, lng?: number, city?: string) => string;
   RESTAURANT_FILTER: string;
   RESTAURANT_GET_MENU: (id: number) => string;
   CREATE_ORDER: string;
@@ -52,7 +52,7 @@ type endpointTypes = {
 };
 
 export const BASE_URL: string = 'https://api.trip-nxt.com/api/v1/'
-// export const BASE_URL: string = 'http://169.254.206.40:5003/api/v1/';
+// export const BASE_URL: string = 'http://169.254.138.17:5003/api/v1/';
 //  export const BASE_URL: string = 'https://immaterial-overfrequently-audrie.ngrok-free.dev/api/v1/' // ngrok
 // export const BASE_URL: string = 'http://192.168.0.108:5003/api/v1' //live
 
@@ -68,10 +68,10 @@ export const endpoint: endpointTypes = {
   GET_USER_PROFILE: '/user/get-auth-user',
   SOCIAL_LOGIN: 'user/social-login',
   UPDATE_USER_PROFILE: (id: number) => `/user/update-user/${id}`,
-  RESTAURANT_GET: (page: number, limit?: number, search?: string, lat?: number, lng?: number) =>
+  RESTAURANT_GET: (page: number, limit?: number, search?: string, lat?: number, lng?: number, city?: string) =>
     limit != null
-      ? `restaurant/get?page=${page}&limit=${limit}&search=${search || ''}&lat=${lat || ''}&lng=${lng || ''}`
-      : `restaurant/get?page=${page}&search=${search || ''}&lat=${lat || ''}&lng=${lng || ''}`,
+      ? `restaurant/get?page=${page}&limit=${limit}&search=${search || ''}&lat=${lat || ''}&lng=${lng || ''}&city=${city || ''}`
+      : `restaurant/get?page=${page}&search=${search || ''}&lat=${lat || ''}&lng=${lng || ''}&city=${city || ''}`,
   RESTAURANT_FILTER: 'restaurant/filter',
   RESTAURANT_GET_MENU: (id: number) =>
     `restaurant/get-restaurant-with-menu/${id}`,

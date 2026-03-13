@@ -20,10 +20,7 @@ import fonts from '../../../config/fonts';
 import SearchWithFilters from '../../../components/searchWithFilters/SearchWithFilters';
 import labels from '../../../config/labels';
 import ListWithIcon from '../../../components/listWithIcon/ListWithIcon';
-import {
-  CarouselData,
-  IconListArray,
-} from '../../../constants/Accomodation';
+import { CarouselData, IconListArray } from '../../../constants/Accomodation';
 import AccomodationCard from '../../../components/accomodationCard/AccomodationCard';
 import HomeCarousel from '../../../components/homeCarousel/HomeCarousel';
 import SectionHeader from '../../../components/sectionHeader/SectionHeader';
@@ -31,8 +28,13 @@ import { RecommendedCard } from '../../dummyPage/DummyPage';
 import DrawerModal from '../../../components/drawerModal/DrawerModal';
 import { useNavigation } from '@react-navigation/native';
 import GeneralStyles from '../../../utils/GeneralStyles';
-import { useHotelForYouMutation, useLazyGetHotelsQuery } from '../../../redux/services/hotel.service';
+import {
+  useHotelForYouMutation,
+  useLazyGetHotelsQuery,
+} from '../../../redux/services/hotel.service';
 import { getLocation, reverseGeocode } from '../../../utils/loaction';
+import { RootState } from '../../../redux/store';
+import { useSelector } from 'react-redux';
 
 type HotelItem = {
   avgRating?: number;
@@ -51,7 +53,13 @@ function matchHotelToQuery(hotel: HotelItem, query: string): boolean {
   const state = (hotel?.location?.state ?? '').toLowerCase();
   const country = (hotel?.location?.country ?? '').toLowerCase();
   const locationStr = [city, state, country].filter(Boolean).join(' ');
-  return name.includes(q) || city.includes(q) || state.includes(q) || country.includes(q) || locationStr.includes(q);
+  return (
+    name.includes(q) ||
+    city.includes(q) ||
+    state.includes(q) ||
+    country.includes(q) ||
+    locationStr.includes(q)
+  );
 }
 
 const Home = () => {
@@ -65,14 +73,21 @@ const Home = () => {
   const [hotelForYou, setHotelForYou] = useState<HotelItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const iconStyle = useMemo(() => iconStyles(25, 25), [height, width]);
+  const { currency } = useSelector((state: RootState) => state.settings);
 
   const displayHotels = useMemo(
-    () => (searchQuery.trim() ? hotels.filter((h) => matchHotelToQuery(h, searchQuery)) : hotels),
-    [hotels, searchQuery]
+    () =>
+      searchQuery.trim()
+        ? hotels.filter(h => matchHotelToQuery(h, searchQuery))
+        : hotels,
+    [hotels, searchQuery],
   );
   const displayHotelForYou = useMemo(
-    () => (searchQuery.trim() ? hotelForYou.filter((h) => matchHotelToQuery(h, searchQuery)) : hotelForYou),
-    [hotelForYou, searchQuery]
+    () =>
+      searchQuery.trim()
+        ? hotelForYou.filter(h => matchHotelToQuery(h, searchQuery))
+        : hotelForYou,
+    [hotelForYou, searchQuery],
   );
   const [getHotelForYou] = useHotelForYouMutation();
   const fetchHotels = async () => {
@@ -91,31 +106,31 @@ const Home = () => {
       const location = await getLocation();
       const latitude = location?.latitude;
       const longitude = location?.longitude;
+      const city = await reverseGeocode(latitude, longitude);
       console.log('latitude ===>', latitude);
       console.log('longitude ===>', longitude);
       if (latitude == null || longitude == null) {
         console.log('hotel for you: skipping — invalid location', location);
         return;
       }
-      const payload = { latitude, longitude };
+      const payload = { latitude, longitude, city: city?.city as string };
       const response = await getHotelForYou(payload).unwrap();
       console.log('response ===>', response);
       setHotelForYou(response?.data ?? []);
-
     } catch (error) {
       console.log('hotel for you error ===>', error);
     }
-  }
+  };
   const fetchScreenData = async () => {
     try {
       setLoadingHotels(true);
       await Promise.all([fetchHotels(), fetchHotelForYou()]);
     } catch (error) {
       console.log('fetch screen data error ===>', error);
-    }finally{
+    } finally {
       setLoadingHotels(false);
     }
-  }
+  };
 
   useEffect(() => {
     const subscribe = navigation.addListener('focus', () => {
@@ -154,7 +169,10 @@ const Home = () => {
       {loadingHotels && hotels.length === 0 ? (
         <ScrollView
           style={[GeneralStyles.flex, styles.screenBackground]}
-          contentContainerStyle={[GeneralStyles.flexGrow, style?.contentContainerStyle]}
+          contentContainerStyle={[
+            GeneralStyles.flexGrow,
+            style?.contentContainerStyle,
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.listContainer}>
@@ -173,7 +191,7 @@ const Home = () => {
                 highlightColor={colors.c_DDDDDD}
               >
                 <View style={styles.skeletonAccomodationRow}>
-                  {[1, 2, 3, 4].map((i) => (
+                  {[1, 2, 3, 4].map(i => (
                     <View key={i} style={styles.skeletonAccomodationCard}>
                       <View style={styles.skeletonAccomodationImage} />
                       <View style={styles.skeletonAccomodationTitle} />
@@ -197,7 +215,7 @@ const Home = () => {
               backgroundColor={colors.c_F3F3F3}
               highlightColor={colors.c_DDDDDD}
             >
-              {[1, 2, 3, 4].map((i) => (
+              {[1, 2, 3, 4].map(i => (
                 <View key={i} style={styles.skeletonRecommendedCard}>
                   <View style={styles.skeletonRecommendedImage} />
                   <View style={styles.skeletonRecommendedBody}>
@@ -213,7 +231,7 @@ const Home = () => {
       ) : (
         <FlatList
           data={displayHotelForYou}
-          keyExtractor={(item) => String(item?.id ?? Math.random())}
+          keyExtractor={item => String(item?.id ?? Math.random())}
           contentContainerStyle={[
             GeneralStyles.flexGrow,
             style?.contentContainerStyle,
@@ -224,15 +242,19 @@ const Home = () => {
             <View>
               <View style={styles.listContainer}>
                 {/* <ListWithIcon list={IconListArray} /> */}
-                {
-                  IconListArray.map((item, index) => (
-                    <TouchableOpacity
+                {IconListArray.map((item, index) => (
+                  <TouchableOpacity
                     style={{
                       alignItems: 'center',
                       width: 100,
                       paddingBottom: 10,
                     }}
-                    onPress={() => navigation.navigate('AccomodationCategory', { category: item.title, type: 'accomodation' })}
+                    onPress={() =>
+                      navigation.navigate('AccomodationCategory', {
+                        category: item.title,
+                        type: 'accomodation',
+                      })
+                    }
                   >
                     <Image
                       source={item.icon as ImageSourcePropType}
@@ -241,8 +263,7 @@ const Home = () => {
                     />
                     <Text style={styles.title}>{item.title}</Text>
                   </TouchableOpacity>
-                  ))
-                }
+                ))}
               </View>
 
               <View style={styles.gap}>
@@ -270,16 +291,28 @@ const Home = () => {
           }
           renderItem={({ item }) => {
             const hotel = item as HotelItem;
-            const imageSrc = hotel?.images?.[0] ? { uri: hotel.images[0] } : images.recommended_accomodation;
+            const imageSrc = hotel?.images?.[0]
+              ? { uri: hotel.images[0] }
+              : images.recommended_accomodation;
             const locationStr = hotel?.location
-              ? [hotel.location.city, hotel.location.state, hotel.location.country].filter(Boolean).join(', ')
+              ? [
+                  hotel.location.city,
+                  hotel.location.state,
+                  hotel.location.country,
+                ]
+                  .filter(Boolean)
+                  .join(', ')
               : '—';
             return (
               <View style={styles.recommendedCardItem}>
                 <RecommendedCard
                   image={imageSrc}
                   title={hotel?.name ?? 'Hotel'}
-                  description={`$${Number(hotel?.rentPerDay ?? 0).toFixed(0)}/night`}
+                  description={`${currency === 'USD' ? '$' : '₦'} ${
+                    currency === 'USD'
+                      ? Number(hotel?.rentPerDay ?? 0).toFixed(6)
+                      : Number(hotel?.rentPerDay ?? 0).toFixed(2)
+                  }/night`}
                   price={Number(hotel?.rentPerDay) ?? 0}
                   rating={item?.avgRating ?? 0}
                   location={locationStr}
@@ -305,10 +338,10 @@ const contentContainerStyle = (bottom: number) =>
       paddingBottom: bottom + 60,
     },
   });
-  const iconStyles = (height: number, width: number) =>
-    StyleSheet.create({
-      iconStyle: { height: height, width: height },
-    });
+const iconStyles = (height: number, width: number) =>
+  StyleSheet.create({
+    iconStyle: { height: height, width: height },
+  });
 export default Home;
 
 const styles = StyleSheet.create({
@@ -351,7 +384,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
     display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'space-around'
+    justifyContent: 'space-around',
   },
   accomodationText: {
     fontSize: 20,

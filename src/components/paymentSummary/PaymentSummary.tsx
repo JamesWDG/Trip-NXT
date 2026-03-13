@@ -4,6 +4,8 @@ import { CreditCard } from 'lucide-react-native';
 import colors from '../../config/colors';
 import fonts from '../../config/fonts';
 import Divider from '../divider/Divider';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 
 interface PaymentSummaryItem {
   label: string;
@@ -25,7 +27,7 @@ const PaymentSummary = ({
   promoCode: initialPromoCode = '',
 }: PaymentSummaryProps) => {
   const [promoCode, setPromoCode] = useState(initialPromoCode);
-
+  const {currency} = useSelector((state: RootState) => state.settings);
   const handlePromoCodeChange = (text: string) => {
     setPromoCode(text);
     onPromoCodeChange?.(text);
@@ -61,7 +63,7 @@ const PaymentSummary = ({
                   item.isDiscount && styles.discountAmount,
                 ]}
               >
-                {item.isDiscount ? '-' : ''}${item.amount.toFixed(2)}
+                {item.isDiscount ? '-' : ''}{currency === 'USD' ? '$' : '₦'} {item.amount.toFixed(2)}
               </Text>
             </View>
 
@@ -79,7 +81,7 @@ const PaymentSummary = ({
         {/* Total */}
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Amount</Text>
-          <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+          <Text style={styles.totalAmount}>{currency === 'USD' ? '$' : '₦'} {total.toFixed(2)}</Text>
         </View>
       </View>
     </View>
