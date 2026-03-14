@@ -509,11 +509,11 @@ const BookARide: FC<{ navigation: NavigationProp<any> }> = ({ navigation }) => {
                   if (!Number.isFinite(min) || min <= 0) min = parseDurationToMin(routeInfo.duration);
                   const fare = getFareEstimate(km, min);
                   const applicableFare = fare.isPeak ? fare.peak : fare.normal;
-                const yourFareRaw = applicableFare + fareAdjustment;
-                const estimatedStr = formatUsd(applicableFare);
-                const centsFromEstimated =
-                  parseFloat('0.' + (estimatedStr.split('.')[1] || '00')) || 0;
-                const wholeDollars = Math.floor(yourFareRaw / RS_PER_USD);
+                  const yourFareRaw = applicableFare + fareAdjustment;
+                  const estimatedStr = formatUsd(applicableFare);
+                  const centsFromEstimated =
+                    parseFloat('0.' + (estimatedStr.split('.')[1] || '00')) || 0;
+                  const wholeDollars = Math.floor(yourFareRaw / RS_PER_USD);
                   const yourFareUsd = Math.max(
                     applicableFare / RS_PER_USD,
                     wholeDollars + centsFromEstimated,
